@@ -1,0 +1,13 @@
+{
+  "@context": "https://onerecord.iata.org/ns/cargo",
+  "@type": "Piece",
+  "@id": "https://example.com/logistics-objects/piece/demo-001",
+  "goodsDescription": "Pharmaceutical samples, temperature controlled",
+  "grossWeight": { "@type": "Value", "unit": "KGM", "value": 8.2 },
+  "dimensions": {
+    "@type": "Dimensions",
+    "length": { "@type": "Value", "unit": "CMT", "value": 35 },
+    "width": { "@type": "Value", "unit": "CMT", "value": 25 },
+    "height": { "@type": "Value", "unit": "CMT", "value": 20 }
+  }
+}

@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Env
+.env
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+npm-debug.log*
+
+# Data artifacts (keep raw sources + eval, ignore generated index)
+data/index/*
+data/processed/*
+!data/**/.gitkeep
+
+# OS
+.DS_Store

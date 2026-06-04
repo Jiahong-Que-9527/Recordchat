@@ -1,0 +1,31 @@
+@prefix cargo: <https://onerecord.iata.org/ns/cargo#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+# Illustrative subset of the ONE Record cargo ontology for RecordChat demos.
+# Not the official ontology file — see https://github.com/IATA-Cargo/ONE-Record
+
+cargo:LogisticsObject a owl:Class ;
+    rdfs:label "Logistics Object" ;
+    rdfs:comment "Base class for all ONE Record data entities. Each logistics object has a unique URI and is exposed through a ONE Record Server." .
+
+cargo:Shipment a owl:Class ;
+    rdfs:subClassOf cargo:LogisticsObject ;
+    rdfs:label "Shipment" ;
+    rdfs:comment "The transport of goods from a shipper to a consignee under a single waybill, grouping one or more pieces." .
+
+cargo:Piece a owl:Class ;
+    rdfs:subClassOf cargo:LogisticsObject ;
+    rdfs:label "Piece" ;
+    rdfs:comment "The smallest physical, individually identifiable unit of goods in a shipment." .
+
+cargo:Waybill a owl:Class ;
+    rdfs:subClassOf cargo:LogisticsObject ;
+    rdfs:label "Waybill" ;
+    rdfs:comment "The transport document and contract for a shipment (Air Waybill)." .
+
+cargo:containedPieces a owl:ObjectProperty ;
+    rdfs:label "contained pieces" ;
+    rdfs:domain cargo:Shipment ;
+    rdfs:range cargo:Piece ;
+    rdfs:comment "Relates a Shipment to the Pieces it contains." .

@@ -1,0 +1,65 @@
+# RecordChat evaluation set (SPEC section 9 / Phase 9).
+# Each item: id, question, category, expected_keywords (case-insensitive),
+# and optional expects_jsonld.
+
+- id: q001
+  question: "What is ONE Record?"
+  category: concept
+  expected_keywords: ["data sharing", "air cargo", "standard"]
+
+- id: q002
+  question: "What is a LogisticsObject in ONE Record?"
+  category: concept
+  expected_keywords: ["LogisticsObject", "base class", "URI"]
+
+- id: q003
+  question: "What is a Piece?"
+  category: concept
+  expected_keywords: ["Piece", "unit", "shipment"]
+
+- id: q004
+  question: "What is the role of JSON-LD in ONE Record?"
+  category: concept
+  expected_keywords: ["JSON-LD", "linked", "@context"]
+
+- id: q005
+  question: "Explain the relationship between Shipment and Piece."
+  category: relationship
+  expected_keywords: ["Shipment", "Piece"]
+
+- id: q006
+  question: "What is the difference between a Waybill and a Shipment?"
+  category: relationship
+  expected_keywords: ["Waybill", "Shipment"]
+
+- id: q007
+  question: "How does the ONE Record API let me create a LogisticsObject?"
+  category: api
+  expected_keywords: ["LogisticsObject", "server"]
+
+- id: q008
+  question: "How does subscription and notification work in ONE Record?"
+  category: api
+  expected_keywords: ["Subscription", "Notification"]
+
+- id: q009
+  question: "Generate a JSON-LD example for a Piece."
+  category: jsonld
+  expects_jsonld: true
+  expected_keywords: ["@context", "@type", "Piece"]
+
+- id: q010
+  question: "Generate a JSON-LD example for a Shipment."
+  category: jsonld
+  expects_jsonld: true
+  expected_keywords: ["@context", "@type", "Shipment"]
+
+- id: q011
+  question: "How does ONE Record support data sharing across the supply chain?"
+  category: concept
+  expected_keywords: ["data sharing", "linked"]
+
+- id: q012
+  question: "What is a TransportMovement?"
+  category: concept
+  expected_keywords: ["TransportMovement", "transport"]

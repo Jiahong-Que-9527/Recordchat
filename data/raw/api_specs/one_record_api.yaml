@@ -1,0 +1,25 @@
+openapi: 3.0.0
+info:
+  title: ONE Record API (illustrative subset)
+  version: "demo"
+  description: Minimal illustrative endpoints for RecordChat demos. Not the official spec.
+paths:
+  /logistics-objects:
+    post:
+      summary: Create a LogisticsObject
+      description: >
+        Create a new logistics object on the ONE Record Server. The server
+        assigns or accepts a URI (@id) for the object and stores its JSON-LD
+        representation so other authorized parties can access it.
+  /logistics-objects/{id}:
+    get:
+      summary: Retrieve a LogisticsObject
+      description: >
+        Fetch the JSON-LD representation of a logistics object by its identifier,
+        following linked-data references to related objects.
+  /subscriptions:
+    post:
+      summary: Create a Subscription
+      description: >
+        Register interest in changes to a logistics object. When the object is
+        updated, the server pushes a Notification to the subscriber's callback.
