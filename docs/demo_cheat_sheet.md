@@ -57,6 +57,12 @@ One-line explanation:
 > "The default demo works fully offline, but the provider abstraction is
 > already there for Qwen, OpenAI, or Claude later."
 
+Important qualifier:
+
+> "The demo loop is complete, but the source base is still intentionally small.
+> The next priority is broadening official ONE Record and NE:ONE coverage
+> before piling on more features."
+
 ## 4. Core Demo Flow
 
 ### Prompt 1
@@ -200,8 +206,9 @@ Use this:
 
 > "This version is intentionally focused. It already has the full RAG path, but
 > it still uses a small curated knowledge base, local hashing embeddings by
-> default, and a local extractive fallback model. The next step is stronger
-> ontology-aware retrieval and deeper ecosystem integration."
+> default, and a local extractive fallback model. The immediate next step is
+> expanding the official and NE:ONE source base; richer downstream features
+> come after that."
 
 If they ask whether it uses a real hosted model:
 

@@ -3,6 +3,10 @@
 > 面向 IATA ONE Record 的 domain-specific AI 助手。
 > 本文档是给人和 coding agent 共同阅读的**单一事实来源（Single Source of Truth）**。
 > 任何实现都应以本文档的契约（API 契约、数据模型、目录结构、验收标准）为准。
+>
+> **状态说明（2026-06）**：本 SPEC 定义的是 `v0.1` 的交付边界。`v0.1`
+> 已可运行和演示。后续阶段的首要任务不是继续堆功能，而是先把知识底座从当前最小
+> 示例集扩展到更完整的官方 ONE Record 与 NE:ONE 资料。
 
 ---
 
@@ -133,6 +137,9 @@ User query
 ## 5. 知识底座与数据（最关键、最易被低估的部分）
 
 RAG 的可信度来自 **source grounding**，不来自 LLM 编造。数据质量决定项目质量。
+
+> **当前优先级提醒：** `v0.1` 之后应先补齐知识底座，再继续做 RecordForge、
+> ALH、或更复杂的前端升级。数据源过窄时，下游能力再多也会建立在不够扎实的语料上。
 
 ### 5.1 数据来源（真实来源，agent 需据此采集）
 
@@ -528,6 +535,7 @@ What is the role of JSON-LD in ONE Record?
 - JSON-LD 生成器与自由文本 LLM 解耦（结构由模板保证）。
 - 前后端解耦，仅通过第 6 章契约通信。
 - 文档与评估从第一天就在。
+- `v0.1` 之后先补知识底座，再扩功能；不要在数据源明显不足时优先做花哨能力。
 
 **禁止：**
 - ❌ 在 `chat.py` 里直接写 prompt + 调模型 + 解析结果 + 生成 JSON（必须经 `pipeline.py`）。
@@ -545,9 +553,12 @@ api/chat.py → rag/pipeline.py → {retriever.py | prompt.py | core/llm.py | do
 
 ## 15. 后续路线（仅记录，不在 v0.1 实现）
 
-- **v0.2.1** Ontology-aware retrieval：entity-first 检索（识别 query 中的 ONE Record 实体后优先检索相关 chunk）。
-- **v0.2.2** RecordForge 集成：`User: Generate 5 synthetic shipments` → RecordChat 调 RecordForge 出 JSON-LD。
+- **前置任务：知识底座扩充**：先导入更完整的官方 ONE Record 与 NE:ONE 资料，再做后续能力验证。
+- **v0.2.1** Ontology-aware retrieval：entity-first 检索（识别 query 中的 ONE Record 实体后优先检索相关 chunk），并在更完整官方资料上重新验证。
+- **v0.2.2** NE:ONE implementation knowledge：支持 setup、config、payload、troubleshooting 问答。
 - **v0.2.3** ALH 集成：解释 ONE Record 对象如何 land 到 Bronze/Silver/Gold。
+- **v0.2.4** Frontend upgrade：流式对话 UI，保留 sources / related concepts / JSON-LD。
+- **v0.2.5** RecordForge 集成：`User: Generate 5 synthetic shipments` → RecordChat 调 RecordForge 出 JSON-LD。
 - **v0.3** 认证 / 会话记忆 / source versioning / OpenTelemetry / 评估 dashboard / 三大 connector。
 
 ---

@@ -3,6 +3,11 @@
 ## Status
 Accepted (v0.2.1)
 
+> Note (2026-06): this ADR explains the original v0.2.1 retrieval design.
+> The current project-level priority is to validate this design against a
+> broader official ONE Record source pack instead of treating the illustrative
+> subset as sufficient for the next phase.
+
 ## Context
 v0.1 retrieval is pure vector search over embedded chunks plus a **manually
 curated** relationship map in `domain/one_record_schema.py`. That works for
@@ -56,7 +61,7 @@ object property domain/range) is not used at retrieval time.
 |--------|----------------------|
 | Metadata-only Qdrant filter | Fragile when entity field missing on glossary/API chunks |
 | Replace vector search with graph traversal | Loses lexical/API recall; bigger change |
-| Full official IATA ontology in repo | Out of scope; illustrative TTL subset is enough for v0.2.1 |
+| Full official IATA ontology in repo | Out of scope for the original v0.2.1 implementation slice; later validation on broader official sources is still required |
 
 ## Consequences
 - Relationship and concept questions should rank ontology class chunks higher.

@@ -29,6 +29,16 @@ data-sharing standard: a single shared record of truth per shipment, modeled as
 interlinked **LogisticsObjects** exposed over a REST API and serialized as JSON-LD.
 RecordChat makes that standard approachable and queryable.
 
+## Current Status
+
+- `v0.1` is complete and demoable
+- the next priority is **not** piling on more features first
+- the next priority is expanding the knowledge base from the current minimal
+  subset to the broader official ONE Record + NE:ONE source pack
+
+See [docs/data_source_plan.md](docs/data_source_plan.md) for the source
+acquisition and import plan.
+
 ## Architecture
 
 ```
@@ -81,6 +91,11 @@ By default, the frontend now auto-detects the API host from the page URL. So if
 you open `http://<your-vps-host>:3000`, it will try `http://<your-vps-host>:8000`
 unless `NEXT_PUBLIC_API_BASE_URL` is explicitly set.
 
+> The repository currently ships a **minimal demo source set** plus the curated
+> glossary. That is enough for v0.1 demos, but the next project priority is to
+> import the broader official ONE Record and NE:ONE materials listed in
+> [docs/data_source_plan.md](docs/data_source_plan.md).
+
 ## Try these questions
 
 - What is ONE Record?
@@ -103,8 +118,9 @@ SPEC.md     single source of truth (contracts, structure, acceptance)
 
 ## Roadmap
 
-- **v0.1** ONE Record RAG assistant (this repo)
-- **v0.2** ontology-aware retrieval + RecordForge integration
-- **v0.3** AviationLakehouse integration + ONE Record Server connector
+- **v0.1** demoable ONE Record RAG assistant (this repo)
+- **next** data foundation: official ONE Record + NE:ONE source expansion
+- **v0.2** ontology validation + NE:ONE knowledge + ALH narrative + frontend upgrade
+- **later** RecordForge integration + live ecosystem connectors
 
 See [docs/roadmap.md](docs/roadmap.md).

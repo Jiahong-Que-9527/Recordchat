@@ -33,6 +33,14 @@ And the runtime path is:
 That means the v0.1 demo is about a complete working retrieval pipeline, even
 when no external API keys are present.
 
+Important framing:
+
+- this demo proves the end-to-end product loop
+- it does **not** mean the source base is already broad enough for the final
+  intended scope
+- after `v0.1`, the next priority is expanding the official ONE Record and
+  NE:ONE source base before piling on more downstream features
+
 ## 3. Recommended Demo Modes
 
 ### Option A: Docker demo
@@ -222,6 +230,12 @@ Suggested narration:
 > "This is the bridge from standards understanding to the future ecosystem:
 > RecordChat, RecordForge, ONE Record Server, and an analytical backend."
 
+Useful closing line:
+
+> "The next step is not just adding more features. The next step is broadening
+> the knowledge base so these answers are grounded in a richer official and
+> implementation-level source pack."
+
 ## 7. Strong Prompt Examples
 
 These are good prompts to have ready in a notes app during a live session.
@@ -336,8 +350,9 @@ If someone asks what is not yet in v0.1, use this answer:
 
 > "This version is intentionally focused: it already has an end-to-end RAG
 > path, but it still uses a small curated knowledge base, local hashing
-> embeddings by default, and a local extractive fallback model. The next step
-> is stronger ontology-aware retrieval and deeper ecosystem integration."
+> embeddings by default, and a local extractive fallback model. The immediate
+> next step is expanding the official and NE:ONE source base; richer downstream
+> features come after that."
 
 If someone asks whether it uses a real hosted model:
 

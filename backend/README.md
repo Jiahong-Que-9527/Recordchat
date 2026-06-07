@@ -19,6 +19,13 @@ With no API keys configured the backend runs fully offline: `local` LLM +
 `local` hashing embeddings + in-memory Qdrant. Set the `LLM_*` / `EMBEDDING_*`
 / `QDRANT_*` env vars (see [../.env.example](../.env.example)) for real models.
 
+Note:
+
+- the current backend is fully usable for `v0.1` demos
+- the next project priority is broadening the imported official ONE Record and
+  NE:ONE source pack, not adding more backend features first
+- see [../docs/data_source_plan.md](../docs/data_source_plan.md)
+
 ## Tests
 
 ```bash
