@@ -1,7 +1,7 @@
 # RecordChat Data Source Plan
 
-This document turns the data checklist in `dl数据下载清单.md` into an execution
-plan for RecordChat.
+This document is the execution plan for expanding the RecordChat knowledge base
+to the required ONE Record and NE:ONE source set.
 
 For direct source URLs and per-folder download instructions, also see:
 [docs/data_download_guide.md](data_download_guide.md)
@@ -153,7 +153,7 @@ these are present:
 5. a broader JSON-LD example set
 6. NE:ONE implementation materials
 
-That is the minimum bar implied by `dl数据下载清单.md`.
+That is the minimum bar defined by the current source planning scope.
 
 ## 7. Import Strategy
 

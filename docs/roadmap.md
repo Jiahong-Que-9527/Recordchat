@@ -6,7 +6,7 @@
 - **v0.2.1 ontology-aware retrieval**: largely landed in code; still needs to be
   validated against a broader official source set
 - **next priority**: expand the knowledge base so the system matches the real
-  ONE Record / NE:ONE materials listed in `dl数据下载清单.md`
+  ONE Record / NE:ONE materials defined in the source planning docs
 
 Source acquisition and import plan:
 [docs/data_source_plan.md](data_source_plan.md)

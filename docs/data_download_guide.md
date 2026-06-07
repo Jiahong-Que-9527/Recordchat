@@ -3,7 +3,6 @@
 This is the operational companion to:
 
 - [docs/data_source_plan.md](data_source_plan.md)
-- [dl数据下载清单.md](../dl数据下载清单.md)
 
 Use this guide when you actually start collecting files.
 
