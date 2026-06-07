@@ -8,6 +8,12 @@ __pycache__/
 # Env
 .env
 
+# Local agent/tooling state
+.agents/
+.codex/
+.claude/
+chat.md
+
 # Node / Next.js
 node_modules/
 .next/
