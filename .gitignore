@@ -21,10 +21,8 @@ node_modules/
 out/
 npm-debug.log*
 
-# Data artifacts (keep raw sources + eval, ignore generated index)
-data/index/*
-data/processed/*
-!data/**/.gitkeep
+# Data (local only — not versioned)
+data/
 
 # OS
 .DS_Store
