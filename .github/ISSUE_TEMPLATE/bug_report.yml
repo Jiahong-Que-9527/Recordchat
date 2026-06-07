@@ -1,0 +1,63 @@
+name: Bug report
+description: Report incorrect behavior, regressions, or broken flows
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Please include enough detail to reproduce the issue locally or in CI.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Backend (FastAPI / RAG)
+        - Frontend (Next.js UI)
+        - Ingestion / data pipeline
+        - Docker / deployment
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug and what you expected instead.
+      placeholder: The /chat endpoint returns 500 when...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Commands, requests, or UI steps that trigger the issue.
+      placeholder: |
+        1. cd backend && uv run uvicorn app.main:app --reload
+        2. curl -X POST localhost:8000/chat ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python/Node versions, provider settings (offline vs API keys), Docker vs local.
+      placeholder: |
+        - OS: Ubuntu 24.04
+        - Python: 3.12
+        - LLM_PROVIDER: local
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Paste relevant stack traces, API responses, or attach screenshots.
+    validations:
+      required: false

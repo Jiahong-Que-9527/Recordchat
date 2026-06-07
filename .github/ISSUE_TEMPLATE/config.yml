@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: SPEC & architecture
+    url: https://github.com/Jiahong-Que-9527/Recordchat/blob/main/SPEC.md
+    about: Read the project specification, contracts, and acceptance criteria
+  - name: Roadmap
+    url: https://github.com/Jiahong-Que-9527/Recordchat/blob/main/docs/roadmap.md
+    about: Planned milestones for RecordChat and the broader platform
