@@ -3,6 +3,9 @@
 This document turns the data checklist in `dl数据下载清单.md` into an execution
 plan for RecordChat.
 
+For direct source URLs and per-folder download instructions, also see:
+[docs/data_download_guide.md](data_download_guide.md)
+
 The key idea is simple:
 
 1. not every source should be ingested the same way

@@ -5,6 +5,13 @@ This folder now has two layers:
 1. the original v0.1 demo files kept in their current locations
 2. the expanded source skeleton for official ONE Record, NE:ONE, and manual downloads
 
+Download instructions:
+
+- high-level plan:
+  [docs/data_source_plan.md](/root/Workspace/Recordchat/docs/data_source_plan.md)
+- direct source links and folder mapping:
+  [docs/data_download_guide.md](/root/Workspace/Recordchat/docs/data_download_guide.md)
+
 ## Use this flow
 
 - put manually downloaded files into `data/raw/_staging/`
