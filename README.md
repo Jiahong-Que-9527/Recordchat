@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="assets/recordchat-logo.png" alt="RecordChat logo" width="480">
+</div>
+
 # RecordChat
 
 **A domain-specific AI assistant for IATA ONE Record.**
@@ -71,6 +75,7 @@ to switch to Qwen / OpenAI / Claude with zero code changes.
 ## Repository layout
 
 ```
+assets/     project branding (logo, etc.)
 backend/    FastAPI service (API, RAG pipeline, domain layer, tests)
 frontend/   Next.js + Tailwind + shadcn-style chat UI
 data/       raw sources, processed artifacts, eval questions
