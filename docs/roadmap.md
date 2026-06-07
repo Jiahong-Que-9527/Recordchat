@@ -17,6 +17,13 @@ A production-minded MVP:
 
 ## v0.2 — Semantics + first ecosystem hook
 
+> **Execution plan:** [docs/v0.2_development_plan.md](v0.2_development_plan.md) ·
+> **GitHub milestones:** [v0.2.1](https://github.com/Jiahong-Que-9527/Recordchat/milestone/1) ·
+> [v0.2.3](https://github.com/Jiahong-Que-9527/Recordchat/milestone/2) ·
+> [v0.2.2](https://github.com/Jiahong-Que-9527/Recordchat/milestone/3) ·
+> [v0.2.4](https://github.com/Jiahong-Que-9527/Recordchat/milestone/4) ·
+> **Issues:** [#1–#20](https://github.com/Jiahong-Que-9527/Recordchat/issues?q=is%3Aissue+is%3Aopen)
+
 - **v0.2.1 Ontology-aware retrieval**: parse the official ONE Record ontology to
   extract classes/properties/relationships; entity-first search (detect the
   entity in the query, then prioritize its chunks).
