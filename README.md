@@ -11,6 +11,11 @@ data model, API concepts, JSON-LD payloads, and the semantic relationships betwe
 logistics objects. It uses retrieval-augmented generation (RAG) with **source-grounded,
 cited answers** — not an ungrounded chatbot.
 
+> **Disclaimer:** RecordChat is a **personal, independent project**. It is **not** an
+> official IATA ONE Record product, and is not affiliated with, endorsed by, or
+> maintained by IATA. All reference materials used in this repository (specifications,
+> ontologies, examples, etc.) come from **publicly available open-source resources**.
+
 > RecordChat is the first interface layer for a future aviation data platform ecosystem:
 > **RecordChat** (AI interface) · **RecordForge** (synthetic data) ·
 > **ONE Record Server** (exchange layer) · **AviationLakehouse** (analytics backend).
