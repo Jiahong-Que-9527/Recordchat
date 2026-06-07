@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { EXAMPLE_QUESTIONS, ONE_RECORD_CONCEPTS } from "@/lib/constants";
 
 export function Sidebar({
@@ -11,9 +12,19 @@ export function Sidebar({
 }) {
   return (
     <aside className="flex h-full w-72 shrink-0 flex-col gap-6 border-r border-border bg-slate-50 p-4">
-      <div>
-        <h1 className="text-lg font-bold text-slate-900">RecordChat</h1>
-        <p className="text-xs text-slate-500">IATA ONE Record assistant</p>
+      <div className="flex items-center gap-3">
+        <Image
+          src="/recordchat-logo.png"
+          alt="RecordChat"
+          width={40}
+          height={40}
+          className="h-10 w-10 shrink-0 rounded-lg object-contain"
+          priority
+        />
+        <div className="min-w-0">
+          <h1 className="text-lg font-bold text-slate-900">RecordChat</h1>
+          <p className="text-xs text-slate-500">IATA ONE Record assistant</p>
+        </div>
       </div>
 
       <button

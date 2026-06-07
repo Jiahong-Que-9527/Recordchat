@@ -53,6 +53,14 @@ docker compose up --build
 curl -X POST localhost:8000/ingest        # build the knowledge base
 ```
 
+If you are developing on a VPS and opening the UI from your local browser:
+
+- open `http://<your-vps-host>:3000` in your browser
+- run `curl -X POST http://127.0.0.1:8000/ingest` on the VPS shell
+- if you want explicit hostnames, set:
+  `CORS_ORIGINS=http://<your-vps-host>:3000`
+  `NEXT_PUBLIC_API_BASE_URL=http://<your-vps-host>:8000`
+
 ### Option B — Backend only, fully offline (no API keys, no Docker)
 
 ```bash
@@ -68,6 +76,10 @@ With no keys configured, RecordChat runs in **offline mode**: `local` LLM
 (extractive, source-grounded), `local` hashing embeddings, and an in-process
 Qdrant. Set `LLM_PROVIDER`/`LLM_API_KEY` etc. (see [.env.example](.env.example))
 to switch to Qwen / OpenAI / Claude with zero code changes.
+
+By default, the frontend now auto-detects the API host from the page URL. So if
+you open `http://<your-vps-host>:3000`, it will try `http://<your-vps-host>:8000`
+unless `NEXT_PUBLIC_API_BASE_URL` is explicitly set.
 
 ## Try these questions
 
