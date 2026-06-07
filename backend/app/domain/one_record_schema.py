@@ -1,10 +1,12 @@
-"""Manually curated ONE Record relationship map (SPEC section 10.1).
+"""ONE Record entity relationships (SPEC section 10.1).
 
-Used to enrich `related_concepts` for relationship questions. In v0.2 this
-can be replaced/augmented by parsing the official ontology.
+v0.2.1 prefers parsed ontology neighbors (ADR 0002) and falls back to the
+curated map when the ontology graph is unavailable.
 """
 
 from __future__ import annotations
+
+from app.domain.ontology_graph import get_ontology_graph
 
 ONE_RECORD_RELATIONSHIPS: dict[str, list[str]] = {
     "Shipment": ["Piece", "Waybill", "LogisticsEvent"],
@@ -34,14 +36,27 @@ KNOWN_ENTITIES: list[str] = sorted(
 
 
 def get_related(entity: str) -> list[str]:
+    graph = get_ontology_graph()
+    if graph and graph.has_entity(entity):
+        related = graph.get_related(entity)
+        if related:
+            return related
     return ONE_RECORD_RELATIONSHIPS.get(entity, [])
+
+
+def _entity_vocabulary() -> list[str]:
+    names = set(KNOWN_ENTITIES)
+    graph = get_ontology_graph()
+    if graph:
+        names.update(graph.all_entity_names())
+    return sorted(names, key=len, reverse=True)
 
 
 def detect_entities(text: str) -> list[str]:
     """Return known ONE Record entities mentioned in the text (case-insensitive)."""
     low = text.lower()
     found = []
-    for ent in KNOWN_ENTITIES:
-        if ent.lower() in low:
+    for ent in _entity_vocabulary():
+        if ent.lower() in low and ent not in found:
             found.append(ent)
     return found

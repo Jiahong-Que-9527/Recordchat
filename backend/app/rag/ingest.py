@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from app.core.logging import get_logger
 from app.domain.glossary import glossary_chunks
+from app.domain.ontology_graph import refresh_ontology_graph
 from app.models.chat import IngestResponse
 from app.rag.chunker import chunk_documents
 from app.rag.loader import load_documents
@@ -24,6 +25,8 @@ def run_ingest(
     retriever = retriever or get_retriever()
     if reset:
         retriever.reset()
+
+    refresh_ontology_graph(source_dir)
 
     docs = load_documents(source_dir)
     file_chunks = chunk_documents(docs)

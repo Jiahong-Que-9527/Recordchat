@@ -20,7 +20,7 @@ a (provider-abstracted) LLM, and enriches the answer with domain tools
 │  rag/pipeline.answer()  ── the only orchestrator                              │
 │    1. classify_query(q)            -> QueryType                               │
 │    2. retriever.search(q, top_k)   -> Chunk[]   (Qdrant)                       │
-│    3. rerank(q, chunks)            -> Chunk[]   (no-op in v0.1)                │
+│    3. rerank(q, chunks)            -> Chunk[]   (ontology boost in v0.2.1)     │
 │    4. prompt.build_user_prompt()   -> str                                     │
 │    5. llm.complete(system, user)   -> answer                                  │
 │    6. domain enrich:                                                          │
@@ -77,13 +77,23 @@ frontend and backend; see [SPEC.md](../SPEC.md) section 6 and
 `backend/app/models/chat.py` (`models/chat.py` and `frontend/lib/api.ts` mirror
 each other).
 
+## Ontology-aware retrieval (v0.2.1)
+
+See [adr/0002-ontology-aware-retrieval.md](adr/0002-ontology-aware-retrieval.md).
+
+```
+data/raw/**/*.ttl  ->  ontology_parser  ->  OntologyGraph (in-memory)
+                              |
+ingest/chunker     ->  chunk.metadata.related_entities
+pipeline           ->  vector pool (top_k * 3)  ->  reranker entity boost  ->  top_k
+one_record_schema  ->  ontology neighbors first, manual map fallback
+```
+
 ## Future integration points (v0.2 / v0.3)
 
 - **RecordForge**: a synthetic-data tool callable from the pipeline to fulfil
   "generate N shipments" requests, returning JSON-LD.
 - **AviationLakehouse**: explain/route ONE Record objects into Bronze/Silver/Gold.
 - **ONE Record Server**: live retrieval of real logistics objects.
-- **Ontology-aware retrieval**: entity-first search using the parsed ontology.
 
-The `reranker.py` no-op and the `Retriever` abstraction are the seams reserved
-for these upgrades.
+The `Retriever` abstraction remains the seam for remote/live object lookup.

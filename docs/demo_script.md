@@ -184,8 +184,9 @@ What to highlight:
 
 Suggested narration:
 
-> "In v0.1, relationships are partly supported by a curated map. In later
-> versions, we can derive more of this directly from ontology parsing."
+> "In v0.2.1, relationships are boosted using the parsed ONE Record ontology —
+> object properties like containedPieces and subClassOf links — with the curated
+> map as fallback."
 
 ### Prompt 4: show JSON-LD generation
 

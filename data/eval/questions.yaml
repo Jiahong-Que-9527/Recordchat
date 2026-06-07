@@ -63,3 +63,18 @@
   question: "What is a TransportMovement?"
   category: concept
   expected_keywords: ["TransportMovement", "transport"]
+
+- id: q013
+  question: "What properties connect Shipment to Piece in the ONE Record ontology?"
+  category: ontology
+  expected_keywords: ["Shipment", "Piece", "containedPieces"]
+
+- id: q014
+  question: "Which class is Shipment a subclass of?"
+  category: ontology
+  expected_keywords: ["Shipment", "LogisticsObject"]
+
+- id: q015
+  question: "What is a Waybill and how does it relate to Shipment?"
+  category: ontology
+  expected_keywords: ["Waybill", "Shipment"]

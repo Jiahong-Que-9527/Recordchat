@@ -59,40 +59,39 @@ def chunk_documents(docs: list[RawDocument]) -> list[Chunk]:
 
 def _chunk_ontology(doc: RawDocument) -> list[Chunk]:
     """One chunk per owl:Class / rdf:Property using rdflib."""
-    from rdflib import RDF, RDFS, Graph, OWL
+    from app.domain.ontology_graph import OntologyGraph
+    from app.domain.ontology_parser import parse_ontology_ttl
 
-    g = Graph()
-    g.parse(data=doc.text, format="turtle")
+    classes, properties = parse_ontology_ttl(doc.text)
+    graph = OntologyGraph(classes, properties)
 
     chunks: list[Chunk] = []
     seen: set[str] = set()
 
-    targets = list(g.subjects(RDF.type, OWL.Class)) + list(g.subjects(RDF.type, RDFS.Class))
-    prop_types = [OWL.ObjectProperty, OWL.DatatypeProperty, RDF.Property]
-    properties = [s for pt in prop_types for s in g.subjects(RDF.type, pt)]
-
-    def _local_name(uri) -> str:
-        s = str(uri)
-        return re.split(r"[#/]", s)[-1] or s
-
-    for subj, chunk_type in (
-        *[(t, "class_definition") for t in targets],
+    for item, chunk_type in (
+        *[(c, "class_definition") for c in classes],
         *[(p, "property_definition") for p in properties],
     ):
-        name = _local_name(subj)
+        name = item.name
         if name in seen:
             continue
         seen.add(name)
-        label = g.value(subj, RDFS.label)
-        comment = g.value(subj, RDFS.comment)
         parts = [f"{chunk_type.replace('_', ' ').title()}: {name}"]
-        if label:
-            parts.append(f"Label: {label}")
-        if comment:
-            parts.append(f"Definition: {comment}")
+        if item.label:
+            parts.append(f"Label: {item.label}")
+        if item.comment:
+            parts.append(f"Definition: {item.comment}")
+        if chunk_type == "property_definition" and item.domain and item.range:
+            parts.append(f"Domain: {item.domain}")
+            parts.append(f"Range: {item.range}")
         content = "\n".join(parts)
         meta = doc.metadata.model_copy(
-            update={"chunk_type": chunk_type, "entity": name, "section_title": name}
+            update={
+                "chunk_type": chunk_type,
+                "entity": name,
+                "section_title": name,
+                "related_entities": graph.get_related(name),
+            }
         )
         chunks.append(Chunk(chunk_id=_chunk_id(meta.source_name, name), content=content, metadata=meta))
 

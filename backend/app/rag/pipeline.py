@@ -19,6 +19,10 @@ from app.rag.retriever import Retriever, get_retriever
 
 logger = get_logger(__name__)
 
+# Fetch extra candidates for ontology-aware reranking (ADR 0002).
+_CANDIDATE_POOL_MULTIPLIER = 3
+_MAX_CANDIDATE_POOL = 20
+
 
 def classify_query(query: str) -> QueryType:
     """Rule-based classifier (SPEC section 7). Replaceable by an LLM classifier."""
@@ -73,8 +77,12 @@ def answer(
     llm = llm or get_llm_provider()
 
     query_type = classify_query(query)
-    chunks = retriever.search(query, top_k=settings.rag_top_k)
-    chunks = rerank(query, chunks)
+    pool_size = min(
+        settings.rag_top_k * _CANDIDATE_POOL_MULTIPLIER,
+        _MAX_CANDIDATE_POOL,
+    )
+    chunks = retriever.search(query, top_k=max(pool_size, settings.rag_top_k))
+    chunks = rerank(query, chunks)[: settings.rag_top_k]
 
     user_prompt = prompt_mod.build_user_prompt(query, chunks, query_type)
     answer_text = llm.complete(system=prompt_mod.SYSTEM_PROMPT, user=user_prompt)
