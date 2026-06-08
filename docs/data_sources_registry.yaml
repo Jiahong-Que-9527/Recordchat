@@ -1,0 +1,311 @@
+- id: official_one_record_repo
+  name: IATA-Cargo ONE Record repository
+  publisher: IATA-Cargo
+  source_url: https://github.com/IATA-Cargo/ONE-Record
+  access_method: git_clone
+  access_date: 2026-06-07
+  license: MIT
+  allowed_use:
+    - retrieval
+    - citation
+    - educational_demo
+    - internal_normalization
+  restrictions:
+    - retain_license_notice
+    - avoid_bulk_republication_of_raw_bundle
+    - do_not_claim_official_iata_affiliation
+  pii_risk: low
+  commercial_risk: low
+  final_destinations:
+    - data/raw/one_record_docs/spec_development/
+    - data/raw/one_record_docs/spec_2025_07/
+    - data/raw/one_record_docs/spec_2023_12/
+    - data/raw/ontology/official/
+    - data/raw/examples/official/
+  batches:
+    - batch_id: one_record_docs_development_repo_extract
+      source_path: data/raw/_staging/ONE-Record/Documentation_website/docs/
+      final_destination: data/raw/one_record_docs/spec_development/
+      material_types:
+        - markdown_docs
+      normalization:
+        - copy_selected_docs
+        - keep_markdown_format
+      license_basis: repository_license
+    - batch_id: one_record_docs_2025_07_repo_release
+      source_path: data/raw/_staging/ONE-Record/2025-07-standard/
+      final_destination: data/raw/one_record_docs/spec_2025_07/repo_release/
+      material_types:
+        - markdown_docs
+        - ontology_ttl
+      normalization:
+        - copy_release_subset
+      license_basis: repository_license
+    - batch_id: one_record_ontology_working_draft_repo_extract
+      source_path: data/raw/_staging/ONE-Record/working_draft/ontology/
+      final_destination: data/raw/ontology/official/one_record_data_model.working_draft.ttl
+      material_types:
+        - ontology_ttl
+      normalization:
+        - copy_selected_ontology_file
+      license_basis: repository_license
+    - batch_id: one_record_ontology_2025_07_repo_extract
+      source_path: data/raw/_staging/ONE-Record/2025-07-standard/Data-Model/
+      final_destination: data/raw/ontology/official/one_record_data_model.2025-07.ttl
+      material_types:
+        - ontology_ttl
+      normalization:
+        - copy_selected_ontology_file
+      license_basis: repository_license
+    - batch_id: one_record_ontology_2023_12_repo_extract
+      source_path: data/raw/_staging/ONE-Record/2023-12-standard/Data-Model/
+      final_destination: data/raw/ontology/official/one_record_data_model.2023-12.ttl
+      material_types:
+        - ontology_ttl
+      normalization:
+        - copy_selected_ontology_file
+      license_basis: repository_license
+    - batch_id: one_record_docs_2023_12_repo_release
+      source_path: data/raw/_staging/ONE-Record/2023-12-standard/
+      final_destination: data/raw/one_record_docs/spec_2023_12/repo_release/
+      material_types:
+        - markdown_docs
+        - ontology_ttl
+      normalization:
+        - copy_release_subset
+      license_basis: repository_license
+
+- id: official_one_record_ontology_pages
+  name: IATA ONE Record ontology and vocabulary pages
+  publisher: IATA
+  source_url: https://onerecord.iata.org/ns/api
+  access_method: public_web_download
+  access_date: 2026-06-07
+  license: unknown_or_not_explicit_on_page
+  allowed_use:
+    - retrieval
+    - citation
+    - internal_normalization
+  restrictions:
+    - treat_as_citation_first_reference_material
+    - review_before_public_redistribution
+    - do_not_claim_official_iata_affiliation
+  pii_risk: low
+  commercial_risk: medium
+  final_destinations:
+    - data/raw/ontology/official/
+  batches:
+    - batch_id: one_record_api_ontology_namespace_download
+      source_path: data/raw/_staging/iata_onerecord_ontology_vocab_pages/ns_api/
+      final_destination: data/raw/ontology/official/
+      material_types:
+        - ttl
+        - owl
+        - jsonld
+      normalization:
+        - copy_current_api_ontology_serializations
+      license_basis: source_page_not_explicit
+    - batch_id: ontology_source_notes
+      source_path: data/raw/_staging/iata_onerecord_ontology_vocab_pages/SOURCE_URLS.md
+      final_destination: data/raw/ontology/official/ontology_sources.md
+      material_types:
+        - source_notes
+      normalization:
+        - preserve_provenance_notes
+      license_basis: internal_project_note
+
+- id: official_one_record_openapi_specs
+  name: ONE Record OpenAPI specifications
+  publisher: IATA
+  source_url: https://developer.iata.org/
+  access_method: public_web_download
+  access_date: 2026-06-07
+  license: MIT
+  license_evidence: OpenAPI info.license field
+  allowed_use:
+    - retrieval
+    - citation
+    - educational_demo
+    - internal_normalization
+  restrictions:
+    - retain_license_notice
+    - avoid_claim_of_official_iata_affiliation
+  pii_risk: low
+  commercial_risk: low
+  final_destinations:
+    - data/raw/api_specs/official/
+  batches:
+    - batch_id: one_record_openapi_working_draft
+      source_path: data/raw/_staging/iata_developer_portal_openapi_api_docs/reference_specs/ONE-Record-API-OpenAPI.working_draft.yaml
+      final_destination: data/raw/api_specs/official/ONE-Record-API-OpenAPI.working_draft.yaml
+      material_types:
+        - openapi_yaml
+      normalization:
+        - keep_original_yaml
+      license_basis: openapi_info_license_field
+    - batch_id: one_record_openapi_2024_12
+      source_path: data/raw/_staging/iata_developer_portal_openapi_api_docs/reference_specs/ONE-Record-API-OpenAPI.2024-12.yaml
+      final_destination: data/raw/api_specs/official/ONE-Record-API-OpenAPI.2024-12.yaml
+      material_types:
+        - openapi_yaml
+      normalization:
+        - keep_original_yaml
+      license_basis: openapi_info_license_field
+    - batch_id: one_record_openapi_2023_12
+      source_path: data/raw/_staging/iata_developer_portal_openapi_api_docs/reference_specs/ONE-Record-API-OpenAPI.2023-12.yaml
+      final_destination: data/raw/api_specs/official/ONE-Record-API-OpenAPI.2023-12.yaml
+      material_types:
+        - openapi_yaml
+      normalization:
+        - keep_original_yaml
+      license_basis: openapi_info_license_field
+
+- id: official_one_record_jsonld_examples
+  name: IATA ONE Record official JSON-LD examples
+  publisher: IATA-Cargo
+  source_url: https://github.com/IATA-Cargo/ONE-Record
+  access_method: git_clone_and_public_web_download
+  access_date: 2026-06-07
+  license: MIT_for_repo_materials
+  allowed_use:
+    - retrieval
+    - citation
+    - educational_demo
+    - internal_normalization
+  restrictions:
+    - retain_license_notice
+    - keep_examples_linked_to_upstream_source_notes
+  pii_risk: low
+  commercial_risk: low
+  final_destinations:
+    - data/raw/examples/official/
+  batches:
+    - batch_id: one_record_examples_repo_copy
+      source_path: data/raw/_staging/iata_onerecord_jsonld_examples/github_repo/
+      final_destination: data/raw/examples/official/one_record_repo_examples/
+      material_types:
+        - json_examples
+        - jsonld_examples
+      normalization:
+        - preserve_upstream_filenames
+      license_basis: repository_license
+    - batch_id: one_record_examples_source_notes
+      source_path: data/raw/_staging/iata_onerecord_jsonld_examples/SOURCE_URLS.md
+      final_destination: data/raw/examples/official/one_record_examples_sources.md
+      material_types:
+        - source_notes
+      normalization:
+        - preserve_provenance_notes
+      license_basis: internal_project_note
+
+- id: ne_one_repo_and_docs
+  name: NE:ONE repository and implementation documents
+  publisher: Open Logistics Foundation
+  source_url: https://git.openlogisticsfoundation.org/wg-digitalaircargo/ne-one
+  access_method: git_clone_plus_public_web_download
+  access_date: 2026-06-07
+  license: Open Logistics Foundation License 1.3
+  allowed_use:
+    - retrieval
+    - citation
+    - educational_demo
+    - internal_normalization
+  restrictions:
+    - retain_license_notice
+    - avoid_bulk_ingest_of_entire_codebase
+  pii_risk: low
+  commercial_risk: low
+  final_destinations:
+    - data/raw/one_record_docs/ne_one/
+    - data/raw/api_specs/ne_one/
+    - data/raw/examples/ne_one/
+    - data/raw/notes/implementation_notes/
+  batches:
+    - batch_id: ne_one_docs_extract
+      source_path: data/raw/_staging/ne_one_implementation_materials/docs/
+      final_destination: data/raw/one_record_docs/ne_one/
+      material_types:
+        - markdown_docs
+      normalization:
+        - extract_selected_docs
+        - exclude_bulk_java_source
+      license_basis: repo_license
+    - batch_id: ne_one_repo_readme_and_changelog
+      source_path: data/raw/_staging/ne_one_implementation_materials/gitlab_repo/
+      final_destination: data/raw/one_record_docs/ne_one/
+      material_types:
+        - markdown_docs
+      normalization:
+        - copy_readme_and_changelog_only
+      license_basis: repo_license
+    - batch_id: ne_one_api_config_extract
+      source_path: data/raw/_staging/ne_one_implementation_materials/api_config/
+      final_destination: data/raw/api_specs/ne_one/
+      material_types:
+        - config_files
+        - ontologies
+        - example_requests
+      normalization:
+        - extract_config_and_api_support_assets
+      license_basis: repo_license
+    - batch_id: ne_one_examples_extract
+      source_path: data/raw/_staging/ne_one_implementation_materials/example_payloads/
+      final_destination: data/raw/examples/ne_one/
+      material_types:
+        - json_examples
+        - csv_support_files
+      normalization:
+        - extract_example_payloads
+      license_basis: repo_license
+    - batch_id: ne_one_source_notes
+      source_path: data/raw/_staging/ne_one_implementation_materials/SOURCE_URLS.md
+      final_destination: data/raw/one_record_docs/ne_one/sources.md
+      material_types:
+        - source_notes
+      normalization:
+        - preserve_provenance_notes
+      license_basis: internal_project_note
+
+- id: manual_iata_and_community_pages
+  name: IATA overview pages, PDFs, and community narrative captures
+  publisher: mixed
+  source_url: mixed_manual_sources
+  access_method: manual_download
+  access_date: 2026-06-07
+  license: mixed_or_unclear
+  allowed_use:
+    - citation
+    - internal_review
+    - selective_normalization
+  restrictions:
+    - do_not_assume_free_redistribution
+    - review_source_terms_before_public_release
+    - keep_as_citation_first_material
+  pii_risk: low
+  commercial_risk: medium
+  final_destinations:
+    - data/raw/one_record_docs/overview/
+    - data/raw/one_record_docs/pdfs/
+    - data/raw/notes/domain_glossary/
+    - data/raw/notes/community_resources/
+    - data/raw/examples/community/
+  batches:
+    - batch_id: iata_overview_and_pdf_captures
+      source_path: data/raw/_staging/iata_business_materials/
+      final_destination: data/raw/one_record_docs/overview/
+      material_types:
+        - html_captures
+        - pdf_captures
+      normalization:
+        - convert_to_markdown_or_text_before_ingest
+      license_basis: mixed_or_unclear
+    - batch_id: community_narrative_materials
+      source_path: data/raw/_staging/community_narrative_addons/
+      final_destination: data/raw/notes/community_resources/
+      material_types:
+        - html_captures
+        - markdown_notes
+        - json_examples
+      normalization:
+        - selective_normalization_only
+      license_basis: mixed_or_source_specific

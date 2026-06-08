@@ -6,11 +6,15 @@ to the required ONE Record and NE:ONE source set.
 For direct source URLs and per-folder download instructions, also see:
 [docs/data_download_guide.md](data_download_guide.md)
 
+For the canonical post-download SOP, also see:
+[docs/data_addition_workflow.md](data_addition_workflow.md)
+
 The key idea is simple:
 
 1. not every source should be ingested the same way
 2. the current loader only ingests text-like files under `data/raw`
-3. some sources can be scripted, while some need manual download and curation
+3. `_staging` is for download and normalization only; it should not be ingested
+4. some sources can be scripted, while some need manual download and curation
 
 ## 1. Current Ingestion Constraints
 
@@ -33,8 +37,24 @@ This means:
 - diagrams should be captured as image assets plus a manual text description
 - source code should not be bulk-ingested; only README/docs/examples/configs/tests
   should be extracted into text-like files
+- `data/raw/_staging/` can hold raw downloads, but loader-facing paths should live
+  in the final folders only
+- curated final folders should carry provenance metadata; the governed core
+  corpus is validated so `_staging` does not silently flow back into ingest
 
-## 2. Execution Order
+## 2. Current Status Snapshot
+
+The repo is now in a transitional but much healthier state:
+
+- `data/raw/_staging/` is treated as download-and-normalization workspace
+- the loader and ontology graph skip `_staging` by default
+- the first normalized P0 batch is already present under the final folders
+- core official docs, ontology, API specs, and example payload sets are now
+  moving under source-governance checks with registry-linked sidecars
+- the remaining work is mainly conversion, metadata, ingest verification, and
+  eval expansion
+
+## 3. Execution Order
 
 The next work should follow this order:
 
@@ -44,7 +64,7 @@ The next work should follow this order:
 4. `D3` Add ALH and broader narrative data
 5. `D4` Add RecordForge-facing and community example data
 
-## 3. Source Matrix
+## 4. Source Matrix
 
 ### D0 — Minimal source pack
 
@@ -60,7 +80,7 @@ work is treated as "complete enough".
 | Official ontology files: TTL / RDF / JSON-LD | P0 | now | from official repo or site | No if in repo, otherwise manual | `data/raw/ontology/official/` | keep originals, add sidecar metadata |
 | OpenAPI spec: YAML / JSON | P0 | now | repo or developer portal export | Often manual | `data/raw/api_specs/official/` | store original files, add sidecar metadata |
 | JSON-LD examples: Shipment / Waybill / Piece / Notification / Subscription | P0/P1 | now | repo examples or docs examples | Mixed | `data/raw/examples/official/` | store original `.jsonld` plus short explanatory `.md` |
-| NE:ONE repo / docs / examples | P0 | immediately after D0 | Git clone + doc extraction | Mixed | `data/raw/ne_one/` | extract README/docs/config/examples into `.md/.txt/.json` |
+| NE:ONE repo / docs / examples | P0 | immediately after D0 | Git clone + doc extraction | Mixed | `data/raw/one_record_docs/ne_one/`, `data/raw/api_specs/ne_one/`, `data/raw/examples/ne_one/` | extract README/docs/config/examples into `.md/.txt/.json` and place by content type |
 
 ### D1 — Business and narrative support
 
@@ -79,7 +99,7 @@ work is treated as "complete enough".
 | Cargo-XML / Cargo-IMP comparison material | P2 | later | manual collection | Yes | `data/raw/domain_background/cargo_xml/` | summary notes first, not raw dumps |
 | Company / ecosystem materials: Lufthansa / Fraport / DHL / CHAMP / DAKOSY | P2 | later | manual collection | Yes | `data/raw/domain_background/industry/` | summary notes first |
 
-## 4. Manual Download Checklist
+## 5. Manual Download Checklist
 
 These should be treated as manual tasks unless we later build dedicated
 downloaders:
@@ -101,7 +121,7 @@ data/raw/_staging/
 
 Then we normalize them into ingestible files under the final folders.
 
-## 5. Recommended Repo Layout
+## 6. Recommended Repo Layout
 
 The current project already uses:
 
@@ -141,7 +161,7 @@ data/raw/
     └── implementation_notes/
 ```
 
-## 6. What "Basically Meets Requirements" Means
+## 7. What "Basically Meets Requirements" Means
 
 RecordChat should not claim a serious ONE Record knowledge base until at least
 these are present:
@@ -155,7 +175,7 @@ these are present:
 
 That is the minimum bar defined by the current source planning scope.
 
-## 7. Import Strategy
+## 8. Import Strategy
 
 Use these ingestion rules:
 
@@ -166,18 +186,20 @@ Use these ingestion rules:
 - OpenAPI files:
   ingest raw YAML/JSON and let the API chunker split by endpoint
 - JSON-LD examples:
-  ingest raw payloads and optionally add explanatory Markdown notes beside them
+  ingest raw payloads and optionally add explanatory Markdown notes beside them;
+  official and NE:ONE example sets should also carry source-governance metadata
 - NE:ONE source code:
   do not ingest the entire codebase; extract README, docs, configs, sample
-  payloads, tests, troubleshooting notes
+  payloads, tests, troubleshooting notes and place them in the split final
+  folders by document type
 
-## 8. Suggested Near-Term Tasks
+## 9. Suggested Near-Term Tasks
 
 ### First
 
-- manually download or clone the P0 source pack
-- place raw assets into `data/raw/_staging/`
-- normalize into ingestible file formats and final folders
+- finish normalizing the remaining P0 source pack
+- keep raw assets in `data/raw/_staging/`
+- place ingest-ready files only into the final folders
 
 ### Then
 

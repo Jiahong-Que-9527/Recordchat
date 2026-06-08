@@ -3,8 +3,13 @@
 This is the operational companion to:
 
 - [docs/data_source_plan.md](data_source_plan.md)
+- [docs/data_addition_workflow.md](data_addition_workflow.md)
 
 Use this guide when you actually start collecting files.
+
+For the canonical end-to-end SOP after normalization, use:
+
+- [docs/data_addition_workflow.md](data_addition_workflow.md)
 
 ## 1. Working Rule
 
@@ -15,6 +20,12 @@ Follow this workflow for every batch:
 3. convert non-ingestible files to `.md` / `.txt` / `.jsonld` / `.yaml`
 4. move normalized files into their final folders
 5. add sidecar metadata if the source is important enough to cite precisely
+
+Then run the standardized post-addition command:
+
+```bash
+python3 scripts/run_data_addition_workflow.py
+```
 
 ## 2. What Counts As Ingestible Right Now
 

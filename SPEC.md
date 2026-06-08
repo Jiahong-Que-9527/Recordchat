@@ -30,6 +30,11 @@ Agent 执行原则：
 
 **一句话：** RecordChat 是一个面向 IATA ONE Record 标准的 domain-specific AI 助手，帮助开发者和航空货运从业者理解 ONE Record 的数据模型、API 概念、JSON-LD 结构和语义关系，并通过 source-grounded 的 RAG 给出带引用的回答。
 
+**对外边界：**
+- RecordChat 是个人独立项目，不是官方 IATA 产品。
+- 项目优先做 citation-first retrieval，不做基于第三方资料语料的模型微调。
+- 数据源只应来自可公开访问、可审查来源与使用边界的材料。
+
 **它不是什么：**
 - 不是「上传 PDF 问答」的通用工具。
 - 不是裸调 LLM 的 chatbot。
@@ -173,6 +178,13 @@ data/raw/
   "ingested_at": "ISO-8601"
 }
 ```
+
+**合规约束：**
+- 不绕过登录、付费墙、验证码或访问限制
+- 不默认把“公开可见网页”视为“可自由再分发内容”
+- 不把原始第三方抓取包当作公开发布资产
+- 回答优先返回总结与引用，不替代上游原文发布
+- 重要 source family 应登记到 `docs/data_sources_registry.yaml`
 
 ### 5.2 降级方案（必须有，保证项目「即使没联网也能跑」）
 

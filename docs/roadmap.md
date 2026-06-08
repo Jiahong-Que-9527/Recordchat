@@ -3,10 +3,13 @@
 ## Status
 
 - **v0.1**: complete and demoable
+- **Data Foundation**: partially landed; `_staging` is now excluded from ingest
+  and a first normalized official/NE:ONE source batch is in final folders
 - **v0.2.1 ontology-aware retrieval**: largely landed in code; still needs to be
   validated against a broader official source set
 - **next priority**: expand the knowledge base so the system matches the real
-  ONE Record / NE:ONE materials defined in the source planning docs
+  ONE Record / NE:ONE materials defined in the source planning docs, then verify
+  that the retrieval path is actually using them well
 
 Source acquisition and import plan:
 [docs/data_source_plan.md](data_source_plan.md)
@@ -49,6 +52,13 @@ Scope:
 Execution details:
 [docs/data_source_plan.md](data_source_plan.md)
 
+Current remaining work:
+
+- finish converting HTML/PDF/manual-download material into ingestible text
+- add sidecar metadata for imported source families
+- rerun `/ingest` on the normalized corpus and verify source/chunk coverage
+- extend eval so official docs and NE:ONE materials are exercised directly
+
 Primary GitHub issues:
 
 - [#21](https://github.com/Jiahong-Que-9527/Recordchat/issues/21) raw-data conventions and metadata
@@ -61,7 +71,8 @@ Primary GitHub issues:
 ## Recommended Next Order
 
 1. **Data Foundation**
-   Download, normalize, and import the required official and NE:ONE sources.
+   Finish normalization, metadata, ingest verification, and eval coverage for the
+   required official and NE:ONE sources.
 2. **v0.2.1 Validation**
    Re-run ontology-aware retrieval against the expanded source set and close any
    quality gaps.
@@ -96,7 +107,8 @@ Goal:
 
 Needs:
 
-- NE:ONE README/docs/configs/examples/tests extracted into ingestible text-like files
+- NE:ONE README/docs/configs/examples/tests normalized into final `data/raw`
+  folders by content type
 - classifier/prompt updates for implementation questions
 - demo and eval coverage for NE:ONE flows
 

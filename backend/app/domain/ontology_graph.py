@@ -13,6 +13,10 @@ logger = get_logger(__name__)
 _ONTOLOGY_EXTENSIONS = {".ttl", ".owl"}
 
 
+def _should_skip_path(path: Path) -> bool:
+    return "_staging" in path.parts
+
+
 class OntologyGraph:
     """Adjacency view over parsed OWL classes and object properties."""
 
@@ -66,6 +70,8 @@ class OntologyGraph:
         parsed_files = 0
 
         for path in sorted(root.rglob("*")):
+            if _should_skip_path(path):
+                continue
             if not path.is_file() or path.suffix not in _ONTOLOGY_EXTENSIONS:
                 continue
             try:

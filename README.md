@@ -33,8 +33,11 @@ RecordChat makes that standard approachable and queryable.
 
 - `v0.1` is complete and demoable
 - the next priority is **not** piling on more features first
-- the next priority is expanding the knowledge base from the current minimal
-  subset to the broader official ONE Record + NE:ONE source pack
+- the data-foundation track is underway: `_staging` now exists for raw
+  downloads, `_staging` is excluded from ingest, and a first normalized official
+  ONE Record + NE:ONE source batch is already in the final folders
+- the next priority is finishing normalization, metadata, ingest verification,
+  and eval coverage for the broader official ONE Record + NE:ONE source pack
 
 See [docs/data_source_plan.md](docs/data_source_plan.md) for the source
 acquisition and import plan.
@@ -112,7 +115,7 @@ backend/    FastAPI service (API, RAG pipeline, domain layer, tests)
 frontend/   Next.js + Tailwind + shadcn-style chat UI
 data/       raw sources, processed artifacts, eval questions
 docs/       architecture, roadmap, demo script, ADRs
-scripts/    ingest_docs.py, evaluate_rag.py, reset_index.py
+scripts/    ingest_docs.py, evaluate_rag.py, reset_index.py, governance/data workflow helpers
 SPEC.md     single source of truth (contracts, structure, acceptance)
 ```
 
@@ -124,3 +127,33 @@ SPEC.md     single source of truth (contracts, structure, acceptance)
 - **later** RecordForge integration + live ecosystem connectors
 
 See [docs/roadmap.md](docs/roadmap.md).
+
+## Data Compliance
+
+See [docs/data_compliance_report.md](docs/data_compliance_report.md) for the
+current data-compliance review and operating boundaries for source usage.
+
+The project does not fine-tune foundation models on third-party source content.
+It uses citation-first retrieval over reviewed public materials, with source
+tracking moving toward a structured registry in
+[docs/data_sources_registry.yaml](docs/data_sources_registry.yaml).
+
+For a shorter external-facing statement of source usage and compliance
+boundaries, see [docs/source_usage_policy.md](docs/source_usage_policy.md).
+
+In short: RecordChat uses reviewed public materials for retrieval and citation,
+does not claim official affiliation with source publishers, does not ingest
+access-restricted materials, and is designed to avoid republishing raw
+third-party source bundles as public assets.
+
+The curated core corpus is also protected by a lightweight source-governance
+check so key official and NE:ONE materials keep registry-linked provenance and
+`_staging` does not drift back into the live ingest surface.
+
+For the standardized data-addition SOP and the command used after each new batch,
+see [docs/data_addition_workflow.md](docs/data_addition_workflow.md). The
+canonical local entrypoint is:
+
+```bash
+python3 scripts/run_data_addition_workflow.py
+```

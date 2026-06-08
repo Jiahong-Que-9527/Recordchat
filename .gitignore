@@ -14,6 +14,7 @@ __pycache__/
 .claude/
 chat.md
 dl数据下载清单.md
+合规问题.md
 
 # Node / Next.js
 node_modules/

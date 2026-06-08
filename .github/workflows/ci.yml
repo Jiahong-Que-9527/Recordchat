@@ -32,6 +32,9 @@ jobs:
       - name: Run tests
         run: uv run pytest -q
 
+      - name: Verify source governance
+        run: uv run python ../scripts/verify_source_governance.py
+
   frontend:
     name: Frontend (build)
     runs-on: ubuntu-latest

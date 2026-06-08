@@ -29,6 +29,10 @@ _TEXT_EXTENSIONS = {
 }
 
 
+def _should_skip_path(path: Path) -> bool:
+    return "_staging" in path.parts
+
+
 def _load_sidecar(path: Path) -> dict:
     meta_path = path.with_suffix(path.suffix + ".meta.json")
     if meta_path.exists():
@@ -47,6 +51,8 @@ def load_documents(source_dir: str) -> list[RawDocument]:
 
     docs: list[RawDocument] = []
     for path in sorted(root.rglob("*")):
+        if _should_skip_path(path):
+            continue
         if not path.is_file() or path.suffix not in _TEXT_EXTENSIONS:
             continue
         if path.name.endswith(".meta.json"):
