@@ -6,10 +6,11 @@ Runs the eval question set through the pipeline and reports:
   - source coverage        (answers carry source citations)
   - answer non-empty rate
   - JSON-LD validity        (for jsonld questions: structured_output is valid JSON)
+  - query-type match rate   (for questions that declare expected_query_type)
   - keyword hit rate        (expected_keywords present in answer/structured output)
 
-Runs fully offline with the local providers; no API key required. Set
-LLM_PROVIDER / EMBEDDING_PROVIDER to evaluate real models.
+Runs against the providers configured in `.env` / environment variables.
+RecordChat now requires external APIs for both LLM and embedding calls.
 
 Usage:
     uv run python ../scripts/evaluate_rag.py            # from backend/
@@ -28,8 +29,6 @@ import yaml
 # Make the backend package importable regardless of CWD.
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
-
-os.environ.setdefault("EMBEDDING_DIM", "256")
 
 from app.rag.ingest import run_ingest  # noqa: E402
 from app.rag.pipeline import answer  # noqa: E402
@@ -56,6 +55,8 @@ def main() -> int:
     nonempty = 0
     jsonld_total = 0
     jsonld_valid = 0
+    query_type_total = 0
+    query_type_match = 0
     kw_hit = 0
     kw_total = 0
     failures: list[str] = []
@@ -71,6 +72,16 @@ def main() -> int:
             source_cov += 1
         if resp.answer.strip():
             nonempty += 1
+
+        expected_query_type = item.get("expected_query_type")
+        if expected_query_type:
+            query_type_total += 1
+            if resp.query_type.value == expected_query_type:
+                query_type_match += 1
+            else:
+                failures.append(
+                    f"{item['id']}: expected query_type={expected_query_type}, got {resp.query_type.value}"
+                )
 
         if item.get("expects_jsonld"):
             jsonld_total += 1
@@ -96,14 +107,14 @@ def main() -> int:
     print(f"Source coverage    : {pct(source_cov, n)} ({source_cov}/{n})")
     print(f"Answer non-empty   : {pct(nonempty, n)} ({nonempty}/{n})")
     print(f"JSON-LD validity   : {pct(jsonld_valid, jsonld_total)} ({jsonld_valid}/{jsonld_total})")
+    print(f"Query-type match   : {pct(query_type_match, query_type_total)} ({query_type_match}/{query_type_total})")
     print(f"Keyword hit rate   : {pct(kw_hit, kw_total)} ({kw_hit}/{kw_total})")
 
     if failures:
-        print("\nNotes (keyword/JSON-LD gaps — expected with the offline local LLM):")
+        print("\nNotes (keyword/JSON-LD gaps):")
         for f in failures:
             print(f"  - {f}")
 
-    # Hard gates that must pass even offline.
     ok = retrieval_hits == n and nonempty == n and jsonld_valid == jsonld_total
     print("\nRESULT:", "PASS" if ok else "FAIL")
     return 0 if ok else 1

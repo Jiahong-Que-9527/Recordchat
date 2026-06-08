@@ -1,10 +1,11 @@
-"""Parse ONE Record ontology TTL into structured class/property records."""
+"""Parse ONE Record ontology serializations into structured class/property records."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
-from rdflib import RDF, RDFS, Graph, OWL
+from rdflib import RDF, RDFS, BNode, Graph, OWL
 
 
 @dataclass(frozen=True)
@@ -30,6 +31,10 @@ def _local_name(uri) -> str:
     return s.rsplit("#", 1)[-1].rsplit("/", 1)[-1] or s
 
 
+def _is_named_node(node) -> bool:
+    return node is not None and not isinstance(node, BNode)
+
+
 def _literal_value(graph: Graph, subject, predicate) -> str | None:
     value = graph.value(subject, predicate)
     if value is None:
@@ -37,10 +42,29 @@ def _literal_value(graph: Graph, subject, predicate) -> str | None:
     return str(value)
 
 
-def parse_ontology_ttl(text: str) -> tuple[list[OntologyClass], list[OntologyProperty]]:
-    """Parse turtle ontology text into classes and properties."""
+def _infer_rdf_format(text: str, source_path: str | None = None) -> str:
+    if source_path:
+        suffix = Path(source_path).suffix.lower()
+        if suffix == ".owl":
+            return "xml"
+        if suffix == ".ttl":
+            return "turtle"
+
+    stripped = text.lstrip()
+    if stripped.startswith("<?xml") or stripped.startswith("<rdf:RDF"):
+        return "xml"
+    return "turtle"
+
+
+def parse_ontology(
+    text: str,
+    *,
+    source_path: str | None = None,
+    rdf_format: str | None = None,
+) -> tuple[list[OntologyClass], list[OntologyProperty]]:
+    """Parse ontology text into classes and properties."""
     graph = Graph()
-    graph.parse(data=text, format="turtle")
+    graph.parse(data=text, format=rdf_format or _infer_rdf_format(text, source_path))
 
     classes: list[OntologyClass] = []
     seen_classes: set[str] = set()
@@ -49,6 +73,8 @@ def parse_ontology_ttl(text: str) -> tuple[list[OntologyClass], list[OntologyPro
         graph.subjects(RDF.type, RDFS.Class)
     )
     for subj in class_subjects:
+        if not _is_named_node(subj):
+            continue
         name = _local_name(subj)
         if name in seen_classes:
             continue
@@ -58,6 +84,7 @@ def parse_ontology_ttl(text: str) -> tuple[list[OntologyClass], list[OntologyPro
                 {
                     _local_name(s)
                     for s in graph.objects(subj, RDFS.subClassOf)
+                    if _is_named_node(s)
                     if str(s) != str(RDFS.Resource)
                 }
             )
@@ -77,6 +104,8 @@ def parse_ontology_ttl(text: str) -> tuple[list[OntologyClass], list[OntologyPro
 
     for prop_type in prop_types:
         for subj in graph.subjects(RDF.type, prop_type):
+            if not _is_named_node(subj):
+                continue
             name = _local_name(subj)
             if name in seen_props:
                 continue
@@ -88,10 +117,15 @@ def parse_ontology_ttl(text: str) -> tuple[list[OntologyClass], list[OntologyPro
                     name=name,
                     label=_literal_value(graph, subj, RDFS.label),
                     comment=_literal_value(graph, subj, RDFS.comment),
-                    domain=_local_name(domain) if domain else None,
-                    range=_local_name(range_) if range_ else None,
+                    domain=_local_name(domain) if _is_named_node(domain) else None,
+                    range=_local_name(range_) if _is_named_node(range_) else None,
                     is_object_property=prop_type == OWL.ObjectProperty,
                 )
             )
 
     return classes, properties
+
+
+def parse_ontology_ttl(text: str) -> tuple[list[OntologyClass], list[OntologyProperty]]:
+    """Backward-compatible turtle-only parser wrapper."""
+    return parse_ontology(text, rdf_format="turtle")

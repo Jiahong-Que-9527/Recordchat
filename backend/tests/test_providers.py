@@ -1,32 +1,53 @@
+from pytest import raises
+
 from app.core.config import Settings
-from app.core.embeddings import LocalHashEmbeddingProvider, build_embedding_provider
-from app.core.llm import LocalLLMProvider, build_llm_provider
+from app.core.embeddings import OpenAICompatEmbeddingProvider, build_embedding_provider
+from app.core.llm import ClaudeLLMProvider, OpenAICompatLLMProvider, build_llm_provider
 
 
-def test_embedding_factory_falls_back_to_local_without_key():
-    s = Settings(embedding_provider="openai", embedding_api_key="")
-    assert isinstance(build_embedding_provider(s), LocalHashEmbeddingProvider)
+def test_embedding_factory_requires_api_key():
+    with raises(ValueError, match="EMBEDDING_API_KEY"):
+        build_embedding_provider(Settings(embedding_provider="openai", embedding_api_key=""))
 
 
-def test_llm_factory_falls_back_to_local_without_key():
-    s = Settings(llm_provider="openai", llm_api_key="")
-    assert isinstance(build_llm_provider(s), LocalLLMProvider)
+def test_llm_factory_requires_api_key():
+    with raises(ValueError, match="LLM_API_KEY"):
+        build_llm_provider(Settings(llm_provider="openai", llm_api_key=""))
 
 
-def test_local_embedding_is_deterministic_and_normalized():
-    p = LocalHashEmbeddingProvider(dim=128)
-    a = p.embed_one("ONE Record Piece")
-    b = p.embed_one("ONE Record Piece")
-    assert a == b
-    assert len(a) == 128
-    norm = sum(x * x for x in a) ** 0.5
-    assert abs(norm - 1.0) < 1e-6
-
-
-def test_local_llm_grounds_in_context():
-    llm = LocalLLMProvider()
-    out = llm.complete(
-        system="sys",
-        user="CONTEXT:\nA Piece is the smallest unit.\n\nQUESTION: What is a Piece?",
+def test_embedding_factory_builds_openai_compat_provider():
+    provider = build_embedding_provider(
+        Settings(
+            embedding_provider="openai",
+            embedding_api_key="test-key",
+            embedding_model="text-embedding-3-small",
+            embedding_base_url="https://api.openai.com/v1",
+            embedding_dim=1536,
+        )
     )
-    assert "Piece" in out
+    assert isinstance(provider, OpenAICompatEmbeddingProvider)
+    assert provider.dim == 1536
+
+
+def test_llm_factory_builds_openai_compat_provider():
+    provider = build_llm_provider(
+        Settings(
+            llm_provider="openai",
+            llm_api_key="test-key",
+            llm_model="gpt-4o-mini",
+            llm_base_url="https://api.openai.com/v1",
+        )
+    )
+    assert isinstance(provider, OpenAICompatLLMProvider)
+
+
+def test_llm_factory_builds_claude_provider():
+    provider = build_llm_provider(
+        Settings(
+            llm_provider="claude",
+            llm_api_key="test-key",
+            llm_model="claude-3-5-sonnet-latest",
+            llm_base_url="https://api.anthropic.com",
+        )
+    )
+    assert isinstance(provider, ClaudeLLMProvider)

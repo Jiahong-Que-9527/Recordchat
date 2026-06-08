@@ -66,11 +66,10 @@ Factories in `core/` choose the concrete implementation from env vars. Switching
 between Qwen / OpenAI / Claude is configuration, not code. See
 [adr/0001-provider-abstraction.md](adr/0001-provider-abstraction.md).
 
-### 2. Offline-first graceful degradation
-With no API key the `local` LLM (extractive, grounded in retrieved context) and
-`local` hashing embeddings keep the whole app runnable, plus an in-process Qdrant
-(`QDRANT_URL=:memory:`). A missing key logs a warning and falls back — it never
-crashes. This makes the project demoable and testable with zero secrets.
+### 2. API-first model integration
+RecordChat now expects externally hosted LLM and embedding providers. Qdrant can
+still run in-process via `QDRANT_URL=:memory:` or point to a remote server, but
+model inference itself is API-backed and must be configured explicitly.
 
 ### 3. Domain logic separated from RAG
 `domain/` (relationship map, JSON-LD templates, glossary) is independent of the
@@ -107,9 +106,10 @@ Recommended order:
 1. expand official and NE:ONE source coverage
 2. validate ontology-aware retrieval on that broader source pack
 3. add NE:ONE implementation knowledge
-4. add ALH narrative
-5. upgrade the frontend
+4. upgrade the frontend with streaming and stronger interaction patterns
+5. add workflow orchestration for real ONE Record business tasks
 6. integrate RecordForge
+7. add ALH narrative last, after the core ONE Record path is strong
 
 - **RecordForge**: a synthetic-data tool callable from the pipeline to fulfil
   "generate N shipments" requests, returning JSON-LD.

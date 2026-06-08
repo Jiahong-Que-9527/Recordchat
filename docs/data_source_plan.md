@@ -161,7 +161,29 @@ data/raw/
     └── implementation_notes/
 ```
 
-## 7. What "Basically Meets Requirements" Means
+## 7. Sidecar Metadata Contract
+
+Governed files should carry a sidecar at:
+
+```text
+<filename>.<ext>.meta.json
+```
+
+The minimum expected fields are:
+
+- `source_name`
+- `version`
+- `url`
+- `document_type`
+- `domain`
+- `registry_id`
+- `batch_id`
+- `ingested_at`
+
+This is the shared contract used by the loader-facing conventions, the source
+registry, and `scripts/verify_source_governance.py`.
+
+## 8. What "Basically Meets Requirements" Means
 
 RecordChat should not claim a serious ONE Record knowledge base until at least
 these are present:
@@ -175,7 +197,7 @@ these are present:
 
 That is the minimum bar defined by the current source planning scope.
 
-## 8. Import Strategy
+## 9. Import Strategy
 
 Use these ingestion rules:
 
@@ -193,7 +215,7 @@ Use these ingestion rules:
   payloads, tests, troubleshooting notes and place them in the split final
   folders by document type
 
-## 9. Suggested Near-Term Tasks
+## 10. Suggested Near-Term Tasks
 
 ### First
 

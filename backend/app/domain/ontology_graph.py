@@ -6,7 +6,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from app.core.logging import get_logger
-from app.domain.ontology_parser import OntologyClass, OntologyProperty, parse_ontology_ttl
+from app.domain.ontology_parser import OntologyClass, OntologyProperty, parse_ontology
 
 logger = get_logger(__name__)
 
@@ -56,7 +56,7 @@ class OntologyGraph:
 
     @classmethod
     def from_ttl(cls, text: str) -> OntologyGraph:
-        classes, properties = parse_ontology_ttl(text)
+        classes, properties = parse_ontology(text, rdf_format="turtle")
         return cls(classes, properties)
 
     @classmethod
@@ -76,7 +76,7 @@ class OntologyGraph:
                 continue
             try:
                 text = path.read_text(encoding="utf-8")
-                classes, properties = parse_ontology_ttl(text)
+                classes, properties = parse_ontology(text, source_path=str(path))
             except Exception as exc:  # noqa: BLE001
                 logger.warning("Skipping unparseable ontology %s: %s", path, exc)
                 continue

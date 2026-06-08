@@ -60,9 +60,9 @@ def chunk_documents(docs: list[RawDocument]) -> list[Chunk]:
 def _chunk_ontology(doc: RawDocument) -> list[Chunk]:
     """One chunk per owl:Class / rdf:Property using rdflib."""
     from app.domain.ontology_graph import OntologyGraph
-    from app.domain.ontology_parser import parse_ontology_ttl
+    from app.domain.ontology_parser import parse_ontology
 
-    classes, properties = parse_ontology_ttl(doc.text)
+    classes, properties = parse_ontology(doc.text, source_path=doc.path)
     graph = OntologyGraph(classes, properties)
 
     chunks: list[Chunk] = []
@@ -127,6 +127,8 @@ def _chunk_openapi(doc: RawDocument) -> list[Chunk]:
 
 def _chunk_whole(doc: RawDocument) -> list[Chunk]:
     meta = doc.metadata.model_copy(update={"section_title": doc.metadata.source_name})
+    if len(doc.text) > _MAX_CHARS:
+        return _chunk_by_size(doc, doc.text, meta, key_prefix="payload")
     return [Chunk(chunk_id=_chunk_id(meta.source_name, "payload"), content=doc.text, metadata=meta)]
 
 
@@ -151,7 +153,7 @@ def _chunk_markdown(doc: RawDocument) -> list[Chunk]:
 def _chunk_by_size(
     doc: RawDocument, text: str, meta: ChunkMetadata, key_prefix: str = ""
 ) -> list[Chunk]:
-    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    paragraphs = [_normalize_paragraph(p) for p in text.split("\n\n") if p.strip()]
     chunks: list[Chunk] = []
     buf = ""
     idx = 0
@@ -167,12 +169,50 @@ def _chunk_by_size(
             buf = ""
 
     for para in paragraphs:
-        if len(buf) + len(para) + 2 > _MAX_CHARS and buf:
-            _flush()
-        buf += para + "\n\n"
+        for piece in _split_oversized_text(para, _MAX_CHARS):
+            if len(buf) + len(piece) + 2 > _MAX_CHARS and buf:
+                _flush()
+            buf += piece + "\n\n"
     _flush()
     if not chunks and text.strip():
-        chunks.append(
-            Chunk(chunk_id=_chunk_id(meta.source_name, f"{key_prefix}#0"), content=text.strip(), metadata=meta)
-        )
+        for piece_idx, piece in enumerate(_split_oversized_text(text.strip(), _MAX_CHARS)):
+            chunks.append(
+                Chunk(
+                    chunk_id=_chunk_id(meta.source_name, f"{key_prefix}#{piece_idx}"),
+                    content=piece,
+                    metadata=meta,
+                )
+            )
     return chunks
+
+
+def _normalize_paragraph(text: str) -> str:
+    return text.strip()
+
+
+def _split_oversized_text(text: str, max_chars: int) -> list[str]:
+    if len(text) <= max_chars:
+        return [text]
+
+    lines = text.splitlines()
+    if len(lines) > 1:
+        parts: list[str] = []
+        buf = ""
+        for line in lines:
+            candidate = line if not buf else f"{buf}\n{line}"
+            if len(candidate) > max_chars and buf:
+                parts.extend(_split_oversized_text(buf, max_chars))
+                buf = line
+            else:
+                buf = candidate
+        if buf:
+            parts.extend(_split_oversized_text(buf, max_chars))
+        return parts
+
+    parts = []
+    start = 0
+    while start < len(text):
+        end = min(start + max_chars, len(text))
+        parts.append(text[start:end].strip())
+        start = end
+    return [part for part in parts if part]

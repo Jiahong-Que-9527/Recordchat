@@ -16,6 +16,8 @@ class QueryType(str, Enum):
     concept_explanation = "concept_explanation"
     relationship_question = "relationship_question"
     api_question = "api_question"
+    implementation_question = "implementation_question"
+    ontology_question = "ontology_question"
     jsonld_generation = "jsonld_generation"
     general_question = "general_question"
 
@@ -24,6 +26,16 @@ class QueryType(str, Enum):
 class HealthResponse(BaseModel):
     status: str = "ok"
     service: str = "recordchat-backend"
+    llm_provider: str
+    llm_model: str
+    llm_api_key_configured: bool
+    llm_base_url_configured: bool
+    embedding_provider: str
+    embedding_model: str
+    embedding_api_key_configured: bool
+    embedding_base_url_configured: bool
+    qdrant_mode: str
+    qdrant_collection: str
 
 
 # ---- /chat ----

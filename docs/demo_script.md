@@ -2,7 +2,7 @@
 
 This guide is designed for a full v0.1 walkthrough, not just a quick smoke test.
 It is written for a 5-10 minute live demo and assumes the project is running in
-its default offline mode unless otherwise noted.
+its default API-backed mode unless otherwise noted.
 
 ## 1. Demo Goal
 
@@ -25,13 +25,13 @@ In the default v0.1 setup, the live system is using:
 
 And the runtime path is:
 
-- `local` embedding provider: deterministic hashing embedding
+- external embedding API
 - Qdrant: vector storage and retrieval
-- `local` LLM provider: extractive grounded answer assembly
+- external LLM API
 - template-based JSON-LD generation from `backend/app/domain/jsonld_generator.py`
 
-That means the v0.1 demo is about a complete working retrieval pipeline, even
-when no external API keys are present.
+That means the v0.1 demo is about a complete working retrieval pipeline backed
+by production-style model APIs rather than offline fallbacks.
 
 Important framing:
 
@@ -113,7 +113,7 @@ cd ../frontend && npm run build
 
 What you want to confirm:
 
-- `/health` returns `{"status":"ok","service":"recordchat-backend"}`
+- `/health` returns `status=ok` plus the active LLM / embedding provider summary
 - `/ingest` reports non-zero `chunks_indexed`
 - backend tests pass
 - frontend build passes
@@ -130,8 +130,8 @@ Use this story arc:
 3. Explain the trust model:
    it uses retrieval and citations instead of freeform answering.
 4. Explain the engineering point:
-   it works offline, has provider abstraction, and can switch to real hosted
-   models later without changing application code.
+   it uses production-style external model APIs, provider abstraction, and a
+   governed source base rather than a generic chatbot prompt.
 
 Short positioning line:
 
@@ -213,22 +213,23 @@ Suggested narration:
 > "This matters because I don't want the model hallucinating data structure.
 > The structure is controlled by templates, and the assistant explains it."
 
-### Prompt 5: connect to the broader platform story
+### Prompt 5: show implementation support beyond pure concepts
 
 Ask:
 
-`How could ONE Record data be connected to an AviationLakehouse?`
+`How do I start NE:ONE locally with docker compose?`
 
 What to highlight:
 
-- The system can answer architectural questions, not just glossary questions.
-- This sets up the roadmap beyond v0.1.
-- It helps explain why RecordChat matters in a broader platform narrative.
+- The system can answer practical implementation questions, not just glossary questions.
+- The answer should cite NE:ONE-derived sources.
+- This shows the broadened source pack is actually being used.
 
 Suggested narration:
 
-> "This is the bridge from standards understanding to the future ecosystem:
-> RecordChat, RecordForge, ONE Record Server, and an analytical backend."
+> "This is where the product becomes useful for developers, not just explainers:
+> the assistant can bridge from ONE Record concepts into NE:ONE setup and
+> implementation guidance with citations."
 
 Useful closing line:
 
@@ -275,12 +276,14 @@ These are good prompts to have ready in a notes app during a live session.
 - `Generate a JSON-LD example for a TransportMovement.`
 - `Explain the fields in this JSON-LD example for a Piece.`
 
-### Broader architecture prompts
+### Ontology and implementation prompts
 
 - `How does ONE Record support data sharing across the supply chain?`
 - `Why is JSON-LD useful for ONE Record?`
-- `How could ONE Record data connect to an AviationLakehouse?`
-- `What would be the role of RecordChat in a larger aviation data platform?`
+- `Which class is Shipment a subclass of?`
+- `What properties connect Shipment to Piece in the ONE Record ontology?`
+- `How do I start NE:ONE locally with docker compose?`
+- `How do I create a LogisticsObject against NE:ONE?`
 
 ## 8. Best Prompt Sets by Audience
 
@@ -297,7 +300,7 @@ What to emphasize:
 
 - retrieval architecture
 - provider abstraction
-- offline fallback
+- API-backed model calls
 - template-based structured output
 
 ### For a product or platform audience
@@ -306,14 +309,15 @@ Use these:
 
 - `What is ONE Record?`
 - `How does ONE Record support data sharing across the supply chain?`
+- `What properties connect Shipment to Piece in the ONE Record ontology?`
 - `Generate a JSON-LD example for a Piece.`
-- `How could ONE Record data be connected to an AviationLakehouse?`
+- `How do I start NE:ONE locally with docker compose?`
 
 What to emphasize:
 
 - domain accessibility
 - trust through citations
-- future ecosystem narrative
+- progression from concept understanding to implementation help
 
 ### For a logistics-domain audience
 
@@ -324,23 +328,28 @@ Use these:
 - `What is a Waybill in ONE Record?`
 - `Explain the relationship between Shipment and Piece.`
 - `How do subscription and notification work in ONE Record?`
+- `How do I start NE:ONE locally with docker compose?`
+- `How do I create a LogisticsObject against NE:ONE?`
 
 What to emphasize:
 
 - terminology clarity
 - entity relationships
 - operational meaning
+- implementation guidance when NE:ONE sources are relevant
 
 ## 9. Fallback Prompts If a Live Answer Feels Weak
 
-Because the default v0.1 mode is offline and extractive, some prompts are
-better than others. If a response feels too thin, move to these:
+Because the current demo is strongest on ONE Record core concepts, ontology, and
+NE:ONE implementation support, some prompts are better than others. If a
+response feels too thin, move to these:
 
 - `What is a Piece in ONE Record?`
 - `What is a LogisticsObject in ONE Record?`
 - `Explain the relationship between Shipment and Piece.`
 - `Generate a JSON-LD example for a Piece.`
 - `What is the role of JSON-LD in ONE Record?`
+- `How do I start NE:ONE locally with docker compose?`
 
 These tend to align most strongly with the current glossary + raw source set.
 
@@ -349,16 +358,14 @@ These tend to align most strongly with the current glossary + raw source set.
 If someone asks what is not yet in v0.1, use this answer:
 
 > "This version is intentionally focused: it already has an end-to-end RAG
-> path, but it still uses a small curated knowledge base, local hashing
-> embeddings by default, and a local extractive fallback model. The immediate
-> next step is expanding the official and NE:ONE source base; richer downstream
-> features come after that."
+> path, but it still uses a small curated knowledge base and external model
+> APIs. The immediate next steps are strengthening streaming UI and workflow
+> execution, not broad platform storytelling first."
 
 If someone asks whether it uses a real hosted model:
 
-> "By default, no. The demo is designed to work offline. But the provider
-> abstraction is already in place, so Qwen, OpenAI, or Claude can be enabled by
-> configuration rather than code changes."
+> "Yes. The current runtime uses external APIs for both embeddings and text
+> generation, while keeping provider selection configurable."
 
 ## 11. CLI Prompt Examples
 
@@ -385,7 +392,7 @@ curl -s -X POST localhost:8000/chat \
 ```bash
 curl -s -X POST localhost:8000/chat \
   -H 'content-type: application/json' \
-  -d '{"message":"How could ONE Record data be connected to an AviationLakehouse?"}'
+  -d '{"message":"How do I start NE:ONE locally with docker compose?"}'
 ```
 
 ## 12. A Clean 5-Minute Version
@@ -397,10 +404,10 @@ If you only have five minutes, do exactly this:
 3. Ask `What is a LogisticsObject in ONE Record?`
 4. Ask `Explain the relationship between Shipment and Piece.`
 5. Ask `Generate a JSON-LD example for a Piece.`
-6. Close with `How could ONE Record data be connected to an AviationLakehouse?`
+6. Close with `How do I start NE:ONE locally with docker compose?`
 
 Closing line:
 
 > "So v0.1 already proves the full loop: curated and raw ONE Record knowledge
 > can be ingested, embedded, retrieved, explained with citations, and rendered
-> in a focused UI, including stable JSON-LD generation."
+> in a focused UI, including ontology-aware answers and stable JSON-LD generation."

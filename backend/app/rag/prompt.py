@@ -53,6 +53,17 @@ _TYPE_HINTS = {
     QueryType.api_question: (
         "Explain the conceptual flow and, when relevant, the endpoint sequence."
     ),
+    QueryType.ontology_question: (
+        "Focus on ontology structure. Prefer class definitions, subclass "
+        "relationships, object properties, domains, and ranges from the "
+        "retrieved ontology chunks."
+    ),
+    QueryType.implementation_question: (
+        "Focus on practical implementation guidance. Prefer NE:ONE setup, "
+        "deployment, config, and troubleshooting details when they are present "
+        "in the retrieved context, and distinguish them from official ONE Record "
+        "standard behavior."
+    ),
 }
 
 

@@ -43,14 +43,17 @@ echo "Creating milestones..."
 M21=$(ensure_milestone "v0.2.1 — Ontology-aware retrieval" \
   "Parse ONE Record ontology; entity-first retrieval; augment relationship map. See docs/v0.2_development_plan.md")
 
-M23=$(ensure_milestone "v0.2.3 — AviationLakehouse narrative" \
-  "ALH Bronze/Silver/Gold knowledge and domain mapping for architecture questions.")
-
-M22=$(ensure_milestone "v0.2.2 — RecordForge integration" \
-  "Synthetic data generation via RecordForge connector (stub or HTTP).")
-
-M24=$(ensure_milestone "v0.2.4 — Frontend upgrade" \
+M23=$(ensure_milestone "v0.2.3 — Frontend upgrade" \
   "Vercel AI Chatbot template, streaming SSE, domain UI port.")
+
+M24=$(ensure_milestone "v0.2.4 — Workflow orchestration" \
+  "Connector abstraction, execution routing, and structured workflow output for ONE Record business flows.")
+
+M25=$(ensure_milestone "v0.2.5 — RecordForge integration" \
+  "Synthetic data generation via RecordForge connector after the orchestration layer lands.")
+
+M26=$(ensure_milestone "v0.2.6 — AviationLakehouse narrative" \
+  "Deferred ALH Bronze/Silver/Gold knowledge and domain mapping for architecture questions.")
 
 echo "Creating issues..."
 
@@ -209,7 +212,7 @@ EOF
 
 create_issue \
   "Add AviationLakehouse knowledge document" \
-  "v0.2.3 — AviationLakehouse narrative" \
+  "v0.2.6 — AviationLakehouse narrative" \
   "$(cat <<'EOF'
 ## Goal
 Add ingestible content explaining ONE Record → ALH Bronze/Silver/Gold mapping.
@@ -224,13 +227,13 @@ Add ingestible content explaining ONE Record → ALH Bronze/Silver/Gold mapping.
 - Sources panel shows the new doc after ingest
 
 ## References
-- `docs/v0.2_development_plan.md` § v0.2.3 step 3.1
+- `docs/v0.2_development_plan.md` § v0.2.6 step 6.1
 EOF
 )"
 
 create_issue \
   "Implement alh_mapping domain module" \
-  "v0.2.3 — AviationLakehouse narrative" \
+  "v0.2.6 — AviationLakehouse narrative" \
   "$(cat <<'EOF'
 ## Goal
 Structured Bronze / Silver / Gold mapping for ONE Record entities.
@@ -254,7 +257,7 @@ EOF
 
 create_issue \
   "Extend classifier and prompts for ALH architecture questions" \
-  "v0.2.3 — AviationLakehouse narrative" \
+  "v0.2.6 — AviationLakehouse narrative" \
   "$(cat <<'EOF'
 ## Goal
 Route and answer AviationLakehouse / platform architecture questions with grounded context.
@@ -272,13 +275,13 @@ Route and answer AviationLakehouse / platform architecture questions with ground
 - `alh_mapping.py` + ALH knowledge doc
 
 ## References
-- `docs/roadmap.md` v0.2.3
+- `docs/roadmap.md` v0.2.6
 EOF
 )"
 
 create_issue \
   "Eval, glossary, and demo updates for ALH narrative" \
-  "v0.2.3 — AviationLakehouse narrative" \
+  "v0.2.6 — AviationLakehouse narrative" \
   "$(cat <<'EOF'
 ## Goal
 Make ALH narrative demo-ready and testable.
@@ -296,25 +299,25 @@ Make ALH narrative demo-ready and testable.
 - ALH classifier/prompt work
 
 ## References
-- `docs/v0.2_development_plan.md` § v0.2.3
+- `docs/v0.2_development_plan.md` § v0.2.6
 EOF
 )"
 
 create_issue \
-  "Define connector abstraction and RecordForge config" \
-  "v0.2.2 — RecordForge integration" \
+  "Define workflow connector abstraction and orchestration config" \
+  "v0.2.4 — Workflow orchestration" \
   "$(cat <<'EOF'
 ## Goal
-Establish the connector seam for external ecosystem tools (RecordForge first).
+Establish the connector seam for real ONE Record business workflows and external tools.
 
 ## Tasks
 - [ ] Add `backend/app/connectors/base.py` with `Connector` ABC
-- [ ] Add env vars: `RECORDFORGE_URL`, `RECORDFORGE_API_KEY` (optional) to `core/config.py` and `.env.example`
-- [ ] Write `docs/adr/0003-recordforge-connector.md`
+- [ ] Add orchestration-related env vars and placeholders for downstream connectors
+- [ ] Write `docs/adr/0003-workflow-orchestration.md`
 
 ## Acceptance criteria
 - Connector pattern documented and importable
-- Missing RecordForge URL → graceful degradation path defined
+- Missing downstream connector config → clear non-RAG error path defined
 
 ## References
 - `docs/architecture.md` Future integration points
@@ -322,32 +325,32 @@ EOF
 )"
 
 create_issue \
-  "Add synthetic_data_generation query type" \
-  "v0.2.2 — RecordForge integration" \
+  "Add workflow-oriented query routing and execution intent types" \
+  "v0.2.4 — Workflow orchestration" \
   "$(cat <<'EOF'
 ## Goal
-Detect requests like "Generate 5 synthetic shipments with pieces".
+Detect requests that should trigger business workflow execution rather than plain QA.
 
 ## Tasks
-- [ ] Add `QueryType.synthetic_data_generation` to `models/chat.py`
+- [ ] Add execution-oriented query types in `models/chat.py`
 - [ ] Extend `classify_query()` in `rag/pipeline.py`
-- [ ] Mirror type in `frontend/lib/api.ts` (until v0.2.4 UI migration)
+- [ ] Mirror new types in frontend API models
 
 ## Acceptance criteria
-- Classifier routes synthetic generation prompts correctly
+- Classifier routes orchestration prompts explicitly
 - Existing query types unaffected (tests)
 
 ## Depends on
 - Connector abstraction
 
 ## References
-- `docs/roadmap.md` v0.2.2
+- `docs/roadmap.md` v0.2.4
 EOF
 )"
 
 create_issue \
   "Implement RecordForge client (HTTP or stub)" \
-  "v0.2.2 — RecordForge integration" \
+  "v0.2.5 — RecordForge integration" \
   "$(cat <<'EOF'
 ## Goal
 Call RecordForge (or a local stub) to produce synthetic JSON-LD payloads.
@@ -372,7 +375,7 @@ EOF
 
 create_issue \
   "Pipeline, frontend, and tests for RecordForge flow" \
-  "v0.2.2 — RecordForge integration" \
+  "v0.2.5 — RecordForge integration" \
   "$(cat <<'EOF'
 ## Goal
 End-to-end synthetic data generation in `/chat` response.
@@ -392,13 +395,13 @@ End-to-end synthetic data generation in `/chat` response.
 - RecordForge client + query type
 
 ## References
-- `docs/v0.2_development_plan.md` § v0.2.2
+- `docs/v0.2_development_plan.md` § v0.2.5
 EOF
 )"
 
 create_issue \
   "Add LLM streaming and POST /chat/stream (SSE)" \
-  "v0.2.4 — Frontend upgrade" \
+  "v0.2.3 — Frontend upgrade" \
   "$(cat <<'EOF'
 ## Goal
 Stream answer tokens to the frontend; keep synchronous `/chat` for eval.
@@ -413,16 +416,15 @@ Stream answer tokens to the frontend; keep synchronous `/chat` for eval.
 ## Acceptance criteria
 - `curl -N POST /chat/stream` yields incremental tokens
 - `/chat` JSON API unchanged
-- Local provider simulates streaming for offline demo
 
 ## References
-- `docs/roadmap.md` v0.2.4 Streaming
+- `docs/roadmap.md` v0.2.3 Streaming
 EOF
 )"
 
 create_issue \
   "Scaffold frontend from Vercel AI Chatbot template" \
-  "v0.2.4 — Frontend upgrade" \
+  "v0.2.3 — Frontend upgrade" \
   "$(cat <<'EOF'
 ## Goal
 Replace v0.1 hand-rolled UI with Vercel AI Chatbot foundation.
@@ -448,7 +450,7 @@ EOF
 
 create_issue \
   "FastAPI adapter route for AI SDK useChat" \
-  "v0.2.4 — Frontend upgrade" \
+  "v0.2.3 — Frontend upgrade" \
   "$(cat <<'EOF'
 ## Goal
 Connect AI SDK `useChat` to RecordChat FastAPI backend (not Vercel AI Gateway).
@@ -472,7 +474,7 @@ EOF
 
 create_issue \
   "Port domain UI: sources, related concepts, JSON-LD viewer" \
-  "v0.2.4 — Frontend upgrade" \
+  "v0.2.3 — Frontend upgrade" \
   "$(cat <<'EOF'
 ## Goal
 Keep RecordChat domain-specific UI in the new Vercel template layout.
@@ -496,7 +498,7 @@ EOF
 
 create_issue \
   "Markdown rendering and UI polish" \
-  "v0.2.4 — Frontend upgrade" \
+  "v0.2.3 — Frontend upgrade" \
   "$(cat <<'EOF'
 ## Goal
 Improve answer readability and loading states.
@@ -519,11 +521,11 @@ EOF
 )"
 
 create_issue \
-  "Docker, README, and E2E demo verification for v0.2.4" \
-  "v0.2.4 — Frontend upgrade" \
+  "Docker, README, and E2E demo verification for v0.2.3" \
+  "v0.2.3 — Frontend upgrade" \
   "$(cat <<'EOF'
 ## Goal
-Ship v0.2.4 with updated ops docs and verified demo flow.
+Ship v0.2.3 with updated ops docs and verified demo flow.
 
 ## Tasks
 - [ ] Update `docker-compose.yml`, `README.md`, `.env.example`
@@ -534,10 +536,10 @@ Ship v0.2.4 with updated ops docs and verified demo flow.
 ## Acceptance criteria
 - `docker compose up --build` works
 - All 5 demo questions pass with streaming UI
-- v0.2 development plan checklist for § v0.2.4 complete
+- v0.2 development plan checklist for § v0.2.3 complete
 
 ## Depends on
-- All other v0.2.4 issues
+- All other v0.2.3 issues
 
 ## References
 - `docs/v0.2_development_plan.md`

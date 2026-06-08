@@ -47,15 +47,15 @@ If you are demoing from a VPS:
 Default v0.1 demo mode:
 
 - data from `data/raw/*` plus curated glossary
-- local hashing embeddings
+- external embedding API
 - Qdrant for vector retrieval
-- local extractive LLM fallback
+- external LLM API
 - template-based JSON-LD generator
 
 One-line explanation:
 
-> "The default demo works fully offline, but the provider abstraction is
-> already there for Qwen, OpenAI, or Claude later."
+> "The default demo already uses provider abstraction for external embedding and
+> generation APIs, while Qdrant stays local or remote depending on deployment."
 
 Important qualifier:
 
@@ -170,7 +170,7 @@ Focus on:
 
 - retrieval pipeline
 - provider abstraction
-- offline fallback
+- API-backed model calls
 - template-based structured output
 
 ### Product or platform audience
@@ -205,8 +205,8 @@ Focus on:
 Use this:
 
 > "This version is intentionally focused. It already has the full RAG path, but
-> it still uses a small curated knowledge base, local hashing embeddings by
-> default, and a local extractive fallback model. The immediate next step is
+> it still uses a small curated knowledge base and external model APIs. The
+> immediate next step is
 > expanding the official and NE:ONE source base; richer downstream features
 > come after that."
 

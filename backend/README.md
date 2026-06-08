@@ -4,7 +4,7 @@ FastAPI backend for RecordChat — a domain-specific AI assistant for IATA ONE R
 
 See the top-level [SPEC.md](../SPEC.md) and [README.md](../README.md) for the full picture.
 
-## Quickstart (local, offline)
+## Quickstart
 
 ```bash
 uv venv && uv pip install -e ".[dev]"
@@ -15,9 +15,9 @@ curl -s -X POST localhost:8000/chat -H 'content-type: application/json' \
   -d '{"message":"What is a Piece in ONE Record?"}' | jq
 ```
 
-With no API keys configured the backend runs fully offline: `local` LLM +
-`local` hashing embeddings + in-memory Qdrant. Set the `LLM_*` / `EMBEDDING_*`
-/ `QDRANT_*` env vars (see [../.env.example](../.env.example)) for real models.
+The backend now requires external APIs for both LLM generation and embeddings.
+Set the `LLM_*` / `EMBEDDING_*` / `QDRANT_*` env vars (see
+[../.env.example](../.env.example)) before running it.
 
 Note:
 

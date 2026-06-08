@@ -1,25 +1,24 @@
-# ADR 0001: Provider abstraction with offline-first fallback
+# ADR 0001: Provider abstraction for external model APIs
 
 ## Status
 Accepted (v0.1)
 
 ## Context
 RecordChat must work across multiple LLM/embedding vendors (Qwen, OpenAI,
-Claude) and be demoable/testable without secrets or network access.
+Claude) without business-logic changes, while tests use explicit stubs rather
+than production fallbacks.
 
 ## Decision
 - Define abstract `LLMProvider`, `EmbeddingProvider`, and `Retriever` interfaces.
 - Concrete implementations are selected by environment variables via factories
   in `core/` and `rag/retriever.py`.
-- Ship a `local` implementation for both LLM (extractive, grounded in retrieved
-  context) and embeddings (deterministic hashing bag-of-words), plus an
-  in-process Qdrant (`QDRANT_URL=:memory:`).
-- A configured provider with a **missing API key** logs a warning and falls back
-  to `local` rather than crashing.
+- Production providers are API-backed and selected by environment variables via
+  factories in `core/` and `rag/retriever.py`.
+- A configured provider with a missing API key is treated as a configuration
+  error and fails fast.
+- Tests use explicit fake providers when they need to avoid external calls.
 
 ## Consequences
 - Switching vendors is a config change, not a code change.
-- Tests and demos run offline with zero secrets.
-- The `local` providers are intentionally low-fidelity; real retrieval/answer
-  quality requires configuring a real provider. This is acceptable for v0.1 and
-  documented in the README.
+- Misconfigured secrets fail early instead of silently degrading answer quality.
+- Tests remain deterministic because they inject fake providers directly.

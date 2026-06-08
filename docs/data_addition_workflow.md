@@ -66,11 +66,14 @@ Move normalized files into the correct final destinations under `data/raw/`.
 
 Examples:
 
+- `data/raw/one_record_docs/spec_development/`
+- `data/raw/one_record_docs/spec_2025_07/`
+- `data/raw/one_record_docs/spec_2023_12/`
 - `data/raw/ontology/official/`
 - `data/raw/api_specs/official/`
+- `data/raw/api_specs/ne_one/`
 - `data/raw/examples/official/`
 - `data/raw/one_record_docs/ne_one/`
-- `data/raw/api_specs/ne_one/`
 - `data/raw/examples/ne_one/`
 
 ### 4. Update source registry
@@ -148,8 +151,12 @@ A source batch is considered added correctly when all of these are true:
 
 The current automation fully checks the curated core corpus, especially:
 
+- `data/raw/one_record_docs/spec_development/`
+- `data/raw/one_record_docs/spec_2025_07/`
+- `data/raw/one_record_docs/spec_2023_12/`
 - `data/raw/ontology/official/`
 - `data/raw/api_specs/official/`
+- `data/raw/api_specs/ne_one/`
 - `data/raw/one_record_docs/ne_one/`
 - `data/raw/examples/official/one_record_repo_examples/`
 - `data/raw/examples/ne_one/`

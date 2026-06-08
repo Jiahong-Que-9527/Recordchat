@@ -3,7 +3,7 @@
 Last reviewed: 2026-06-07
 
 This report reviews the current RecordChat data corpus against the compliance
-principles captured in [合规问题.md](</root/Workspace/Recordchat/合规问题.md>).
+principles captured in [合规问题.md](../合规问题.md).
 It is a project governance note, not formal legal advice.
 
 ## Executive Summary
@@ -38,11 +38,11 @@ remaining gaps are governance gaps rather than obvious infringement:
 
 Reviewed areas:
 
-- current compliance principles in [合规问题.md](</root/Workspace/Recordchat/合规问题.md>)
+- current compliance principles in [合规问题.md](../合规问题.md)
 - current data layout under `data/raw` and `data/raw/_staging`
 - source provenance records such as `SOURCE_URLS.md`
 - license signals inside the staged official and community materials
-- repository publication posture in [.gitignore](/root/Workspace/Recordchat/.gitignore)
+- repository publication posture in [.gitignore](../.gitignore)
 
 ## Findings
 
@@ -50,9 +50,9 @@ Reviewed areas:
 
 The current repo setup already supports a relatively safe operating model:
 
-- `data/` is ignored in Git via [.gitignore](/root/Workspace/Recordchat/.gitignore),
+- `data/` is ignored in Git via [.gitignore](../.gitignore),
   which reduces accidental redistribution risk
-- RecordChat is framed in [README.md](/root/Workspace/Recordchat/README.md) as
+- RecordChat is framed in [README.md](../README.md) as
   an independent project using public reference materials
 - ingestion is now focused on normalized final folders, and `_staging` is not
   part of the live ingest surface
@@ -67,11 +67,11 @@ turning raw downloaded corpora into public redistributable artifacts.
 
 I found explicit license evidence for the most important technical source sets:
 
-- [data/raw/_staging/ONE-Record/LICENSE](/root/Workspace/Recordchat/data/raw/_staging/ONE-Record/LICENSE)
+- [data/raw/_staging/ONE-Record/LICENSE](../data/raw/_staging/ONE-Record/LICENSE)
   is MIT
-- [data/raw/_staging/ne_one_implementation_materials/gitlab_repo/LICENSE](/root/Workspace/Recordchat/data/raw/_staging/ne_one_implementation_materials/gitlab_repo/LICENSE)
+- [data/raw/_staging/ne_one_implementation_materials/gitlab_repo/LICENSE](../data/raw/_staging/ne_one_implementation_materials/gitlab_repo/LICENSE)
   is Open Logistics Foundation License 1.3
-- [data/raw/_staging/iata_developer_portal_openapi_api_docs/reference_specs/ONE-Record-API-OpenAPI.working_draft.yaml](/root/Workspace/Recordchat/data/raw/_staging/iata_developer_portal_openapi_api_docs/reference_specs/ONE-Record-API-OpenAPI.working_draft.yaml:13)
+- [data/raw/_staging/iata_developer_portal_openapi_api_docs/reference_specs/ONE-Record-API-OpenAPI.working_draft.yaml](../data/raw/_staging/iata_developer_portal_openapi_api_docs/reference_specs/ONE-Record-API-OpenAPI.working_draft.yaml)
   declares MIT in the OpenAPI metadata
 
 These are the most important sources for the current product scope, so this is

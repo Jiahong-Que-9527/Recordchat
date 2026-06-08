@@ -5,11 +5,14 @@
 - **v0.1**: complete and demoable
 - **Data Foundation**: partially landed; `_staging` is now excluded from ingest
   and a first normalized official/NE:ONE source batch is in final folders
-- **v0.2.1 ontology-aware retrieval**: largely landed in code; still needs to be
-  validated against a broader official source set
-- **next priority**: expand the knowledge base so the system matches the real
-  ONE Record / NE:ONE materials defined in the source planning docs, then verify
-  that the retrieval path is actually using them well
+- **v0.2.1 ontology-aware retrieval**: landed and validated on the broadened
+  official source pack, including official OWL ingest, ontology-aware reranking,
+  and multilingual ontology queries
+- **v0.2.2 NE:ONE implementation knowledge**: landed at a useful baseline with
+  implementation query routing, NE:ONE source citation, and eval/demo coverage
+- **next priority**: move from knowledge-quality validation into stronger user
+  interaction and execution layers: streaming UI first, workflow orchestration
+  second
 
 Source acquisition and import plan:
 [docs/data_source_plan.md](data_source_plan.md)
@@ -25,7 +28,7 @@ Delivered:
 
 - FastAPI backend: `/health`, `/chat`, `/ingest`
 - RAG pipeline: classify -> retrieve (Qdrant) -> prompt -> LLM -> cited answer
-- Provider abstraction (Qwen / OpenAI / Claude) + offline `local` fallback
+- Provider abstraction (Qwen / OpenAI / Claude)
 - Domain-aware chunking (ontology / OpenAPI / markdown / JSON-LD)
 - Curated glossary as graceful-degradation knowledge base
 - Template-based JSON-LD generator (Piece, Shipment, Waybill, TransportMovement)
@@ -59,6 +62,26 @@ Current remaining work:
 - rerun `/ingest` on the normalized corpus and verify source/chunk coverage
 - extend eval so official docs and NE:ONE materials are exercised directly
 
+Canonical data-foundation conventions:
+
+- `data/raw/_staging/` is raw intake only and is not part of the live corpus
+- normalized files must move into final `data/raw` folders before ingest
+- loader and ontology traversal explicitly skip `_staging`
+- governed source batches should use `<filename>.<ext>.meta.json` sidecars with
+  `source_name`, `version`, `url`, `document_type`, `domain`, `registry_id`,
+  `batch_id`, and `ingested_at`
+
+Canonical final destinations for the current core source pack:
+
+- `data/raw/one_record_docs/spec_development/`
+- `data/raw/one_record_docs/spec_2025_07/`
+- `data/raw/ontology/official/`
+- `data/raw/api_specs/official/`
+- `data/raw/examples/official/`
+- `data/raw/one_record_docs/ne_one/`
+- `data/raw/api_specs/ne_one/`
+- `data/raw/examples/ne_one/`
+
 Primary GitHub issues:
 
 - [#21](https://github.com/Jiahong-Que-9527/Recordchat/issues/21) raw-data conventions and metadata
@@ -78,12 +101,17 @@ Primary GitHub issues:
    quality gaps.
 3. **v0.2.2 NE:ONE implementation knowledge**
    Make the assistant useful for setup, config, payload, and troubleshooting questions.
-4. **v0.2.3 AviationLakehouse narrative**
-   Add Bronze/Silver/Gold landing explanations and domain mapping.
-5. **v0.2.4 Frontend upgrade**
+4. **v0.2.3 Frontend upgrade**
    Replace the hand-rolled UI with a streaming AI-chat surface.
+5. **v0.2.4 Workflow orchestration**
+   Add connector abstractions and business-flow execution paths for ONE Record
+   tasks before integrating external generators.
 6. **v0.2.5 RecordForge integration**
-   Add synthetic data generation only after the knowledge base and UI are ready.
+   Add synthetic data generation and workflow execution once the orchestration
+   layer and UI are ready.
+7. **v0.2.6 AviationLakehouse narrative**
+   Defer the Bronze/Silver/Gold platform story until the ONE Record core
+   assistant, streaming UX, and workflow integrations are strong.
 
 ## v0.2.1 — Ontology-aware retrieval
 
@@ -95,8 +123,10 @@ Goal:
 
 Current state:
 
-- ADR, parser, ontology graph, reranker, and tests already exist in the repo
-- the remaining concern is source breadth and validation against official files
+- official ontology TTL and OWL files are indexed from the normalized source pack
+- ontology chunks, entity-first reranking, and `related_concepts` ontology neighbors
+  are already active in the pipeline
+- eval and multilingual spot checks have been extended to cover ontology questions
 
 ## v0.2.2 — NE:ONE implementation knowledge
 
@@ -105,14 +135,52 @@ Goal:
 - answer practical questions about NE:ONE setup, config, API interaction,
   example payloads, and troubleshooting
 
+Current state:
+
+- NE:ONE docs/configs/examples/tests are normalized into final `data/raw` folders
+- implementation questions have dedicated classifier and prompt steering
+- eval/demo coverage includes NE:ONE setup and troubleshooting flows
+
+## v0.2.3 — Frontend upgrade
+
+Goal:
+
+- move from the v0.1 hand-rolled UI to a more capable streaming chat UI
+
 Needs:
 
-- NE:ONE README/docs/configs/examples/tests normalized into final `data/raw`
-  folders by content type
-- classifier/prompt updates for implementation questions
-- demo and eval coverage for NE:ONE flows
+- streaming `POST /chat/stream`
+- AI SDK / Vercel chatbot style frontend
+- preserve RecordChat-specific domain panels: sources, related concepts, JSON-LD
 
-## v0.2.3 — AviationLakehouse narrative
+## v0.2.4 — Workflow orchestration
+
+Goal:
+
+- support real business workflow questions and multi-step execution flows around
+  ONE Record operations, not just static Q&A
+
+Scope:
+
+- connector abstraction for external business workflow tools
+- query routing for execution / orchestration intents
+- structured workflow results that the frontend can render cleanly
+
+## v0.2.5 — RecordForge integration
+
+Goal:
+
+- support synthetic data generation requests such as:
+  `"Generate 5 synthetic shipments with pieces and transport events"`
+
+Needs:
+
+- build on the workflow orchestration layer rather than bypass it
+- query type for synthetic data generation
+- RecordForge stub or HTTP client
+- frontend support for multi-object JSON-LD results
+
+## v0.2.6 — AviationLakehouse narrative
 
 Goal:
 
@@ -124,32 +192,6 @@ Needs:
 - ALH knowledge document
 - `alh_mapping` domain module
 - eval/demo/glossary updates
-
-## v0.2.4 — Frontend upgrade
-
-Goal:
-
-- move from the v0.1 hand-rolled UI to a more capable streaming chat UI
-
-Scope:
-
-- streaming `POST /chat/stream`
-- AI SDK / Vercel chatbot style frontend
-- preserve RecordChat-specific domain panels: sources, related concepts, JSON-LD
-
-## v0.2.5 — RecordForge integration
-
-Goal:
-
-- support synthetic data generation requests such as:
-  `"Generate 5 synthetic shipments with pieces and transport events"`
-
-Needs:
-
-- connector abstraction
-- query type for synthetic data generation
-- RecordForge stub or HTTP client
-- frontend support for multi-object JSON-LD results
 
 ## v0.3 — Real platform
 
@@ -165,5 +207,5 @@ Needs:
 RecordChat        = AI interface for ONE Record knowledge
 RecordForge       = synthetic ONE Record data generator
 ONE Record Server = standardized data exchange layer
-AviationLakehouse = analytical backend (Bronze/Silver/Gold)
+AviationLakehouse = analytical backend (Bronze/Silver/Gold, deferred)
 ```

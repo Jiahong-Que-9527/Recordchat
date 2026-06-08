@@ -14,8 +14,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 REGISTRY_PATH = REPO_ROOT / "docs" / "data_sources_registry.yaml"
 
 GOVERNED_ROOTS = [
+    REPO_ROOT / "data" / "raw" / "one_record_docs" / "spec_development",
+    REPO_ROOT / "data" / "raw" / "one_record_docs" / "spec_2025_07",
+    REPO_ROOT / "data" / "raw" / "one_record_docs" / "spec_2023_12",
     REPO_ROOT / "data" / "raw" / "ontology" / "official",
     REPO_ROOT / "data" / "raw" / "api_specs" / "official",
+    REPO_ROOT / "data" / "raw" / "api_specs" / "ne_one",
     REPO_ROOT / "data" / "raw" / "one_record_docs" / "ne_one",
     REPO_ROOT / "data" / "raw" / "examples" / "official" / "one_record_repo_examples",
     REPO_ROOT / "data" / "raw" / "examples" / "ne_one",

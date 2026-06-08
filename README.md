@@ -36,11 +36,47 @@ RecordChat makes that standard approachable and queryable.
 - the data-foundation track is underway: `_staging` now exists for raw
   downloads, `_staging` is excluded from ingest, and a first normalized official
   ONE Record + NE:ONE source batch is already in the final folders
-- the next priority is finishing normalization, metadata, ingest verification,
-  and eval coverage for the broader official ONE Record + NE:ONE source pack
+- ontology-aware retrieval is now validated against the broadened official
+  source pack, and NE:ONE implementation Q&A is landed at a useful baseline
+- the next priority is stronger interaction and execution layers: streaming UI,
+  then workflow orchestration
 
 See [docs/data_source_plan.md](docs/data_source_plan.md) for the source
 acquisition and import plan.
+
+### Data Foundation Conventions
+
+The current raw-data contract is:
+
+- `data/raw/_staging/` is a download-and-normalization workspace only
+- loader-facing files must live in final `data/raw` folders, not under `_staging`
+- `backend/app/rag/loader.py` and `backend/app/domain/ontology_graph.py`
+  explicitly skip `_staging`
+- loader-ingestible file types are `.ttl`, `.owl`, `.md`, `.markdown`, `.txt`,
+  `.json`, `.jsonld`, `.yaml`, and `.yml`
+
+The canonical final homes for the current P0 source families are:
+
+- `data/raw/one_record_docs/spec_development/`
+- `data/raw/one_record_docs/spec_2025_07/`
+- `data/raw/ontology/official/`
+- `data/raw/api_specs/official/`
+- `data/raw/examples/official/`
+- `data/raw/one_record_docs/ne_one/`
+- `data/raw/api_specs/ne_one/`
+- `data/raw/examples/ne_one/`
+
+Governed files should carry a sidecar at `<filename>.<ext>.meta.json` with at
+least:
+
+- `source_name`
+- `version`
+- `url`
+- `document_type`
+- `domain`
+- `registry_id`
+- `batch_id`
+- `ingested_at`
 
 ## Architecture
 
@@ -74,7 +110,7 @@ If you are developing on a VPS and opening the UI from your local browser:
   `CORS_ORIGINS=http://<your-vps-host>:3000`
   `NEXT_PUBLIC_API_BASE_URL=http://<your-vps-host>:8000`
 
-### Option B — Backend only, fully offline (no API keys, no Docker)
+### Option B — Backend only (external model APIs, no Docker)
 
 ```bash
 cd backend
@@ -85,10 +121,29 @@ curl -s -X POST localhost:8000/chat -H 'content-type: application/json' \
   -d '{"message":"What is a Piece in ONE Record?"}'
 ```
 
-With no keys configured, RecordChat runs in **offline mode**: `local` LLM
-(extractive, source-grounded), `local` hashing embeddings, and an in-process
-Qdrant. Set `LLM_PROVIDER`/`LLM_API_KEY` etc. (see [.env.example](.env.example))
-to switch to Qwen / OpenAI / Claude with zero code changes.
+RecordChat now expects both generation and retrieval to use external model APIs.
+Configure `LLM_PROVIDER` / `LLM_API_KEY` and `EMBEDDING_PROVIDER` /
+`EMBEDDING_API_KEY` before starting the backend. Qdrant can still run in-process
+via `QDRANT_URL=:memory:` if you do not want Docker.
+
+If you want to use different vendors for generation and retrieval, configure
+them independently. For example:
+
+```env
+LLM_PROVIDER=openai
+LLM_MODEL=deepseek-v4-flash
+LLM_API_KEY=your_deepseek_key
+LLM_BASE_URL=your_deepseek_openai_compatible_base_url
+
+EMBEDDING_PROVIDER=openai
+EMBEDDING_MODEL=text-embedding-3-small
+EMBEDDING_API_KEY=your_openai_key
+EMBEDDING_BASE_URL=https://api.openai.com/v1
+EMBEDDING_DIM=1536
+```
+
+Any time you change the embedding model or provider, rerun `/ingest` so the
+stored document vectors and query vectors stay in the same embedding space.
 
 By default, the frontend now auto-detects the API host from the page URL. So if
 you open `http://<your-vps-host>:3000`, it will try `http://<your-vps-host>:8000`
@@ -123,8 +178,8 @@ SPEC.md     single source of truth (contracts, structure, acceptance)
 
 - **v0.1** demoable ONE Record RAG assistant (this repo)
 - **next** data foundation: official ONE Record + NE:ONE source expansion
-- **v0.2** ontology validation + NE:ONE knowledge + ALH narrative + frontend upgrade
-- **later** RecordForge integration + live ecosystem connectors
+- **v0.2** ontology validation + NE:ONE knowledge + streaming/frontend upgrade + workflow orchestration
+- **later** RecordForge integration, then ALH narrative and broader live ecosystem connectors
 
 See [docs/roadmap.md](docs/roadmap.md).
 

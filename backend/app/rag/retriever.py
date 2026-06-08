@@ -40,6 +40,9 @@ class Retriever(ABC):
     @abstractmethod
     def search(self, query: str, top_k: int) -> list[Chunk]: ...
 
+    @abstractmethod
+    def search_ontology_candidates(self, entities: list[str], top_k: int) -> list[Chunk]: ...
+
 
 class QdrantRetriever(Retriever):
     def __init__(self, settings: Settings, embedder: EmbeddingProvider) -> None:
@@ -113,6 +116,62 @@ class QdrantRetriever(Retriever):
                 )
             )
         return chunks
+
+    def search_ontology_candidates(self, entities: list[str], top_k: int) -> list[Chunk]:
+        if not entities or top_k <= 0:
+            return []
+
+        self.ensure_collection()
+        filters = [
+            qmodels.Filter(
+                must=[
+                    qmodels.FieldCondition(
+                        key="chunk_type",
+                        match=qmodels.MatchAny(any=["class_definition", "property_definition"]),
+                    ),
+                    qmodels.FieldCondition(key="entity", match=qmodels.MatchAny(any=entities)),
+                ]
+            ),
+            qmodels.Filter(
+                must=[
+                    qmodels.FieldCondition(
+                        key="chunk_type",
+                        match=qmodels.MatchAny(any=["class_definition", "property_definition"]),
+                    ),
+                    qmodels.FieldCondition(
+                        key="related_entities", match=qmodels.MatchAny(any=entities)
+                    ),
+                ]
+            ),
+        ]
+
+        found: dict[str, Chunk] = {}
+        for flt in filters:
+            points, _ = self.client.scroll(
+                collection_name=self.collection,
+                scroll_filter=flt,
+                limit=top_k,
+                with_payload=True,
+            )
+            for point in points:
+                payload = point.payload or {}
+                chunk = Chunk(
+                    chunk_id=payload.get("chunk_id", str(point.id)),
+                    content=payload.get("content", ""),
+                    metadata=ChunkMetadata(
+                        source_name=payload.get("source_name", "unknown"),
+                        source_url=payload.get("source_url"),
+                        version=payload.get("version"),
+                        section_title=payload.get("section_title"),
+                        chunk_type=payload.get("chunk_type", "general"),
+                        entity=payload.get("entity"),
+                        related_entities=payload.get("related_entities", []) or [],
+                    ),
+                )
+                found.setdefault(chunk.chunk_id, chunk)
+                if len(found) >= top_k:
+                    return list(found.values())
+        return list(found.values())
 
 
 _retriever: Retriever | None = None

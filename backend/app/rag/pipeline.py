@@ -7,6 +7,7 @@ together. API handlers call `answer()`; they contain no business logic.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
 
 from app.core.config import get_settings
 from app.core.llm import LLMProvider, get_llm_provider
@@ -22,20 +23,140 @@ logger = get_logger(__name__)
 # Fetch extra candidates for ontology-aware reranking (ADR 0002).
 _CANDIDATE_POOL_MULTIPLIER = 3
 _MAX_CANDIDATE_POOL = 20
+_ONTOLOGY_CANDIDATE_LIMIT = 12
+
+
+def _is_ontology_query(query: str) -> bool:
+    q = query.lower()
+    return any(
+        marker in q
+        for marker in (
+            "ontology",
+            "subclass",
+            "superclass",
+            "class is",
+            "class does",
+            "property",
+            "properties",
+            "domain",
+            "range",
+            "connect",
+            "connected to",
+            "本体",
+            "子类",
+            "父类",
+            "属性",
+            "定义域",
+            "值域",
+        )
+    ) or ("关联" in query and any(token in query for token in ("什么属性", "哪个属性", "哪些属性")))
 
 
 def classify_query(query: str) -> QueryType:
     """Rule-based classifier (SPEC section 7). Replaceable by an LLM classifier."""
     q = query.lower()
+    implementation_markers = (
+        "ne:one",
+        "neone",
+        "docker compose",
+        "docker-compose",
+        "keycloak",
+        "graphdb",
+        "blazegraph",
+        "minio",
+        "wiremock",
+        "gatling",
+        "troubleshoot",
+        "troubleshooting",
+        "config value",
+        "configuration",
+        "environment variable",
+        "http-client.env",
+        "start locally",
+        "run locally",
+        "本地启动",
+        "本地运行",
+        "环境变量",
+        "配置",
+        "报错",
+        "排查",
+        "请求失败",
+    )
+    implementation_howto_markers = (
+        "how do i start",
+        "how do i run",
+        "what should i check",
+        "怎么启动",
+        "怎么运行",
+        "如何启动",
+        "如何运行",
+        "怎么排查",
+        "如何排查",
+    )
+    implementation_context_markers = (
+        "server",
+        "local",
+        "deployment",
+        "request fails",
+        "api request",
+        "本地",
+        "服务",
+        "部署",
+        "请求失败",
+        "接口请求",
+    )
+    relationship_markers = (
+        "relationship",
+        "related",
+        "relate to",
+        "difference between",
+        " vs",
+        "vs.",
+        "关系",
+        "区别",
+        "差别",
+        "有什么不同",
+        "如何关联",
+    )
+    api_markers = (
+        "api",
+        "endpoint",
+        "subscription",
+        "server",
+        "how do i create",
+        "接口",
+        "端点",
+        "订阅",
+        "通知",
+        "怎么创建",
+        "如何创建",
+    )
+    concept_markers = (
+        "what is",
+        "explain",
+        "define",
+        "what are",
+        "是什么",
+        "解释",
+        "定义",
+        "什么意思",
+    )
     if ("json-ld" in q or "jsonld" in q or "payload" in q) and (
-        "generate" in q or "example" in q or "create" in q
+        "generate" in q or "example" in q or "create" in q or "生成" in query or "示例" in query
     ):
         return QueryType.jsonld_generation
-    if any(k in q for k in ("relationship", "related", "difference between", " vs", "vs.")):
+    if _is_ontology_query(query):
+        return QueryType.ontology_question
+    if any(k in q for k in implementation_markers) or (
+        any(k in q or k in query for k in implementation_howto_markers)
+        and any(k in q or k in query for k in implementation_context_markers)
+    ):
+        return QueryType.implementation_question
+    if any(k in q or k in query for k in relationship_markers):
         return QueryType.relationship_question
-    if any(k in q for k in ("api", "endpoint", "subscription", "server", "how do i create")):
+    if any(k in q or k in query for k in api_markers):
         return QueryType.api_question
-    if any(k in q for k in ("what is", "explain", "define", "what are")):
+    if any(k in q or k in query for k in concept_markers):
         return QueryType.concept_explanation
     return QueryType.general_question
 
@@ -67,31 +188,45 @@ def _jsonld_entity(query: str) -> str | None:
     return None
 
 
-def answer(
-    query: str,
-    retriever: Retriever | None = None,
-    llm: LLMProvider | None = None,
-) -> ChatResponse:
-    settings = get_settings()
-    retriever = retriever or get_retriever()
-    llm = llm or get_llm_provider()
+def _fallback_answer_from_chunks(query: str, chunks) -> str:
+    snippets = [chunk.content.strip() for chunk in chunks if chunk.content.strip()]
+    if not snippets:
+        return (
+            "I could not find grounded supporting context in the current ONE Record "
+            "knowledge base for this question."
+        )
+    body = "\n\n".join(snippets[:2])
+    return (
+        "Grounded fallback answer:\n"
+        f"{body}\n\n"
+        f"Question: {query}"
+    )
 
+
+def _prepare_answer_context(query: str, retriever: Retriever) -> tuple[QueryType, list, str]:
+    settings = get_settings()
     query_type = classify_query(query)
     pool_size = min(
         settings.rag_top_k * _CANDIDATE_POOL_MULTIPLIER,
         _MAX_CANDIDATE_POOL,
     )
     chunks = retriever.search(query, top_k=max(pool_size, settings.rag_top_k))
+    if query_type == QueryType.ontology_question:
+        ontology_chunks = retriever.search_ontology_candidates(
+            one_record_schema.detect_entities(query),
+            top_k=_ONTOLOGY_CANDIDATE_LIMIT,
+        )
+        by_chunk_id = {chunk.chunk_id: chunk for chunk in chunks}
+        for chunk in ontology_chunks:
+            by_chunk_id.setdefault(chunk.chunk_id, chunk)
+        chunks = list(by_chunk_id.values())
     chunks = rerank(query, chunks)[: settings.rag_top_k]
-
     user_prompt = prompt_mod.build_user_prompt(query, chunks, query_type)
-    answer_text = llm.complete(system=prompt_mod.SYSTEM_PROMPT, user=user_prompt)
+    return query_type, chunks, user_prompt
 
-    structured_output = None
-    if query_type == QueryType.jsonld_generation:
-        structured_output = jsonld_generator.generate_for_entity(_jsonld_entity(query))
 
-    sources = [
+def _sources_from_chunks(chunks) -> list[Source]:
+    return [
         Source(
             source_name=c.metadata.source_name,
             section_title=c.metadata.section_title,
@@ -101,10 +236,64 @@ def answer(
         for c in chunks
     ]
 
+
+def answer(
+    query: str,
+    retriever: Retriever | None = None,
+    llm: LLMProvider | None = None,
+) -> ChatResponse:
+    retriever = retriever or get_retriever()
+    llm = llm or get_llm_provider()
+
+    query_type, chunks, user_prompt = _prepare_answer_context(query, retriever)
+    answer_text = llm.complete(system=prompt_mod.SYSTEM_PROMPT, user=user_prompt)
+    if not answer_text.strip():
+        logger.warning("LLM returned an empty answer; using grounded fallback text.")
+        answer_text = _fallback_answer_from_chunks(query, chunks)
+
+    structured_output = None
+    if query_type == QueryType.jsonld_generation:
+        structured_output = jsonld_generator.generate_for_entity(_jsonld_entity(query))
+
     return ChatResponse(
         answer=answer_text,
         query_type=query_type,
-        sources=sources,
+        sources=_sources_from_chunks(chunks),
         related_concepts=_related_concepts(query, chunks),
         structured_output=structured_output,
     )
+
+
+def answer_stream(
+    query: str,
+    retriever: Retriever | None = None,
+    llm: LLMProvider | None = None,
+) -> Iterator[dict]:
+    retriever = retriever or get_retriever()
+    llm = llm or get_llm_provider()
+
+    query_type, chunks, user_prompt = _prepare_answer_context(query, retriever)
+    parts: list[str] = []
+    for token in llm.complete_stream(system=prompt_mod.SYSTEM_PROMPT, user=user_prompt):
+        if token:
+            parts.append(token)
+            yield {"event": "token", "data": {"text": token}}
+
+    answer_text = "".join(parts).strip()
+    if not answer_text:
+        logger.warning("LLM stream returned no content; using grounded fallback text.")
+        answer_text = _fallback_answer_from_chunks(query, chunks)
+        yield {"event": "token", "data": {"text": answer_text}}
+
+    structured_output = None
+    if query_type == QueryType.jsonld_generation:
+        structured_output = jsonld_generator.generate_for_entity(_jsonld_entity(query))
+
+    response = ChatResponse(
+        answer=answer_text,
+        query_type=query_type,
+        sources=_sources_from_chunks(chunks),
+        related_concepts=_related_concepts(query, chunks),
+        structured_output=structured_output,
+    )
+    yield {"event": "metadata", "data": response.model_dump(mode="json")}

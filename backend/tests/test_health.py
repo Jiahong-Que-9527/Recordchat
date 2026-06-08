@@ -1,11 +1,13 @@
-from fastapi.testclient import TestClient
-
-from app.main import app
-
-client = TestClient(app)
+from app.api.health import health
 
 
 def test_health():
-    resp = client.get("/health")
-    assert resp.status_code == 200
-    assert resp.json() == {"status": "ok", "service": "recordchat-backend"}
+    body = health().model_dump()
+    assert body["status"] == "ok"
+    assert body["service"] == "recordchat-backend"
+    assert body["llm_provider"]
+    assert body["llm_model"]
+    assert isinstance(body["llm_api_key_configured"], bool)
+    assert isinstance(body["embedding_api_key_configured"], bool)
+    assert body["qdrant_mode"] in {"in_memory", "remote"}
+    assert body["qdrant_collection"]
