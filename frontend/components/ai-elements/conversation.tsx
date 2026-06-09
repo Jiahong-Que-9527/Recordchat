@@ -15,7 +15,7 @@ export function Conversation({
   return (
     <section
       className={cn(
-        "flex min-h-0 flex-1 flex-col rounded-[32px] border border-white/70 bg-white/60 backdrop-blur",
+        "flex min-h-0 flex-1 flex-col rounded-[34px] border border-white/80 bg-[linear-gradient(180deg,_rgba(255,255,255,0.70)_0%,_rgba(247,251,250,0.86)_100%)] shadow-[0_18px_52px_rgba(15,23,42,0.08)] ring-1 ring-white/60 backdrop-blur",
         className
       )}
     >
@@ -53,9 +53,9 @@ export function ConversationContent({
 
 export function ConversationEmptyState() {
   return (
-    <Card className="mt-8 bg-white/80 sm:mt-20">
+    <Card className="mt-8 bg-[linear-gradient(180deg,_rgba(255,255,255,0.92)_0%,_rgba(247,251,250,0.88)_100%)] animate-[recordchat-rise_320ms_ease-out] sm:mt-20">
       <CardHeader className="items-center text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 shadow-sm">
+        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[linear-gradient(135deg,_rgba(20,184,166,0.14)_0%,_rgba(8,145,178,0.16)_100%)] text-teal-700 shadow-sm ring-1 ring-teal-100">
           <MessageSquareText className="h-7 w-7" />
         </div>
         <CardTitle className="text-2xl sm:text-3xl">
@@ -68,7 +68,7 @@ export function ConversationEmptyState() {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3 pt-0 sm:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-left">
+        <div className="rounded-[24px] border border-slate-200/90 bg-slate-50/80 p-4 text-left shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
             Ontology
           </p>
@@ -76,7 +76,7 @@ export function ConversationEmptyState() {
             Inspect class relationships, properties, and official ontology links.
           </p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-left">
+        <div className="rounded-[24px] border border-slate-200/90 bg-slate-50/80 p-4 text-left shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
             Implementation
           </p>
@@ -84,7 +84,7 @@ export function ConversationEmptyState() {
             Get grounded NE:ONE setup, Docker Compose, and API guidance.
           </p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-left">
+        <div className="rounded-[24px] border border-slate-200/90 bg-slate-50/80 p-4 text-left shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
             Structured Output
           </p>

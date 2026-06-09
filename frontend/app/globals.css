@@ -10,6 +10,22 @@ body {
   @apply bg-white text-slate-900 antialiased;
 }
 
+::selection {
+  background: rgba(20, 184, 166, 0.22);
+}
+
+@keyframes recordchat-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .recordchat-markdown p + p {
   margin-top: 0.85rem;
 }

@@ -12,15 +12,20 @@ export function Sources({ sources }: { sources: Source[] }) {
           {sources.length}
         </span>
       </div>
-      <ul className="space-y-2">
-        {sources.map((s) => (
+      <ul className="space-y-2.5">
+        {sources.map((s, index) => (
           <li
             key={s.chunk_id}
-            className="rounded-2xl border border-slate-200 bg-slate-50/70 px-3 py-3 text-xs text-slate-600"
+            className="group rounded-[22px] border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/80 px-3 py-3 text-xs text-slate-600 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-semibold text-slate-800">{s.source_name}</p>
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-slate-900 px-1.5 text-[10px] font-semibold text-white">
+                    {index + 1}
+                  </span>
+                  <p className="font-semibold text-slate-800">{s.source_name}</p>
+                </div>
                 {s.section_title ? (
                   <p className="mt-1 text-[11px] leading-5 text-slate-500">{s.section_title}</p>
                 ) : null}
@@ -33,7 +38,7 @@ export function Sources({ sources }: { sources: Source[] }) {
                   href={s.source_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="shrink-0 rounded-full border border-teal-200 bg-white px-3 py-1 text-[11px] font-medium text-teal-800 transition hover:bg-teal-50"
+                  className="shrink-0 rounded-full border border-teal-200 bg-white px-3 py-1 text-[11px] font-medium text-teal-800 transition group-hover:border-teal-300 group-hover:bg-teal-50"
                 >
                   Open
                 </a>

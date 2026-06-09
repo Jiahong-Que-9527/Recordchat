@@ -70,15 +70,18 @@ export default function Home() {
       />
 
       <section className="flex min-h-0 flex-1 flex-col gap-4 px-3 py-3 sm:px-4 sm:py-4">
-        <div className="border-b border-black/5 bg-white/70 px-4 py-4 backdrop-blur sm:px-6">
+        <div className="rounded-[30px] border border-white/70 bg-white/75 px-4 py-4 shadow-[0_16px_44px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6">
           <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-700">
                 ONE Record Grounded Chat
               </p>
               <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
-                Streaming answers, cited sources, and implementation guidance
+                Streaming answers, evidence-first citations, and implementation guidance
               </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Built for ontology lookups, developer support, and structured ONE Record outputs.
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="hidden sm:inline-flex">
@@ -129,10 +132,16 @@ export default function Home() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about ONE Record concepts, ontology, or NE:ONE implementation…"
+              onSubmitShortcut={() => ask(input)}
             />
             <PromptInputToolbar>
-              <div className="text-xs text-slate-500">
-                Grounded on official ONE Record, ontology, and NE:ONE sources.
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-slate-600">
+                  Grounded on official ONE Record, ontology, and NE:ONE sources.
+                </div>
+                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                  Enter to send. Shift+Enter for a new line.
+                </div>
               </div>
               <PromptInputSubmit isLoading={loading} disabled={!input.trim()} />
             </PromptInputToolbar>
