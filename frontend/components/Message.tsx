@@ -1,28 +1,26 @@
-import type { ChatResponse } from "@/lib/api";
+import { getMessageData, getMessageText, type RecordChatMessage } from "@/lib/api";
 import { JsonLdViewer } from "./JsonLdViewer";
 import { MarkdownAnswer } from "./MarkdownAnswer";
 import { QueryTypeBadge } from "./QueryTypeBadge";
 import { Sources } from "./Sources";
 
-export interface ChatTurn {
-  role: "user" | "assistant";
-  text: string;
-  data?: ChatResponse;
-  streaming?: boolean;
-}
+export function Message({ message }: { message: RecordChatMessage }) {
+  const text = getMessageText(message);
+  const data = getMessageData(message);
+  const streaming = message.parts.some(
+    (part) => part.type === "text" && part.state === "streaming"
+  );
 
-export function Message({ turn }: { turn: ChatTurn }) {
-  if (turn.role === "user") {
+  if (message.role === "user") {
     return (
       <div className="flex justify-end">
         <div className="max-w-[92%] rounded-[24px] bg-gradient-to-br from-teal-700 to-cyan-700 px-4 py-3 text-sm text-white shadow-[0_18px_40px_rgba(8,145,178,0.18)] sm:max-w-[80%]">
-          {turn.text}
+          {text}
         </div>
       </div>
     );
   }
 
-  const data = turn.data;
   return (
     <div className="flex justify-start">
       <div className="max-w-[96%] rounded-[28px] border border-white/70 bg-white/90 px-4 py-4 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur sm:max-w-[88%] sm:px-5">
@@ -31,8 +29,8 @@ export function Message({ turn }: { turn: ChatTurn }) {
             <QueryTypeBadge queryType={data.query_type} />
           </div>
         ) : null}
-        <MarkdownAnswer text={turn.text} />
-        {turn.streaming ? (
+        <MarkdownAnswer text={text} />
+        {streaming ? (
           <span className="mt-3 inline-block h-4 w-2 animate-pulse rounded-sm bg-teal-600 align-middle" />
         ) : null}
 

@@ -1,21 +1,41 @@
 "use client";
 
-import { startTransition, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { InspectorPanel } from "@/components/InspectorPanel";
 import { Sidebar } from "@/components/Sidebar";
-import { Message, type ChatTurn } from "@/components/Message";
+import { Message } from "@/components/Message";
 import { TypingIndicator } from "@/components/TypingIndicator";
-import { streamChat, type ChatResponse } from "@/lib/api";
+import { getMessageData, type RecordChatMessage } from "@/lib/api";
 
 export default function Home() {
-  const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [streamingStatus, setStreamingStatus] = useState<string>("");
   const endRef = useRef<HTMLDivElement>(null);
-  const latestAssistantData = [...turns]
+  const {
+    messages,
+    sendMessage,
+    setMessages,
+    status,
+    error,
+  } = useChat<RecordChatMessage>({
+    transport: new DefaultChatTransport<RecordChatMessage>({
+      api: "/api/chat",
+    }),
+  });
+  const loading = status === "submitted" || status === "streaming";
+  const streamingStatus =
+    status === "submitted"
+      ? "RecordChat is preparing retrieval…"
+      : status === "streaming"
+        ? "RecordChat is streaming…"
+        : "";
+  const latestAssistantMessage = [...messages]
     .reverse()
-    .find((turn) => turn.role === "assistant" && turn.data)?.data;
+    .find((message) => message.role === "assistant");
+  const latestAssistantData = latestAssistantMessage
+    ? getMessageData(latestAssistantMessage)
+    : undefined;
 
   function scrollToEnd() {
     requestAnimationFrame(() =>
@@ -25,67 +45,16 @@ export default function Home() {
 
   useEffect(() => {
     scrollToEnd();
-  }, [turns]);
+  }, [messages]);
 
-  async function ask(message: string) {
+  function ask(message: string) {
     const q = message.trim();
-    if (!q || loading) return;
-    setInput("");
-    const assistantIndex = turns.length + 1;
-    setTurns((t) => [
-      ...t,
-      { role: "user", text: q },
-      { role: "assistant", text: "", streaming: true },
-    ]);
-    setLoading(true);
-    setStreamingStatus("RecordChat is streaming…");
-    scrollToEnd();
-    try {
-      await streamChat(q, {
-        onToken(text) {
-          startTransition(() => {
-            setTurns((current) =>
-              current.map((turn, index) =>
-                index === assistantIndex
-                  ? { ...turn, text: `${turn.text}${text}`, streaming: true }
-                  : turn
-              )
-            );
-          });
-          scrollToEnd();
-        },
-        onMetadata(data: ChatResponse) {
-          startTransition(() => {
-            setTurns((current) =>
-              current.map((turn, index) =>
-                index === assistantIndex
-                  ? { ...turn, text: data.answer, data, streaming: false }
-                  : turn
-              )
-            );
-          });
-        },
-      });
-    } catch (e) {
-      setTurns((current) =>
-        current.map((turn, index) =>
-          index === assistantIndex
-            ? {
-                role: "assistant",
-                text:
-                  "Could not reach the RecordChat backend. Is it running on " +
-                  (process.env.NEXT_PUBLIC_API_BASE_URL ?? "the expected backend address") +
-                  "? Did you run /ingest, or configure the frontend proxy route?",
-                streaming: false,
-              }
-            : turn
-        )
-      );
-    } finally {
-      setLoading(false);
-      setStreamingStatus("");
-      scrollToEnd();
+    if (!q || loading) {
+      return;
     }
+
+    setInput("");
+    sendMessage({ text: q });
   }
 
   return (
@@ -93,8 +62,8 @@ export default function Home() {
       <Sidebar
         onPick={ask}
         onNewChat={() => {
-          setTurns([]);
-          setStreamingStatus("");
+          setMessages([]);
+          setInput("");
         }}
       />
 
@@ -117,7 +86,7 @@ export default function Home() {
 
         <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
           <div className="mx-auto flex max-w-4xl flex-col gap-4">
-            {turns.length === 0 ? (
+            {messages.length === 0 ? (
               <div className="mt-8 rounded-[28px] border border-white/70 bg-white/80 px-6 py-10 text-center shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur sm:mt-20 sm:px-8 sm:py-12">
                 <p className="text-2xl font-semibold text-slate-800 sm:text-3xl">
                   Ask RecordChat about IATA ONE Record
@@ -129,10 +98,18 @@ export default function Home() {
                 </p>
               </div>
             ) : (
-              turns.map((t, i) => <Message key={i} turn={t} />)
+              messages.map((message) => (
+                <Message key={message.id} message={message} />
+              ))
             )}
             {loading ? (
               <TypingIndicator label={streamingStatus || "Streaming…"} />
+            ) : null}
+            {error ? (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                Could not reach the RecordChat backend. Check the frontend proxy,
+                backend server, and `/ingest` state. Details: {error.message}
+              </div>
             ) : null}
             <div className="xl:hidden">
               <InspectorPanel latest={latestAssistantData} loading={loading} className="overflow-hidden rounded-[28px] border bg-white/80 shadow-[0_16px_48px_rgba(15,23,42,0.08)]" />
