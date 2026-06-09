@@ -117,3 +117,5 @@ Recommended order:
 - **ONE Record Server**: live retrieval of real logistics objects.
 
 The `Retriever` abstraction remains the seam for remote/live object lookup.
+The `Connector` abstraction is the new seam for optional workflow integrations
+such as RecordForge and future execution-oriented ecosystem tools.

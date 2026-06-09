@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     qdrant_collection: str = "recordchat_one_record"
     qdrant_upsert_batch_size: int = 128
 
+    # Workflow connectors
+    recordforge_url: str = ""
+    recordforge_api_key: str = ""
+
     # RAG
     rag_top_k: int = 5
 
