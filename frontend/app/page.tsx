@@ -1,15 +1,20 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { startTransition, useRef, useState } from "react";
+import { InspectorPanel } from "@/components/InspectorPanel";
 import { Sidebar } from "@/components/Sidebar";
 import { Message, type ChatTurn } from "@/components/Message";
-import { sendChat } from "@/lib/api";
+import { streamChat, type ChatResponse } from "@/lib/api";
 
 export default function Home() {
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [streamingStatus, setStreamingStatus] = useState<string>("");
   const endRef = useRef<HTMLDivElement>(null);
+  const latestAssistantData = [...turns]
+    .reverse()
+    .find((turn) => turn.role === "assistant" && turn.data)?.data;
 
   function scrollToEnd() {
     requestAnimationFrame(() =>
@@ -21,83 +26,146 @@ export default function Home() {
     const q = message.trim();
     if (!q || loading) return;
     setInput("");
-    setTurns((t) => [...t, { role: "user", text: q }]);
+    const assistantIndex = turns.length + 1;
+    setTurns((t) => [
+      ...t,
+      { role: "user", text: q },
+      { role: "assistant", text: "", streaming: true },
+    ]);
     setLoading(true);
+    setStreamingStatus("RecordChat is streaming…");
     scrollToEnd();
     try {
-      const data = await sendChat(q);
-      setTurns((t) => [
-        ...t,
-        { role: "assistant", text: data.answer, data },
-      ]);
-    } catch (e) {
-      setTurns((t) => [
-        ...t,
-        {
-          role: "assistant",
-          text:
-            "Could not reach the RecordChat backend. Is it running on " +
-            (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000") +
-            "? Did you run /ingest?",
+      await streamChat(q, {
+        onToken(text) {
+          startTransition(() => {
+            setTurns((current) =>
+              current.map((turn, index) =>
+                index === assistantIndex
+                  ? { ...turn, text: `${turn.text}${text}`, streaming: true }
+                  : turn
+              )
+            );
+          });
+          scrollToEnd();
         },
-      ]);
+        onMetadata(data: ChatResponse) {
+          startTransition(() => {
+            setTurns((current) =>
+              current.map((turn, index) =>
+                index === assistantIndex
+                  ? { ...turn, text: data.answer, data, streaming: false }
+                  : turn
+              )
+            );
+          });
+        },
+      });
+    } catch (e) {
+      setTurns((current) =>
+        current.map((turn, index) =>
+          index === assistantIndex
+            ? {
+                role: "assistant",
+                text:
+                  "Could not reach the RecordChat backend. Is it running on " +
+                  (process.env.NEXT_PUBLIC_API_BASE_URL ?? "the expected backend address") +
+                  "? Did you run /ingest, or configure the frontend proxy route?",
+                streaming: false,
+              }
+            : turn
+        )
+      );
     } finally {
       setLoading(false);
+      setStreamingStatus("");
       scrollToEnd();
     }
   }
 
   return (
-    <main className="flex h-screen">
-      <Sidebar onPick={ask} onNewChat={() => setTurns([])} />
+    <main className="flex min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(13,148,136,0.12),_transparent_28%),linear-gradient(180deg,_#f7fbfb_0%,_#eef4f3_100%)]">
+      <Sidebar
+        onPick={ask}
+        onNewChat={() => {
+          setTurns([]);
+          setStreamingStatus("");
+        }}
+      />
 
       <section className="flex flex-1 flex-col">
+        <div className="border-b border-black/5 bg-white/70 px-6 py-4 backdrop-blur">
+          <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-700">
+                ONE Record Grounded Chat
+              </p>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Streaming answers, cited sources, and implementation guidance
+              </h2>
+            </div>
+            <div className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-800">
+              {loading ? streamingStatus || "Streaming…" : "Ready"}
+            </div>
+          </div>
+        </div>
+
         <div className="flex-1 overflow-y-auto px-6 py-6">
-          <div className="mx-auto flex max-w-3xl flex-col gap-4">
+          <div className="mx-auto flex max-w-4xl flex-col gap-4">
             {turns.length === 0 ? (
-              <div className="mt-20 text-center text-slate-400">
-                <p className="text-2xl font-semibold text-slate-600">
-                  Ask about IATA ONE Record
+              <div className="mt-20 rounded-[28px] border border-white/70 bg-white/80 px-8 py-12 text-center shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur">
+                <p className="text-3xl font-semibold text-slate-800">
+                  Ask RecordChat about IATA ONE Record
                 </p>
-                <p className="mt-2 text-sm">
-                  Concepts, the data model, JSON-LD, the API, and how logistics
-                  objects relate. Pick an example on the left to start.
+                <p className="mt-3 text-sm leading-6 text-slate-500">
+                  Stream answers from the broadened official and NE:ONE source pack.
+                  Concepts, ontology relationships, JSON-LD, API behavior, and
+                  implementation support all land in the same chat surface.
                 </p>
               </div>
             ) : (
               turns.map((t, i) => <Message key={i} turn={t} />)
             )}
             {loading ? (
-              <div className="text-sm text-slate-400">RecordChat is thinking…</div>
+              <div className="text-sm text-slate-500">{streamingStatus}</div>
             ) : null}
+            <div className="xl:hidden">
+              <InspectorPanel latest={latestAssistantData} loading={loading} className="overflow-hidden rounded-[28px] border bg-white/80 shadow-[0_16px_48px_rgba(15,23,42,0.08)]" />
+            </div>
             <div ref={endRef} />
           </div>
         </div>
 
-        <div className="border-t border-border bg-white px-6 py-4">
+        <div className="border-t border-black/5 bg-white/80 px-6 py-4 backdrop-blur">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               ask(input);
             }}
-            className="mx-auto flex max-w-3xl gap-2"
+            className="mx-auto flex max-w-4xl gap-3"
           >
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about ONE Record…"
-              className="flex-1 rounded-lg border border-border px-4 py-2 text-sm outline-none focus:border-accent"
+              placeholder="Ask about ONE Record concepts, ontology, or NE:ONE implementation…"
+              className="flex-1 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
             />
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-accent px-5 py-2 text-sm font-medium text-white disabled:opacity-50"
+              className="rounded-2xl bg-teal-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-teal-800 disabled:opacity-50"
             >
-              Send
+              {loading ? "Streaming…" : "Send"}
             </button>
           </form>
         </div>
       </section>
+
+      <InspectorPanel
+        latest={latestAssistantData}
+        loading={loading}
+        className="hidden w-[360px] border-l xl:flex xl:flex-col"
+      />
     </main>
   );
 }
