@@ -6,6 +6,7 @@ const QUERY_TYPE_STYLES: Record<QueryType, string> = {
   api_question: "border-indigo-200 bg-indigo-50 text-indigo-800",
   implementation_question: "border-emerald-200 bg-emerald-50 text-emerald-800",
   ontology_question: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-800",
+  synthetic_data_generation: "border-cyan-200 bg-cyan-50 text-cyan-800",
   jsonld_generation: "border-slate-300 bg-slate-100 text-slate-800",
   general_question: "border-slate-200 bg-white text-slate-700",
 };

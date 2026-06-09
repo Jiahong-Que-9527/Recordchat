@@ -64,6 +64,12 @@ _TYPE_HINTS = {
         "in the retrieved context, and distinguish them from official ONE Record "
         "standard behavior."
     ),
+    QueryType.synthetic_data_generation: (
+        "The user wants synthetic ONE Record objects or a generation workflow. "
+        "If a generation connector is not available, explain the limitation "
+        "clearly and state what objects or steps would be produced once the "
+        "workflow integration is enabled."
+    ),
 }
 
 

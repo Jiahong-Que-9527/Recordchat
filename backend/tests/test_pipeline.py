@@ -34,6 +34,8 @@ class FakeStreamingLLMProvider(LLMProvider):
 def test_classify_query():
     assert classify_query("Generate a JSON-LD example for a Piece") == QueryType.jsonld_generation
     assert classify_query("给我生成一个 Piece 的 JSON-LD 示例") == QueryType.jsonld_generation
+    assert classify_query("Generate 5 synthetic shipments with pieces") == QueryType.synthetic_data_generation
+    assert classify_query("请生成 5 个带 pieces 的 synthetic shipments") == QueryType.synthetic_data_generation
     assert classify_query("What is the difference between Shipment and Piece") == QueryType.relationship_question
     assert classify_query("What is a Waybill and how does it relate to Shipment?") == QueryType.relationship_question
     assert classify_query("Waybill 和 Shipment 的关系是什么？") == QueryType.relationship_question
@@ -88,3 +90,13 @@ def test_answer_stream_emits_tokens_then_metadata(ingested_retriever):
     assert events[-1]["event"] == "metadata"
     assert events[-1]["data"]["answer"] == "Streamed answer"
     assert events[-1]["data"]["sources"]
+
+
+def test_synthetic_generation_query_degrades_gracefully(ingested_retriever):
+    resp = answer(
+        "Generate 5 synthetic shipments with pieces",
+        retriever=ingested_retriever,
+        llm=FakeLLMProvider(),
+    )
+    assert resp.query_type == QueryType.synthetic_data_generation
+    assert "RecordForge connector is not configured" in resp.answer

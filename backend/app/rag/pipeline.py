@@ -12,6 +12,7 @@ from collections.abc import Iterator
 from app.core.config import get_settings
 from app.core.llm import LLMProvider, get_llm_provider
 from app.core.logging import get_logger
+from app.connectors.base import ConnectorAvailability
 from app.domain import jsonld_generator, one_record_schema
 from app.models.chat import ChatResponse, QueryType, Source
 from app.rag import prompt as prompt_mod
@@ -50,6 +51,60 @@ def _is_ontology_query(query: str) -> bool:
             "值域",
         )
     ) or ("关联" in query and any(token in query for token in ("什么属性", "哪个属性", "哪些属性")))
+
+
+def _is_synthetic_generation_query(query: str) -> bool:
+    q = query.lower()
+    explicit_generation_markers = (
+        "synthetic",
+        "fake data",
+        "mock data",
+        "sample data",
+        "test data",
+        "generate shipment",
+        "generate shipments",
+        "generate piece",
+        "generate pieces",
+        "seed shipment",
+        "seed data",
+        "合成数据",
+        "模拟数据",
+        "测试数据",
+        "生成 shipment",
+        "生成 shipments",
+        "生成 piece",
+        "生成 pieces",
+        "生成 5 个 shipment",
+        "生成 5 个 shipments",
+    )
+    object_markers = (
+        "shipment",
+        "shipments",
+        "piece",
+        "pieces",
+        "waybill",
+        "logisticsobject",
+        "logistics object",
+        "订舱",
+        "运单",
+        "货件",
+        "shipment",
+        "piece",
+    )
+    generation_verbs = (
+        "generate",
+        "create",
+        "produce",
+        "synthesize",
+        "生成",
+        "创建",
+        "构造",
+    )
+    if any(marker in q or marker in query for marker in explicit_generation_markers):
+        return True
+    return any(verb in q or verb in query for verb in generation_verbs) and any(
+        marker in q or marker in query for marker in object_markers
+    )
 
 
 def classify_query(query: str) -> QueryType:
@@ -145,6 +200,8 @@ def classify_query(query: str) -> QueryType:
         "generate" in q or "example" in q or "create" in q or "生成" in query or "示例" in query
     ):
         return QueryType.jsonld_generation
+    if _is_synthetic_generation_query(query):
+        return QueryType.synthetic_data_generation
     if _is_ontology_query(query):
         return QueryType.ontology_question
     if any(k in q for k in implementation_markers) or (
@@ -225,6 +282,45 @@ def _prepare_answer_context(query: str, retriever: Retriever) -> tuple[QueryType
     return query_type, chunks, user_prompt
 
 
+def _synthetic_generation_answer(query: str) -> str:
+    settings = get_settings()
+    if not settings.recordforge_url:
+        availability = ConnectorAvailability.unconfigured.value
+        return (
+            "Answer:\n"
+            "This request is classified as synthetic ONE Record data generation, "
+            "but the RecordForge connector is not configured yet.\n\n"
+            "Related concepts:\n"
+            "- Synthetic shipments\n"
+            "- RecordForge connector\n"
+            "- Workflow orchestration\n\n"
+            "Implementation note:\n"
+            f"Connector status: {availability}. Set RECORDFORGE_URL (and optionally "
+            "RECORDFORGE_API_KEY) to enable generation workflows such as synthetic "
+            "shipments with pieces. Until then, RecordChat can explain the expected "
+            "object model and payload structure, but it cannot execute the generation "
+            f"request: {query}\n\n"
+            "Sources:\n"
+            "- Connector abstraction and orchestration configuration"
+        )
+
+    return (
+        "Answer:\n"
+        "This request is classified as synthetic ONE Record data generation. "
+        "The RecordForge connector is configured, but execution planning is not "
+        "implemented in this milestone yet.\n\n"
+        "Related concepts:\n"
+        "- Synthetic shipments\n"
+        "- RecordForge connector\n"
+        "- Workflow orchestration\n\n"
+        "Implementation note:\n"
+        "The next orchestration slice will turn this intent into a structured "
+        "workflow request against RecordForge.\n\n"
+        "Sources:\n"
+        "- Connector abstraction and orchestration configuration"
+    )
+
+
 def _sources_from_chunks(chunks) -> list[Source]:
     return [
         Source(
@@ -246,6 +342,14 @@ def answer(
     llm = llm or get_llm_provider()
 
     query_type, chunks, user_prompt = _prepare_answer_context(query, retriever)
+    if query_type == QueryType.synthetic_data_generation:
+        return ChatResponse(
+            answer=_synthetic_generation_answer(query),
+            query_type=query_type,
+            sources=_sources_from_chunks(chunks),
+            related_concepts=_related_concepts(query, chunks),
+            structured_output=None,
+        )
     answer_text = llm.complete(system=prompt_mod.SYSTEM_PROMPT, user=user_prompt)
     if not answer_text.strip():
         logger.warning("LLM returned an empty answer; using grounded fallback text.")
@@ -273,6 +377,18 @@ def answer_stream(
     llm = llm or get_llm_provider()
 
     query_type, chunks, user_prompt = _prepare_answer_context(query, retriever)
+    if query_type == QueryType.synthetic_data_generation:
+        answer_text = _synthetic_generation_answer(query)
+        yield {"event": "token", "data": {"text": answer_text}}
+        response = ChatResponse(
+            answer=answer_text,
+            query_type=query_type,
+            sources=_sources_from_chunks(chunks),
+            related_concepts=_related_concepts(query, chunks),
+            structured_output=None,
+        )
+        yield {"event": "metadata", "data": response.model_dump(mode="json")}
+        return
     parts: list[str] = []
     for token in llm.complete_stream(system=prompt_mod.SYSTEM_PROMPT, user=user_prompt):
         if token:

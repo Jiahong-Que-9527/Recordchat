@@ -6,6 +6,7 @@ export type QueryType =
   | "api_question"
   | "implementation_question"
   | "ontology_question"
+  | "synthetic_data_generation"
   | "jsonld_generation"
   | "general_question";
 
