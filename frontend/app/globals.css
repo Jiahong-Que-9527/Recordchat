@@ -9,3 +9,98 @@
 body {
   @apply bg-white text-slate-900 antialiased;
 }
+
+.recordchat-markdown p + p {
+  margin-top: 0.85rem;
+}
+
+.recordchat-markdown ul,
+.recordchat-markdown ol {
+  margin: 0.85rem 0 0 1.25rem;
+}
+
+.recordchat-markdown li + li {
+  margin-top: 0.35rem;
+}
+
+.recordchat-markdown h1,
+.recordchat-markdown h2,
+.recordchat-markdown h3 {
+  margin-top: 1rem;
+  font-weight: 700;
+  color: rgb(15 23 42);
+}
+
+.recordchat-markdown pre {
+  margin-top: 1rem;
+  overflow-x: auto;
+  border-radius: 1rem;
+  border: 1px solid rgb(30 41 59 / 0.45);
+  background: rgb(2 6 23);
+  padding: 1rem;
+  color: rgb(226 232 240);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+}
+
+.recordchat-markdown pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.recordchat-markdown blockquote {
+  margin-top: 1rem;
+  border-left: 4px solid rgb(20 184 166 / 0.4);
+  padding-left: 1rem;
+  color: rgb(71 85 105);
+}
+
+.recordchat-markdown table {
+  margin-top: 1rem;
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgb(226 232 240);
+}
+
+.recordchat-markdown th,
+.recordchat-markdown td {
+  border-bottom: 1px solid rgb(226 232 240);
+  padding: 0.65rem 0.8rem;
+  text-align: left;
+}
+
+.recordchat-markdown th {
+  background: rgb(248 250 252);
+  font-weight: 600;
+}
+
+.recordchat-markdown .hljs-keyword,
+.recordchat-markdown .hljs-selector-tag,
+.recordchat-markdown .hljs-literal {
+  color: rgb(125 211 252);
+}
+
+.recordchat-markdown .hljs-string,
+.recordchat-markdown .hljs-attr,
+.recordchat-markdown .hljs-template-tag {
+  color: rgb(134 239 172);
+}
+
+.recordchat-markdown .hljs-number,
+.recordchat-markdown .hljs-symbol,
+.recordchat-markdown .hljs-bullet {
+  color: rgb(253 224 71);
+}
+
+.recordchat-markdown .hljs-title,
+.recordchat-markdown .hljs-section,
+.recordchat-markdown .hljs-type {
+  color: rgb(196 181 253);
+}
+
+.recordchat-markdown .hljs-comment,
+.recordchat-markdown .hljs-quote {
+  color: rgb(148 163 184);
+}
