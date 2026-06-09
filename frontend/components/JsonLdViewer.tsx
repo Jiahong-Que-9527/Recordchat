@@ -16,37 +16,33 @@ export function JsonLdViewer({ data }: { data: Record<string, unknown> }) {
   }
 
   return (
-    <div className="mt-3 overflow-hidden rounded-[28px] border border-slate-800 bg-slate-950 shadow-[0_18px_48px_rgba(15,23,42,0.28)]">
+    <div className="mt-3 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-rc-md">
       <div className="border-b border-slate-800/90 px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-              JSON-LD Output
-            </span>
+            <span className="text-sm font-semibold text-slate-200">JSON-LD Output</span>
             <div className="mt-2 flex items-center gap-2">
-              <Badge variant="outline" className="border-slate-700 bg-slate-900 text-slate-200">
+              <Badge variant="outline" className="border-slate-700 bg-slate-900 text-slate-300">
                 {entries.length} top-level fields
-              </Badge>
-              <Badge variant="outline" className="border-slate-700 bg-slate-900 text-slate-200">
-                {mode === "structured" ? "Structured view" : "Raw view"}
               </Badge>
             </div>
           </div>
           <button
             type="button"
             onClick={copy}
-            className="rounded-full border border-slate-700 px-3 py-1 text-[11px] font-medium text-slate-200 transition hover:border-slate-500 hover:text-white"
+            aria-label="Copy JSON-LD to clipboard"
+            className="rounded-lg border border-slate-700 px-3 py-1 text-[11px] font-medium text-slate-200 transition hover:border-slate-500 hover:text-white"
           >
             {copied ? "Copied" : "Copy"}
           </button>
         </div>
-        <div className="mt-3 inline-flex rounded-full border border-slate-800 bg-slate-900/80 p-1">
+        <div className="mt-3 inline-flex rounded-lg border border-slate-800 bg-slate-900/80 p-1">
           {(["structured", "raw"] as const).map((option) => (
             <button
               key={option}
               type="button"
               onClick={() => setMode(option)}
-              className={`rounded-full px-3 py-1 text-[11px] font-medium transition ${
+              className={`rounded-md px-3 py-1 text-[11px] font-medium transition ${
                 mode === option
                   ? "bg-slate-100 text-slate-950"
                   : "text-slate-400 hover:text-slate-200"
@@ -62,10 +58,10 @@ export function JsonLdViewer({ data }: { data: Record<string, unknown> }) {
           {entries.map(([key, value]) => (
             <div
               key={key}
-              className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3"
+              className="rounded-lg border border-slate-800 bg-slate-900/80 p-3"
             >
               <div className="mb-2 flex items-center justify-between gap-3">
-                <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                <span className="font-mono text-[11px] font-semibold text-sky-300">
                   {key}
                 </span>
                 <span className="text-[10px] uppercase tracking-[0.18em] text-slate-500">

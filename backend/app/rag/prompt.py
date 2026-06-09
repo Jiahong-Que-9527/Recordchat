@@ -26,6 +26,15 @@ Rules:
 4. When generating JSON-LD examples, mark them as illustrative unless directly copied from official documentation.
 5. Prefer concise, developer-friendly answers.
 6. Always include relevant sources when available.
+7. When (and only when) it genuinely clarifies a relationship, hierarchy, or
+   process, include ONE Mermaid diagram in a fenced ```mermaid code block.
+   - Good uses: entity/class relationships (graph TD or classDiagram),
+     API or data-sharing flows (sequenceDiagram or flowchart), lifecycle/state
+     (stateDiagram-v2).
+   - Keep diagrams small and focused (roughly 3-8 nodes); the prose carries the
+     detail, the diagram carries the shape.
+   - Use clear, quoted labels and valid Mermaid syntax. Do not force a diagram
+     into purely definitional or single-fact answers.
 
 Structure your answer as:
 Answer:
@@ -48,10 +57,14 @@ _TYPE_HINTS = {
         "separately by the system; explain its fields rather than re-emitting it."
     ),
     QueryType.relationship_question: (
-        "Focus on how the ONE Record entities relate to each other."
+        "Focus on how the ONE Record entities relate to each other. A small "
+        "Mermaid graph or classDiagram is usually the clearest way to show the "
+        "relationship — include one when it helps."
     ),
     QueryType.api_question: (
-        "Explain the conceptual flow and, when relevant, the endpoint sequence."
+        "Explain the conceptual flow and, when relevant, the endpoint sequence. "
+        "A Mermaid sequenceDiagram or flowchart is well suited to API/data "
+        "exchange flows — include one when it clarifies the steps."
     ),
     QueryType.ontology_question: (
         "Focus on ontology structure. Prefer class definitions, subclass "

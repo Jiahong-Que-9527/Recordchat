@@ -1,9 +1,7 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { EXAMPLE_QUESTIONS } from "@/lib/constants";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 export function SuggestionList({
   onPick,
@@ -11,27 +9,18 @@ export function SuggestionList({
   onPick: (question: string) => void;
 }) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <Badge variant="secondary" className="gap-1.5">
-          <Sparkles className="h-3 w-3" />
-          Suggested prompts
-        </Badge>
-      </div>
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {EXAMPLE_QUESTIONS.map((question) => (
-          <Button
-            key={question}
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onPick(question)}
-            className="h-auto min-w-[220px] justify-start whitespace-normal px-3 py-2 text-left text-xs leading-5"
-          >
-            {question}
-          </Button>
-        ))}
-      </div>
+    <div className="mx-auto mt-8 grid w-full max-w-md grid-cols-1 gap-2 sm:grid-cols-2">
+      {EXAMPLE_QUESTIONS.slice(0, 4).map((question) => (
+        <button
+          key={question}
+          type="button"
+          onClick={() => onPick(question)}
+          className="group flex items-start justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left text-xs leading-5 text-slate-600 shadow-rc-sm transition hover:border-accent-ring hover:bg-accent-weak"
+        >
+          <span>{question}</span>
+          <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-300 transition group-hover:text-accent" />
+        </button>
+      ))}
     </div>
   );
 }

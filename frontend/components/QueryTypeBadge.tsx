@@ -1,20 +1,21 @@
 import type { QueryType } from "@/lib/api";
 
-const QUERY_TYPE_STYLES: Record<QueryType, string> = {
-  concept_explanation: "border-sky-200 bg-sky-50 text-sky-800",
-  relationship_question: "border-amber-200 bg-amber-50 text-amber-800",
-  api_question: "border-indigo-200 bg-indigo-50 text-indigo-800",
-  implementation_question: "border-emerald-200 bg-emerald-50 text-emerald-800",
-  ontology_question: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-800",
-  synthetic_data_generation: "border-cyan-200 bg-cyan-50 text-cyan-800",
-  jsonld_generation: "border-slate-300 bg-slate-100 text-slate-800",
-  general_question: "border-slate-200 bg-white text-slate-700",
-};
+// Two tones only: "generative" intents get the accent tint, everything else
+// stays neutral. Keeps the surface calm instead of an 8-colour rainbow.
+const GENERATIVE: ReadonlySet<QueryType> = new Set([
+  "jsonld_generation",
+  "synthetic_data_generation",
+]);
 
 export function QueryTypeBadge({ queryType }: { queryType: QueryType }) {
+  const generative = GENERATIVE.has(queryType);
   return (
     <span
-      className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${QUERY_TYPE_STYLES[queryType]}`}
+      className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${
+        generative
+          ? "border-accent-ring bg-accent-weak text-accent"
+          : "border-slate-200 bg-slate-50 text-slate-600"
+      }`}
     >
       {queryType.replace(/_/g, " ")}
     </span>

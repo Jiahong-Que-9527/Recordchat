@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { MessageSquareText } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowDown, MessageSquareText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Conversation({
@@ -15,7 +14,7 @@ export function Conversation({
   return (
     <section
       className={cn(
-        "flex min-h-0 flex-1 flex-col rounded-[34px] border border-white/80 bg-[linear-gradient(180deg,_rgba(255,255,255,0.70)_0%,_rgba(247,251,250,0.86)_100%)] shadow-[0_18px_52px_rgba(15,23,42,0.08)] ring-1 ring-white/60 backdrop-blur",
+        "flex min-h-0 flex-1 flex-col rounded-2xl border border-slate-200 bg-white shadow-rc-sm",
         className
       )}
     >
@@ -24,75 +23,114 @@ export function Conversation({
   );
 }
 
+const NEAR_BOTTOM_PX = 120;
+
 export function ConversationContent({
   children,
   watch,
+  newTurnKey,
   className,
 }: {
   children: React.ReactNode;
+  /** Changes on every streaming update; drives "follow while pinned". */
   watch?: unknown;
+  /** Increments when the user sends a new message; forces a re-pin + jump. */
+  newTurnKey?: number;
   className?: string;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  // "pinned" = stuck to the bottom and following new content. The user
+  // detaches by scrolling up; they re-attach by scrolling back to the bottom.
+  const [pinned, setPinned] = useState(true);
+  const pinnedRef = useRef(true);
+  // Ignore scroll events fired by our own smooth programmatic scrolls so the
+  // animation's intermediate positions don't get mistaken for a user scroll-up.
+  const suppressUntil = useRef(0);
 
+  const setPinnedBoth = useCallback((value: boolean) => {
+    pinnedRef.current = value;
+    setPinned(value);
+  }, []);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior) => {
+    if (behavior === "smooth") {
+      suppressUntil.current = performance.now() + 700;
+    }
+    endRef.current?.scrollIntoView({ behavior, block: "end" });
+  }, []);
+
+  // Re-evaluate pinned state on user scroll. Programmatic scrolls always land
+  // at the bottom (→ near bottom → stays pinned), so a "far from bottom" event
+  // can only come from the user scrolling up.
+  const handleScroll = useCallback(() => {
+    if (performance.now() < suppressUntil.current) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setPinnedBoth(distance < NEAR_BOTTOM_PX);
+  }, [setPinnedBoth]);
+
+  // Follow new/streaming content only while pinned — instant, no animation.
   useEffect(() => {
-    requestAnimationFrame(() =>
-      endRef.current?.scrollIntoView({ behavior: "smooth" })
-    );
+    if (pinnedRef.current) {
+      scrollToBottom("auto");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watch]);
 
+  // A new user turn always re-pins and jumps to it.
+  useEffect(() => {
+    if (newTurnKey === undefined) return;
+    setPinnedBoth(true);
+    requestAnimationFrame(() => scrollToBottom("smooth"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newTurnKey]);
+
   return (
-    <div className={cn("flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6", className)}>
-      <div className="mx-auto flex max-w-4xl flex-col gap-4">
-        {children}
-        <div ref={endRef} />
+    <div className="relative min-h-0 flex-1">
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className={cn("h-full overflow-y-auto px-4 py-5 sm:px-6 sm:py-6 xl:px-8", className)}
+      >
+        <div className="mx-auto flex max-w-3xl flex-col gap-4">
+          {children}
+          <div ref={endRef} />
+        </div>
       </div>
+
+      {!pinned ? (
+        <button
+          type="button"
+          onClick={() => {
+            setPinnedBoth(true);
+            scrollToBottom("smooth");
+          }}
+          aria-label="Scroll to latest message"
+          className="absolute bottom-4 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-rc-md transition hover:border-accent-ring hover:text-accent"
+        >
+          <ArrowDown className="h-3.5 w-3.5" />
+          Latest
+        </button>
+      ) : null}
     </div>
   );
 }
 
 export function ConversationEmptyState() {
   return (
-    <Card className="mt-8 bg-[linear-gradient(180deg,_rgba(255,255,255,0.92)_0%,_rgba(247,251,250,0.88)_100%)] animate-[recordchat-rise_320ms_ease-out] sm:mt-20">
-      <CardHeader className="items-center text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[linear-gradient(135deg,_rgba(20,184,166,0.14)_0%,_rgba(8,145,178,0.16)_100%)] text-teal-700 shadow-sm ring-1 ring-teal-100">
-          <MessageSquareText className="h-7 w-7" />
-        </div>
-        <CardTitle className="text-2xl sm:text-3xl">
-          Ask RecordChat about IATA ONE Record
-        </CardTitle>
-        <CardDescription className="max-w-2xl">
-          Stream answers from the broadened official and NE:ONE source pack.
-          Concepts, ontology relationships, JSON-LD, API behavior, and
-          implementation support all land in the same chat surface.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-3 pt-0 sm:grid-cols-3">
-        <div className="rounded-[24px] border border-slate-200/90 bg-slate-50/80 p-4 text-left shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Ontology
-          </p>
-          <p className="mt-2 text-sm text-slate-700">
-            Inspect class relationships, properties, and official ontology links.
-          </p>
-        </div>
-        <div className="rounded-[24px] border border-slate-200/90 bg-slate-50/80 p-4 text-left shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Implementation
-          </p>
-          <p className="mt-2 text-sm text-slate-700">
-            Get grounded NE:ONE setup, Docker Compose, and API guidance.
-          </p>
-        </div>
-        <div className="rounded-[24px] border border-slate-200/90 bg-slate-50/80 p-4 text-left shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Structured Output
-          </p>
-          <p className="mt-2 text-sm text-slate-700">
-            Review JSON-LD and citations alongside the streamed answer.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="mx-auto mt-10 flex max-w-md flex-col items-center text-center animate-[recordchat-rise_320ms_ease-out] sm:mt-16">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-weak text-accent">
+        <MessageSquareText className="h-6 w-6" />
+      </div>
+      <h2 className="mt-4 text-xl font-semibold text-slate-900 sm:text-2xl">
+        Ask RecordChat about IATA ONE Record
+      </h2>
+      <p className="mt-2 text-sm leading-6 text-slate-500">
+        Grounded answers on ONE Record concepts, ontology relationships, JSON-LD,
+        API behavior, and NE:ONE implementation — with sources you can inspect.
+      </p>
+    </div>
   );
 }

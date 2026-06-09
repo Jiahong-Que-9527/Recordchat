@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PanelRight, PanelRightOpen, X } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import {
@@ -19,15 +20,18 @@ import { InspectorPanel } from "@/components/InspectorPanel";
 import { Sidebar } from "@/components/Sidebar";
 import { Message } from "@/components/Message";
 import { TypingIndicator } from "@/components/TypingIndicator";
-import { Badge } from "@/components/ui/badge";
 import { getMessageData, type RecordChatMessage } from "@/lib/api";
 
 export default function Home() {
   const [input, setInput] = useState("");
+  const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [desktopInspectorOpen, setDesktopInspectorOpen] = useState(true);
   const {
     messages,
     sendMessage,
     setMessages,
+    regenerate,
+    stop,
     status,
     error,
   } = useChat<RecordChatMessage>({
@@ -38,90 +42,137 @@ export default function Home() {
   const loading = status === "submitted" || status === "streaming";
   const streamingStatus =
     status === "submitted"
-      ? "RecordChat is preparing retrieval…"
+      ? "Preparing retrieval…"
       : status === "streaming"
-        ? "RecordChat is streaming…"
+        ? "Streaming…"
         : "";
+
   const latestAssistantMessage = [...messages]
     .reverse()
     .find((message) => message.role === "assistant");
   const latestAssistantData = latestAssistantMessage
     ? getMessageData(latestAssistantMessage)
     : undefined;
+  const lastMessageId = messages[messages.length - 1]?.id;
+  const userTurnCount = messages.filter((m) => m.role === "user").length;
 
   function ask(message: string) {
     const q = message.trim();
     if (!q || loading) {
       return;
     }
-
     setInput("");
     sendMessage({ text: q });
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top_left,_rgba(13,148,136,0.12),_transparent_28%),linear-gradient(180deg,_#f7fbfb_0%,_#eef4f3_100%)] lg:flex-row">
-      <Sidebar
-        onPick={ask}
-        onNewChat={() => {
-          setMessages([]);
-          setInput("");
-        }}
-      />
+    <main className="min-h-screen px-3 py-3 sm:px-4 sm:py-4">
+      <div
+        className={`mx-auto grid min-h-[calc(100vh-1.5rem)] max-w-[1680px] grid-cols-1 gap-4 ${
+          desktopInspectorOpen
+            ? "xl:grid-cols-[260px_minmax(0,1fr)_340px]"
+            : "xl:grid-cols-[260px_minmax(0,1fr)]"
+        }`}
+      >
+        <Sidebar
+          onPick={ask}
+          onNewChat={() => {
+            setMessages([]);
+            setInput("");
+          }}
+        />
 
-      <section className="flex min-h-0 flex-1 flex-col gap-4 px-3 py-3 sm:px-4 sm:py-4">
-        <div className="rounded-[30px] border border-white/70 bg-white/75 px-4 py-4 shadow-[0_16px_44px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6">
-          <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-700">
-                ONE Record Grounded Chat
+        <section className="flex min-h-0 flex-col gap-3">
+          {/* Slim toolbar — short intro + status, replaces the old marketing block. */}
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-rc-sm">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-800">
+                ONE Record grounded chat
               </p>
-              <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
-                Streaming answers, evidence-first citations, and implementation guidance
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Built for ontology lookups, developer support, and structured ONE Record outputs.
+              <p className="mt-0.5 truncate text-xs text-slate-500">
+                Evidence-backed answers on ONE Record ontology, JSON-LD, and NE:ONE implementation — every reply cites its sources.
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="hidden sm:inline-flex">
-                useChat + AI SDK
-              </Badge>
-              <div className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-800">
+            <div className="flex shrink-0 items-center gap-2">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+                  loading
+                    ? "bg-accent-weak text-accent"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    loading ? "animate-pulse bg-accent" : "bg-slate-400"
+                  }`}
+                />
                 {loading ? streamingStatus || "Streaming…" : "Ready"}
-              </div>
+              </span>
+              {/* Mobile: open drawer */}
+              <button
+                type="button"
+                onClick={() => setInspectorOpen(true)}
+                aria-label="Open inspector"
+                title="Inspector"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-100 xl:hidden"
+              >
+                <PanelRight className="h-4 w-4" />
+              </button>
+              {/* Desktop: reopen collapsed inspector */}
+              {!desktopInspectorOpen ? (
+                <button
+                  type="button"
+                  onClick={() => setDesktopInspectorOpen(true)}
+                  aria-label="Show inspector"
+                  title="Show inspector"
+                  className="hidden h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 xl:inline-flex"
+                >
+                  <PanelRightOpen className="h-4 w-4" />
+                  Inspector
+                </button>
+              ) : null}
             </div>
           </div>
-        </div>
 
-        <Conversation className="min-h-0">
-          <ConversationContent watch={messages}>
-            {messages.length === 0 ? (
-              <>
-                <ConversationEmptyState />
-                <SuggestionList onPick={ask} />
-              </>
-            ) : (
-              messages.map((message) => (
-                <Message key={message.id} message={message} />
-              ))
-            )}
-            {loading ? (
-              <TypingIndicator label={streamingStatus || "Streaming…"} />
-            ) : null}
-            {error ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                Could not reach the RecordChat backend. Check the frontend proxy,
-                backend server, and `/ingest` state. Details: {error.message}
-              </div>
-            ) : null}
-            <div className="xl:hidden">
-              <InspectorPanel latest={latestAssistantData} loading={loading} className="overflow-hidden rounded-[28px] border bg-white/80 shadow-[0_16px_48px_rgba(15,23,42,0.08)]" />
-            </div>
-          </ConversationContent>
-        </Conversation>
+          <Conversation className="min-h-0 flex-1">
+            <ConversationContent watch={messages} newTurnKey={userTurnCount}>
+              {messages.length === 0 ? (
+                <>
+                  <ConversationEmptyState />
+                  <SuggestionList onPick={ask} />
+                </>
+              ) : (
+                messages.map((message) => (
+                  <Message
+                    key={message.id}
+                    message={message}
+                    isLast={message.id === lastMessageId}
+                    loading={loading}
+                    onRegenerate={() => regenerate()}
+                  />
+                ))
+              )}
+              {loading ? (
+                <TypingIndicator label={streamingStatus || "Streaming…"} />
+              ) : null}
+              {error ? (
+                <div className="flex flex-col gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                  <span>
+                    Could not reach the RecordChat backend. Check the frontend proxy,
+                    backend server, and <code className="rounded bg-rose-100 px-1">/ingest</code> state.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => regenerate()}
+                    className="self-start rounded-lg border border-rose-300 bg-white px-3 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-100"
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : null}
+            </ConversationContent>
+          </Conversation>
 
-        <div className="bg-transparent px-1 pb-1">
           <PromptInput
             onSubmit={(e) => {
               e.preventDefault();
@@ -135,25 +186,53 @@ export default function Home() {
               onSubmitShortcut={() => ask(input)}
             />
             <PromptInputToolbar>
-              <div className="space-y-1">
-                <div className="text-xs font-medium text-slate-600">
-                  Grounded on official ONE Record, ontology, and NE:ONE sources.
-                </div>
-                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                  Enter to send. Shift+Enter for a new line.
-                </div>
-              </div>
-              <PromptInputSubmit isLoading={loading} disabled={!input.trim()} />
+              <span className="text-xs text-slate-400">
+                Enter to send · Shift+Enter for a new line
+              </span>
+              <PromptInputSubmit
+                isLoading={loading}
+                disabled={!input.trim()}
+                onStop={() => stop()}
+              />
             </PromptInputToolbar>
           </PromptInput>
-        </div>
-      </section>
+        </section>
 
-      <InspectorPanel
-        latest={latestAssistantData}
-        loading={loading}
-        className="hidden w-[360px] border-l xl:flex xl:flex-col"
-      />
+        {/* Desktop inspector — collapsible to the right */}
+        {desktopInspectorOpen ? (
+          <InspectorPanel
+            latest={latestAssistantData}
+            loading={loading}
+            onCollapse={() => setDesktopInspectorOpen(false)}
+            className="hidden overflow-hidden rounded-2xl border border-slate-200 shadow-rc-sm xl:flex xl:min-h-0 xl:flex-col"
+          />
+        ) : null}
+      </div>
+
+      {/* Mobile inspector drawer */}
+      {inspectorOpen ? (
+        <div className="fixed inset-0 z-50 xl:hidden">
+          <div
+            className="absolute inset-0 bg-slate-900/40"
+            onClick={() => setInspectorOpen(false)}
+          />
+          <div className="absolute right-0 top-0 flex h-full w-[min(380px,90vw)] flex-col bg-white shadow-rc-md animate-[recordchat-rise_220ms_ease-out]">
+            <button
+              type="button"
+              onClick={() => setInspectorOpen(false)}
+              aria-label="Close inspector"
+              className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <InspectorPanel
+              latest={latestAssistantData}
+              loading={loading}
+              className="flex h-full min-h-0 flex-col"
+            />
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

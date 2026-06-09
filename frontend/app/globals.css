@@ -4,20 +4,28 @@
 
 :root {
   color-scheme: light;
+  /* Brand tokens — single source for the few values used outside Tailwind utilities. */
+  --rc-accent: #2563eb;
+  --rc-bg: #f6f9fc;
+}
+
+html,
+body {
+  background: var(--rc-bg);
 }
 
 body {
-  @apply bg-white text-slate-900 antialiased;
+  @apply text-slate-900 antialiased;
 }
 
 ::selection {
-  background: rgba(20, 184, 166, 0.22);
+  background: rgba(37, 99, 235, 0.18);
 }
 
 @keyframes recordchat-rise {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
 
   to {
@@ -26,36 +34,52 @@ body {
   }
 }
 
+.recordchat-markdown > :first-child {
+  margin-top: 0;
+}
+
 .recordchat-markdown p + p {
-  margin-top: 0.85rem;
+  margin-top: 0.7rem;
 }
 
 .recordchat-markdown ul,
 .recordchat-markdown ol {
-  margin: 0.85rem 0 0 1.25rem;
+  margin: 0.6rem 0 0 1.2rem;
 }
 
 .recordchat-markdown li + li {
-  margin-top: 0.35rem;
+  margin-top: 0.3rem;
 }
 
 .recordchat-markdown h1,
 .recordchat-markdown h2,
 .recordchat-markdown h3 {
-  margin-top: 1rem;
-  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
   color: rgb(15 23 42);
+}
+
+.recordchat-markdown h1 {
+  font-size: 1.05rem;
+}
+
+.recordchat-markdown h2 {
+  font-size: 1rem;
+}
+
+.recordchat-markdown h3 {
+  font-size: 0.95rem;
 }
 
 .recordchat-markdown pre {
   margin-top: 1rem;
   overflow-x: auto;
-  border-radius: 1rem;
-  border: 1px solid rgb(30 41 59 / 0.45);
-  background: rgb(2 6 23);
+  border-radius: 12px;
+  border: 1px solid rgb(30 41 59 / 0.4);
+  background: rgb(15 23 42);
   padding: 1rem;
   color: rgb(226 232 240);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
 }
 
 .recordchat-markdown pre code {
@@ -66,7 +90,7 @@ body {
 
 .recordchat-markdown blockquote {
   margin-top: 1rem;
-  border-left: 4px solid rgb(20 184 166 / 0.4);
+  border-left: 3px solid var(--rc-accent);
   padding-left: 1rem;
   color: rgb(71 85 105);
 }
@@ -76,7 +100,7 @@ body {
   width: 100%;
   border-collapse: collapse;
   overflow: hidden;
-  border-radius: 1rem;
+  border-radius: 12px;
   border: 1px solid rgb(226 232 240);
 }
 
