@@ -31,15 +31,13 @@ RecordChat makes that standard approachable and queryable.
 
 ## Current Status
 
-- `v0.1` is complete and demoable
-- the next priority is **not** piling on more features first
-- the data-foundation track is underway: `_staging` now exists for raw
-  downloads, `_staging` is excluded from ingest, and a first normalized official
-  ONE Record + NE:ONE source batch is already in the final folders
-- ontology-aware retrieval is now validated against the broadened official
-  source pack, and NE:ONE implementation Q&A is landed at a useful baseline
-- the next priority is stronger interaction and execution layers: streaming UI,
-  then workflow orchestration
+- `v0.2.3` frontend upgrade is now landed and demoable
+- official ONE Record, ontology, and NE:ONE source packs are ingested under the
+  governed `data/raw` layout
+- ontology-aware retrieval and NE:ONE implementation Q&A are validated
+- the frontend now streams through AI SDK `useChat` with RecordChat-specific
+  grounded panels for sources, related concepts, and JSON-LD
+- the next priority is workflow orchestration, then RecordForge integration
 
 See [docs/data_source_plan.md](docs/data_source_plan.md) for the source
 acquisition and import plan.
@@ -95,20 +93,24 @@ Details in [docs/architecture.md](docs/architecture.md).
 ### Option A — Docker Compose (backend + frontend + Qdrant)
 
 ```bash
-cp .env.example .env        # optional: add LLM/EMBEDDING keys for real models
+cp .env.example .env
 docker compose up --build
 # backend  -> http://localhost:8000
 # frontend -> http://localhost:3000
-curl -X POST localhost:8000/ingest        # build the knowledge base
+curl -X POST http://127.0.0.1:8000/ingest
 ```
+
+`POST /ingest` now rebuilds the collection by default. This avoids stale-vector
+dimension mismatches after you change the embedding model or dimension.
 
 If you are developing on a VPS and opening the UI from your local browser:
 
 - open `http://<your-vps-host>:3000` in your browser
 - run `curl -X POST http://127.0.0.1:8000/ingest` on the VPS shell
-- if you want explicit hostnames, set:
+- if needed, set:
   `CORS_ORIGINS=http://<your-vps-host>:3000`
-  `NEXT_PUBLIC_API_BASE_URL=http://<your-vps-host>:8000`
+- `NEXT_PUBLIC_API_BASE_URL` can stay empty because the frontend now auto-detects
+  `http://<current-host>:8000`
 
 ### Option B — Backend only (external model APIs, no Docker)
 
@@ -121,7 +123,7 @@ curl -s -X POST localhost:8000/chat -H 'content-type: application/json' \
   -d '{"message":"What is a Piece in ONE Record?"}'
 ```
 
-RecordChat now expects both generation and retrieval to use external model APIs.
+RecordChat expects both generation and retrieval to use external model APIs.
 Configure `LLM_PROVIDER` / `LLM_API_KEY` and `EMBEDDING_PROVIDER` /
 `EMBEDDING_API_KEY` before starting the backend. Qdrant can still run in-process
 via `QDRANT_URL=:memory:` if you do not want Docker.
@@ -145,14 +147,13 @@ EMBEDDING_DIM=1536
 Any time you change the embedding model or provider, rerun `/ingest` so the
 stored document vectors and query vectors stay in the same embedding space.
 
-By default, the frontend now auto-detects the API host from the page URL. So if
-you open `http://<your-vps-host>:3000`, it will try `http://<your-vps-host>:8000`
+By default, the frontend auto-detects the API host from the page URL. If you
+open `http://<your-vps-host>:3000`, it will call `http://<your-vps-host>:8000`
 unless `NEXT_PUBLIC_API_BASE_URL` is explicitly set.
 
-> The repository currently ships a **minimal demo source set** plus the curated
-> glossary. That is enough for v0.1 demos, but the next project priority is to
-> import the broader official ONE Record and NE:ONE materials listed in
-> [docs/data_source_plan.md](docs/data_source_plan.md).
+The current demo corpus is no longer just a tiny glossary seed. It now includes
+broadened official ONE Record, ontology, and NE:ONE materials listed in
+[docs/data_source_plan.md](docs/data_source_plan.md).
 
 ## Try these questions
 
@@ -176,9 +177,10 @@ SPEC.md     single source of truth (contracts, structure, acceptance)
 
 ## Roadmap
 
-- **v0.1** demoable ONE Record RAG assistant (this repo)
-- **next** data foundation: official ONE Record + NE:ONE source expansion
-- **v0.2** ontology validation + NE:ONE knowledge + streaming/frontend upgrade + workflow orchestration
+- **v0.1** initial demoable ONE Record RAG assistant
+- **v0.2.1/v0.2.2** ontology validation + NE:ONE implementation knowledge
+- **v0.2.3** streaming frontend upgrade with AI SDK chat shell
+- **next** workflow orchestration
 - **later** RecordForge integration, then ALH narrative and broader live ecosystem connectors
 
 See [docs/roadmap.md](docs/roadmap.md).

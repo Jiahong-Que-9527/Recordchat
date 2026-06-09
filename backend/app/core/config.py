@@ -1,8 +1,4 @@
-"""Application configuration (SPEC section 8).
-
-All runtime knobs come from environment variables / .env.
-RecordChat now requires externally hosted LLM and embedding APIs.
-"""
+"""Application configuration (SPEC section 8)."""
 
 from __future__ import annotations
 
@@ -20,21 +16,22 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=str(_ENV_FILE), extra="ignore")
 
     # LLM
-    llm_provider: str = "openai"           # qwen | openai | claude
-    llm_model: str = "qwen-plus"
+    llm_provider: str = "openai"           # openai | claude
+    llm_model: str = "deepseek-v4-flash"
     llm_api_key: str = ""
     llm_base_url: str = ""
 
     # Embedding
-    embedding_provider: str = "openai"     # qwen | openai
+    embedding_provider: str = "openai"
     embedding_model: str = "text-embedding-3-small"
     embedding_api_key: str = ""
     embedding_base_url: str = ""
     embedding_dim: int = 1536
 
-    # Qdrant — ":memory:" runs an embedded in-process store (offline friendly)
+    # Qdrant
     qdrant_url: str = ":memory:"
     qdrant_collection: str = "recordchat_one_record"
+    qdrant_upsert_batch_size: int = 128
 
     # RAG
     rag_top_k: int = 5

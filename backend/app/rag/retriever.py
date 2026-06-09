@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import uuid
 from abc import ABC, abstractmethod
+from itertools import islice
 
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as qmodels
@@ -25,6 +26,17 @@ _NAMESPACE = uuid.UUID("a3f1c0de-0000-4000-8000-0a1b2c3d4e5f")
 
 def _point_id(chunk_id: str) -> str:
     return str(uuid.uuid5(_NAMESPACE, chunk_id))
+
+
+def _batched(items: list[qmodels.PointStruct], size: int) -> list[list[qmodels.PointStruct]]:
+    if size <= 0:
+        return [items]
+
+    out: list[list[qmodels.PointStruct]] = []
+    iterator = iter(items)
+    while batch := list(islice(iterator, size)):
+        out.append(batch)
+    return out
 
 
 class Retriever(ABC):
@@ -48,6 +60,7 @@ class QdrantRetriever(Retriever):
     def __init__(self, settings: Settings, embedder: EmbeddingProvider) -> None:
         self.collection = settings.qdrant_collection
         self.dim = settings.embedding_dim
+        self.upsert_batch_size = settings.qdrant_upsert_batch_size
         self.embedder = embedder
         if settings.qdrant_url == ":memory:" or not settings.qdrant_url:
             logger.info("Using in-memory Qdrant store.")
@@ -88,7 +101,14 @@ class QdrantRetriever(Retriever):
             )
             for c, vec in zip(chunks, vectors)
         ]
-        self.client.upsert(collection_name=self.collection, points=points)
+        for batch in _batched(points, self.upsert_batch_size):
+            self.client.upsert(collection_name=self.collection, points=batch)
+        logger.info(
+            "Upserted %d points into %s using batch_size=%d",
+            len(points),
+            self.collection,
+            self.upsert_batch_size,
+        )
         return len(points)
 
     def search(self, query: str, top_k: int) -> list[Chunk]:

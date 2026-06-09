@@ -61,7 +61,7 @@ class ChatResponse(BaseModel):
 
 # ---- /ingest ----
 class IngestRequest(BaseModel):
-    reset: bool = False
+    reset: bool = True
     source_dir: str = "data/raw"
 
 
