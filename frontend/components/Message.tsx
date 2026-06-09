@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Braces, Check, ChevronDown, Copy, RefreshCw } from "lucide-react";
 import { getMessageData, getMessageText, type RecordChatMessage } from "@/lib/api";
 import { JsonLdViewer } from "./JsonLdViewer";
@@ -29,7 +29,7 @@ function ActionButton({
   );
 }
 
-export function Message({
+function MessageComponent({
   message,
   isLast = false,
   loading = false,
@@ -113,3 +113,7 @@ export function Message({
     </div>
   );
 }
+
+// Memoised so completed messages don't re-render on every streamed token of a
+// later message. Relies on a stable `onRegenerate` reference from the parent.
+export const Message = memo(MessageComponent);

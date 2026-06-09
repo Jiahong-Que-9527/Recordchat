@@ -1,6 +1,13 @@
 "use client";
 
-import { isValidElement, useRef, useState, type ReactNode } from "react";
+import {
+  isValidElement,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Check, Copy } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -48,6 +55,10 @@ function CodeBlock({ children }: { children: ReactNode }) {
   );
 }
 
+// During streaming we re-parse Markdown at most this often instead of on every
+// token — full re-parse per token is O(n²) as the answer grows.
+const STREAM_RENDER_MS = 90;
+
 export function MarkdownAnswer({
   text,
   streaming = false,
@@ -55,11 +66,31 @@ export function MarkdownAnswer({
   text: string;
   streaming?: boolean;
 }) {
-  return (
-    <div className="recordchat-markdown text-sm leading-7 text-slate-800">
+  // Throttle the text fed to ReactMarkdown while streaming.
+  const latest = useRef(text);
+  latest.current = text;
+  const [shown, setShown] = useState(text);
+
+  useEffect(() => {
+    if (!streaming) {
+      setShown(latest.current);
+      return;
+    }
+    setShown(latest.current);
+    const id = setInterval(() => setShown(latest.current), STREAM_RENDER_MS);
+    return () => {
+      clearInterval(id);
+      setShown(latest.current);
+    };
+  }, [streaming]);
+
+  // Syntax highlighting is the most expensive step, so skip it mid-stream and
+  // apply it once the answer is complete.
+  const rendered = useMemo(
+    () => (
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight]}
+        rehypePlugins={streaming ? [] : [rehypeHighlight]}
         components={{
           a: ({ ...props }) => (
             <a
@@ -103,8 +134,15 @@ export function MarkdownAnswer({
           },
         }}
       >
-        {text}
+        {shown}
       </ReactMarkdown>
+    ),
+    [shown, streaming]
+  );
+
+  return (
+    <div className="recordchat-markdown text-sm leading-7 text-slate-800">
+      {rendered}
     </div>
   );
 }

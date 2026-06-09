@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { PanelRight, PanelRightOpen, X } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -64,6 +64,11 @@ export default function Home() {
     setInput("");
     sendMessage({ text: q });
   }
+
+  // Stable reference so memoised <Message> components don't re-render each token.
+  const handleRegenerate = useCallback(() => {
+    regenerate();
+  }, [regenerate]);
 
   return (
     <main className="min-h-screen px-3 py-3 sm:px-4 sm:py-4">
@@ -148,7 +153,7 @@ export default function Home() {
                     message={message}
                     isLast={message.id === lastMessageId}
                     loading={loading}
-                    onRegenerate={() => regenerate()}
+                    onRegenerate={handleRegenerate}
                   />
                 ))
               )}
