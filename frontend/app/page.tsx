@@ -1,17 +1,29 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationEmptyState,
+} from "@/components/ai-elements/conversation";
+import {
+  PromptInput,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputToolbar,
+} from "@/components/ai-elements/prompt-input";
+import { SuggestionList } from "@/components/ai-elements/suggestion-list";
 import { InspectorPanel } from "@/components/InspectorPanel";
 import { Sidebar } from "@/components/Sidebar";
 import { Message } from "@/components/Message";
 import { TypingIndicator } from "@/components/TypingIndicator";
+import { Badge } from "@/components/ui/badge";
 import { getMessageData, type RecordChatMessage } from "@/lib/api";
 
 export default function Home() {
   const [input, setInput] = useState("");
-  const endRef = useRef<HTMLDivElement>(null);
   const {
     messages,
     sendMessage,
@@ -37,16 +49,6 @@ export default function Home() {
     ? getMessageData(latestAssistantMessage)
     : undefined;
 
-  function scrollToEnd() {
-    requestAnimationFrame(() =>
-      endRef.current?.scrollIntoView({ behavior: "smooth" })
-    );
-  }
-
-  useEffect(() => {
-    scrollToEnd();
-  }, [messages]);
-
   function ask(message: string) {
     const q = message.trim();
     if (!q || loading) {
@@ -67,7 +69,7 @@ export default function Home() {
         }}
       />
 
-      <section className="flex min-h-0 flex-1 flex-col">
+      <section className="flex min-h-0 flex-1 flex-col gap-4 px-3 py-3 sm:px-4 sm:py-4">
         <div className="border-b border-black/5 bg-white/70 px-4 py-4 backdrop-blur sm:px-6">
           <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
             <div>
@@ -78,25 +80,24 @@ export default function Home() {
                 Streaming answers, cited sources, and implementation guidance
               </h2>
             </div>
-            <div className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-800">
-              {loading ? streamingStatus || "Streaming…" : "Ready"}
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="hidden sm:inline-flex">
+                useChat + AI SDK
+              </Badge>
+              <div className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-800">
+                {loading ? streamingStatus || "Streaming…" : "Ready"}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
-          <div className="mx-auto flex max-w-4xl flex-col gap-4">
+        <Conversation className="min-h-0">
+          <ConversationContent watch={messages}>
             {messages.length === 0 ? (
-              <div className="mt-8 rounded-[28px] border border-white/70 bg-white/80 px-6 py-10 text-center shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur sm:mt-20 sm:px-8 sm:py-12">
-                <p className="text-2xl font-semibold text-slate-800 sm:text-3xl">
-                  Ask RecordChat about IATA ONE Record
-                </p>
-                <p className="mt-3 text-sm leading-6 text-slate-500">
-                  Stream answers from the broadened official and NE:ONE source pack.
-                  Concepts, ontology relationships, JSON-LD, API behavior, and
-                  implementation support all land in the same chat surface.
-                </p>
-              </div>
+              <>
+                <ConversationEmptyState />
+                <SuggestionList onPick={ask} />
+              </>
             ) : (
               messages.map((message) => (
                 <Message key={message.id} message={message} />
@@ -114,32 +115,28 @@ export default function Home() {
             <div className="xl:hidden">
               <InspectorPanel latest={latestAssistantData} loading={loading} className="overflow-hidden rounded-[28px] border bg-white/80 shadow-[0_16px_48px_rgba(15,23,42,0.08)]" />
             </div>
-            <div ref={endRef} />
-          </div>
-        </div>
+          </ConversationContent>
+        </Conversation>
 
-        <div className="border-t border-black/5 bg-white/80 px-4 py-4 backdrop-blur sm:px-6">
-          <form
+        <div className="bg-transparent px-1 pb-1">
+          <PromptInput
             onSubmit={(e) => {
               e.preventDefault();
               ask(input);
             }}
-            className="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row"
           >
-            <input
+            <PromptInputTextarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about ONE Record concepts, ontology, or NE:ONE implementation…"
-              className="flex-1 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
             />
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-2xl bg-teal-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-teal-800 disabled:opacity-50 sm:min-w-[132px]"
-            >
-              {loading ? "Streaming…" : "Send"}
-            </button>
-          </form>
+            <PromptInputToolbar>
+              <div className="text-xs text-slate-500">
+                Grounded on official ONE Record, ontology, and NE:ONE sources.
+              </div>
+              <PromptInputSubmit isLoading={loading} disabled={!input.trim()} />
+            </PromptInputToolbar>
+          </PromptInput>
         </div>
       </section>
 
