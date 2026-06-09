@@ -181,6 +181,7 @@ SPEC.md     single source of truth (contracts, structure, acceptance)
 - **v0.2.1/v0.2.2** ontology validation + NE:ONE implementation knowledge
 - **v0.2.3** streaming frontend upgrade with AI SDK chat shell
 - **next** workflow orchestration
+  connector abstraction is now in place; intent routing is the next concrete step
 - **later** RecordForge integration, then ALH narrative and broader live ecosystem connectors
 
 See [docs/roadmap.md](docs/roadmap.md).
