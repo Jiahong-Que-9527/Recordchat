@@ -14,19 +14,15 @@ export function Sidebar({
 }) {
   return (
     <aside className="flex w-full shrink-0 flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-rc-sm xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)]">
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center px-1">
         <Image
           src="/recordchat-logo.png"
           alt="RecordChat"
-          width={36}
-          height={36}
-          className="h-9 w-9 shrink-0 rounded-lg object-contain"
+          width={44}
+          height={44}
+          className="h-11 w-auto object-contain"
           priority
         />
-        <div className="min-w-0">
-          <h1 className="text-base font-bold text-slate-900">RecordChat</h1>
-          <p className="text-xs text-slate-500">IATA ONE Record assistant</p>
-        </div>
       </div>
 
       <Button onClick={onNewChat} className="w-full gap-2">

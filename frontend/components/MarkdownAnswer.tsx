@@ -8,11 +8,82 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, Lightbulb } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { MermaidDiagram } from "./MermaidDiagram";
+
+// Matches a section header line like "Answer:", "**Related concepts:**",
+// "## Implementation note:", optionally with inline content after the colon.
+const HEADER_RE =
+  /^\s*(?:#{1,6}\s+)?(?:\*\*|__)?\s*(Answer|Related concepts?|Implementation notes?|Sources?)\s*(?:\*\*|__)?\s*:\s*(.*)$/i;
+
+function canonicalSection(label: string): "answer" | "related" | "implementation" | "sources" {
+  const l = label.toLowerCase();
+  if (l.startsWith("related")) return "related";
+  if (l.startsWith("implementation")) return "implementation";
+  if (l.startsWith("source")) return "sources";
+  return "answer";
+}
+
+// Split the model's structured answer into the parts we actually render.
+// Related concepts / Sources are dropped here (the Inspector shows them as
+// structured data); the leading "Answer:" label is stripped.
+function parseAnswerSections(text: string): { body: string; implementation?: string } {
+  const lines = text.split("\n");
+  const buckets: Record<string, string[]> = {
+    answer: [],
+    related: [],
+    implementation: [],
+    sources: [],
+  };
+  let current: keyof typeof buckets = "answer";
+  let matchedAny = false;
+
+  for (const line of lines) {
+    const match = line.match(HEADER_RE);
+    if (match) {
+      matchedAny = true;
+      current = canonicalSection(match[1]);
+      const inline = match[2]?.trim();
+      if (inline) buckets[current].push(inline);
+      continue;
+    }
+    buckets[current].push(line);
+  }
+
+  if (!matchedAny) return { body: text.trim() };
+  const body = buckets.answer.join("\n").trim();
+  const implementation = buckets.implementation.join("\n").trim();
+  return { body, implementation: implementation || undefined };
+}
+
+const LINK_CLASS =
+  "font-medium text-accent underline decoration-accent-ring underline-offset-4 transition hover:text-accent-hover";
+
+function ImplementationNote({ text }: { text: string }) {
+  return (
+    <div className="mt-3 flex gap-2.5 rounded-xl border border-accent-ring bg-accent-weak px-3.5 py-3">
+      <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+      <div className="min-w-0 flex-1">
+        <p className="mb-1 text-xs font-semibold text-accent">Implementation note</p>
+        <div className="recordchat-markdown text-sm leading-6 text-slate-700">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              a: ({ ...props }) => (
+                <a {...props} className={LINK_CLASS} target="_blank" rel="noreferrer" />
+              ),
+            }}
+          >
+            {text}
+          </ReactMarkdown>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Recursively collect raw text from rendered markdown children. rehype-highlight
 // may wrap code in <span>s, so we rebuild the original source from text leaves.
@@ -84,6 +155,13 @@ export function MarkdownAnswer({
     };
   }, [streaming]);
 
+  // Drop redundant sections and pull out the implementation note. Cheap regex
+  // pass over the (throttled) text, memoised — negligible cost.
+  const { body, implementation } = useMemo(
+    () => parseAnswerSections(shown),
+    [shown]
+  );
+
   // Syntax highlighting is the most expensive step, so skip it mid-stream and
   // apply it once the answer is complete.
   const rendered = useMemo(
@@ -95,7 +173,7 @@ export function MarkdownAnswer({
           a: ({ ...props }) => (
             <a
               {...props}
-              className="font-medium text-accent underline decoration-accent-ring underline-offset-4 transition hover:text-accent-hover"
+              className={LINK_CLASS}
               target="_blank"
               rel="noreferrer"
             />
@@ -134,15 +212,16 @@ export function MarkdownAnswer({
           },
         }}
       >
-        {shown}
+        {body}
       </ReactMarkdown>
     ),
-    [shown, streaming]
+    [body, streaming]
   );
 
   return (
     <div className="recordchat-markdown text-sm leading-7 text-slate-800">
       {rendered}
+      {implementation ? <ImplementationNote text={implementation} /> : null}
     </div>
   );
 }

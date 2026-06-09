@@ -36,18 +36,15 @@ Rules:
    - Use clear, quoted labels and valid Mermaid syntax. Do not force a diagram
      into purely definitional or single-fact answers.
 
-Structure your answer as:
-Answer:
-...
+Write a clear, well-structured answer in Markdown.
 
-Related concepts:
-...
+When there is a practical setup, configuration, deployment, or compatibility
+caveat worth flagging, add a final section titled exactly "Implementation note:"
+followed by that guidance. Omit the section when there is nothing to add.
 
-Implementation note:
-...
-
-Sources:
-...
+Do NOT include "Related concepts" or "Sources" sections — related concepts and
+source citations are attached automatically as structured metadata and shown
+separately in the UI.
 """
 
 # Extra steering per query type.

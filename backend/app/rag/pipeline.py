@@ -287,37 +287,23 @@ def _synthetic_generation_answer(query: str) -> str:
     if not settings.recordforge_url:
         availability = ConnectorAvailability.unconfigured.value
         return (
-            "Answer:\n"
             "This request is classified as synthetic ONE Record data generation, "
             "but the RecordForge connector is not configured yet.\n\n"
-            "Related concepts:\n"
-            "- Synthetic shipments\n"
-            "- RecordForge connector\n"
-            "- Workflow orchestration\n\n"
             "Implementation note:\n"
             f"Connector status: {availability}. Set RECORDFORGE_URL (and optionally "
             "RECORDFORGE_API_KEY) to enable generation workflows such as synthetic "
             "shipments with pieces. Until then, RecordChat can explain the expected "
             "object model and payload structure, but it cannot execute the generation "
-            f"request: {query}\n\n"
-            "Sources:\n"
-            "- Connector abstraction and orchestration configuration"
+            f"request: {query}"
         )
 
     return (
-        "Answer:\n"
         "This request is classified as synthetic ONE Record data generation. "
         "The RecordForge connector is configured, but execution planning is not "
         "implemented in this milestone yet.\n\n"
-        "Related concepts:\n"
-        "- Synthetic shipments\n"
-        "- RecordForge connector\n"
-        "- Workflow orchestration\n\n"
         "Implementation note:\n"
         "The next orchestration slice will turn this intent into a structured "
-        "workflow request against RecordForge.\n\n"
-        "Sources:\n"
-        "- Connector abstraction and orchestration configuration"
+        "workflow request against RecordForge."
     )
 
 
