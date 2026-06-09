@@ -1,217 +1,79 @@
 <div align="center">
-  <img src="assets/recordchat-logo.png" alt="RecordChat logo" width="480">
+  <img src="assets/recordchat-logo.png" alt="RecordChat logo" width="420">
 </div>
 
 # RecordChat
 
-**A domain-specific AI assistant for IATA ONE Record.**
+**An open-source AI assistant that makes IATA ONE Record easier to learn and explore.**
 
-RecordChat helps developers and logistics stakeholders understand the ONE Record
-data model, API concepts, JSON-LD payloads, and the semantic relationships between
-logistics objects. It uses retrieval-augmented generation (RAG) with **source-grounded,
-cited answers** — not an ungrounded chatbot.
+ONE Record is the air-cargo industry's data-sharing standard — powerful, but spread
+across specifications, an ontology, a REST API, JSON-LD payloads, and server
+implementations like **NE:ONE**. Getting up to speed means reading a lot of dense
+material. RecordChat exists to shorten that path: ask a question in plain language
+and get a **grounded, source-cited answer**, so developers, logistics teams, and
+newcomers can understand ONE Record — including NE:ONE server topics — faster and
+more easily.
 
-> **Disclaimer:** RecordChat is a **personal, independent project**. It is **not** an
-> official IATA ONE Record product, and is not affiliated with, endorsed by, or
-> maintained by IATA. All reference materials used in this repository (specifications,
-> ontologies, examples, etc.) come from **publicly available open-source resources**.
+It is a community helper, not a replacement for the official docs: every answer
+cites where it came from, and diagrams are generated when they make a relationship
+or flow clearer.
 
-> RecordChat is the first interface layer for a future aviation data platform ecosystem:
-> **RecordChat** (AI interface) · **RecordForge** (synthetic data) ·
-> **ONE Record Server** (exchange layer) · **AviationLakehouse** (analytics backend).
+> **Disclaimer.** RecordChat is an **independent, auxiliary open-source project**.
+> It is **not** an official IATA product and is not affiliated with or endorsed by
+> IATA. Every reference material it uses comes from **publicly available,
+> open-source resources**, and answers are retrieval-based with citations — no
+> fine-tuning on third-party content.
 
-See [SPEC.md](SPEC.md) for the full specification and execution plan.
+## What it does
 
-## Why ONE Record?
-
-[IATA ONE Record](https://www.iata.org/en/programs/cargo/e/one-record/) is the air-cargo
-data-sharing standard: a single shared record of truth per shipment, modeled as
-interlinked **LogisticsObjects** exposed over a REST API and serialized as JSON-LD.
-RecordChat makes that standard approachable and queryable.
-
-## Current Status
-
-- `v0.2.3` frontend upgrade is now landed and demoable
-- official ONE Record, ontology, and NE:ONE source packs are ingested under the
-  governed `data/raw` layout
-- ontology-aware retrieval and NE:ONE implementation Q&A are validated
-- the frontend now streams through AI SDK `useChat` with RecordChat-specific
-  grounded panels for sources, related concepts, and JSON-LD
-- the next priority is workflow orchestration, then RecordForge integration
-
-See [docs/data_source_plan.md](docs/data_source_plan.md) for the source
-acquisition and import plan.
-
-### Data Foundation Conventions
-
-The current raw-data contract is:
-
-- `data/raw/_staging/` is a download-and-normalization workspace only
-- loader-facing files must live in final `data/raw` folders, not under `_staging`
-- `backend/app/rag/loader.py` and `backend/app/domain/ontology_graph.py`
-  explicitly skip `_staging`
-- loader-ingestible file types are `.ttl`, `.owl`, `.md`, `.markdown`, `.txt`,
-  `.json`, `.jsonld`, `.yaml`, and `.yml`
-
-The canonical final homes for the current P0 source families are:
-
-- `data/raw/one_record_docs/spec_development/`
-- `data/raw/one_record_docs/spec_2025_07/`
-- `data/raw/ontology/official/`
-- `data/raw/api_specs/official/`
-- `data/raw/examples/official/`
-- `data/raw/one_record_docs/ne_one/`
-- `data/raw/api_specs/ne_one/`
-- `data/raw/examples/ne_one/`
-
-Governed files should carry a sidecar at `<filename>.<ext>.meta.json` with at
-least:
-
-- `source_name`
-- `version`
-- `url`
-- `document_type`
-- `domain`
-- `registry_id`
-- `batch_id`
-- `ingested_at`
-
-## Architecture
-
-```
-Frontend (Next.js)  ──HTTP──▶  Backend (FastAPI)
-                                 └─ rag/pipeline ─▶ retriever (Qdrant)
-                                                  ─▶ prompt + llm (provider-abstracted)
-                                                  ─▶ domain (relationships, JSON-LD)
-Ingestion:  data/raw ─▶ loader ─▶ chunker ─▶ embeddings ─▶ Qdrant
-```
-
-Details in [docs/architecture.md](docs/architecture.md).
+- **Grounded Q&A** — answers are retrieved from reviewed public sources and cited,
+  not made up.
+- **Concepts & ontology** — explains LogisticsObjects, classes, properties, and how
+  entities relate to each other.
+- **JSON-LD & API** — shows illustrative JSON-LD payloads and explains API/data-sharing flows.
+- **NE:ONE implementation** — practical guidance on running and using the NE:ONE server.
+- **Visual when useful** — renders Mermaid diagrams for relationships and flows.
 
 ## Quickstart
 
-### Option A — Docker Compose (backend + frontend + Qdrant)
+Requires Docker. The included `Makefile` wraps the common commands:
 
 ```bash
-cp .env.example .env
-docker compose up --build
-# backend  -> http://localhost:8000
-# frontend -> http://localhost:3000
-curl -X POST http://127.0.0.1:8000/ingest
+make env      # create .env from .env.example, then add your model API keys
+make up       # start backend + frontend + Qdrant (http://localhost:3000)
+make ingest   # load the public ONE Record / NE:ONE corpus into the vector store
 ```
 
-`POST /ingest` now rebuilds the collection by default. This avoids stale-vector
-dimension mismatches after you change the embedding model or dimension.
+Run `make` to see all targets (`down`, `restart`, `rebuild`, `logs`, `test`, …).
+Generation and retrieval use external model APIs — set `LLM_*` and `EMBEDDING_*`
+in `.env` before `make up`. Re-run `make ingest` whenever you change the embedding
+model. See [SPEC.md](SPEC.md) for the no-Docker path and full configuration.
 
-If you are developing on a VPS and opening the UI from your local browser:
+## Try asking
 
-- open `http://<your-vps-host>:3000` in your browser
-- run `curl -X POST http://127.0.0.1:8000/ingest` on the VPS shell
-- if needed, set:
-  `CORS_ORIGINS=http://<your-vps-host>:3000`
-- `NEXT_PUBLIC_API_BASE_URL` can stay empty because the frontend now auto-detects
-  `http://<current-host>:8000`
-
-### Option B — Backend only (external model APIs, no Docker)
-
-```bash
-cd backend
-uv venv && uv pip install -e ".[dev]"
-uv run uvicorn app.main:app --reload --port 8000
-curl -X POST localhost:8000/ingest
-curl -s -X POST localhost:8000/chat -H 'content-type: application/json' \
-  -d '{"message":"What is a Piece in ONE Record?"}'
-```
-
-RecordChat expects both generation and retrieval to use external model APIs.
-Configure `LLM_PROVIDER` / `LLM_API_KEY` and `EMBEDDING_PROVIDER` /
-`EMBEDDING_API_KEY` before starting the backend. Qdrant can still run in-process
-via `QDRANT_URL=:memory:` if you do not want Docker.
-
-If you want to use different vendors for generation and retrieval, configure
-them independently. For example:
-
-```env
-LLM_PROVIDER=openai
-LLM_MODEL=deepseek-v4-flash
-LLM_API_KEY=your_deepseek_key
-LLM_BASE_URL=your_deepseek_openai_compatible_base_url
-
-EMBEDDING_PROVIDER=openai
-EMBEDDING_MODEL=text-embedding-3-small
-EMBEDDING_API_KEY=your_openai_key
-EMBEDDING_BASE_URL=https://api.openai.com/v1
-EMBEDDING_DIM=1536
-```
-
-Any time you change the embedding model or provider, rerun `/ingest` so the
-stored document vectors and query vectors stay in the same embedding space.
-
-By default, the frontend auto-detects the API host from the page URL. If you
-open `http://<your-vps-host>:3000`, it will call `http://<your-vps-host>:8000`
-unless `NEXT_PUBLIC_API_BASE_URL` is explicitly set.
-
-The current demo corpus is no longer just a tiny glossary seed. It now includes
-broadened official ONE Record, ontology, and NE:ONE materials listed in
-[docs/data_source_plan.md](docs/data_source_plan.md).
-
-## Try these questions
-
-- What is ONE Record?
-- What is a LogisticsObject?
-- Explain the relationship between Shipment and Piece.
+- What is a LogisticsObject, and why is it central to ONE Record?
+- How do Shipment, Piece, and Waybill relate in ONE Record?
 - Generate a JSON-LD example for a Piece.
-- How does ONE Record support data sharing?
+- Walk me through the ONE Record data sharing flow with subscriptions.
+- How do I run NE:ONE locally with Docker Compose?
 
 ## Repository layout
 
 ```
-assets/     project branding (logo, etc.)
-backend/    FastAPI service (API, RAG pipeline, domain layer, tests)
-frontend/   Next.js + Tailwind + shadcn-style chat UI
-data/       raw sources, processed artifacts, eval questions
-docs/       architecture, roadmap, demo script, ADRs
-scripts/    ingest_docs.py, evaluate_rag.py, reset_index.py, governance/data workflow helpers
-SPEC.md     single source of truth (contracts, structure, acceptance)
+backend/    FastAPI service — API, RAG pipeline, domain layer, tests
+frontend/   Next.js + Tailwind chat UI (streaming, citations, diagrams)
+data/       public raw sources and processed artifacts
+docs/       architecture, roadmap, data-source & compliance notes
+scripts/    ingestion, evaluation, and data-governance helpers
+SPEC.md     single source of truth (contracts, structure, setup)
 ```
 
-## Roadmap
+## Open data & compliance
 
-- **v0.1** initial demoable ONE Record RAG assistant
-- **v0.2.1/v0.2.2** ontology validation + NE:ONE implementation knowledge
-- **v0.2.3** streaming frontend upgrade with AI SDK chat shell
-- **next** workflow orchestration
-  connector abstraction is now in place; intent routing is the next concrete step
-- **later** RecordForge integration, then ALH narrative and broader live ecosystem connectors
-
-See [docs/roadmap.md](docs/roadmap.md).
-
-## Data Compliance
-
-See [docs/data_compliance_report.md](docs/data_compliance_report.md) for the
-current data-compliance review and operating boundaries for source usage.
-
-The project does not fine-tune foundation models on third-party source content.
-It uses citation-first retrieval over reviewed public materials, with source
-tracking moving toward a structured registry in
-[docs/data_sources_registry.yaml](docs/data_sources_registry.yaml).
-
-For a shorter external-facing statement of source usage and compliance
-boundaries, see [docs/source_usage_policy.md](docs/source_usage_policy.md).
-
-In short: RecordChat uses reviewed public materials for retrieval and citation,
-does not claim official affiliation with source publishers, does not ingest
-access-restricted materials, and is designed to avoid republishing raw
-third-party source bundles as public assets.
-
-The curated core corpus is also protected by a lightweight source-governance
-check so key official and NE:ONE materials keep registry-linked provenance and
-`_staging` does not drift back into the live ingest surface.
-
-For the standardized data-addition SOP and the command used after each new batch,
-see [docs/data_addition_workflow.md](docs/data_addition_workflow.md). The
-canonical local entrypoint is:
-
-```bash
-python3 scripts/run_data_addition_workflow.py
-```
+RecordChat only uses **publicly available, open-source** ONE Record, ontology, and
+NE:ONE materials, with citation-first retrieval over reviewed sources. It does not
+claim official affiliation, does not ingest access-restricted materials, and does
+not republish raw third-party bundles. Details:
+[data_compliance_report.md](docs/data_compliance_report.md) ·
+[source_usage_policy.md](docs/source_usage_policy.md) ·
+[data_source_plan.md](docs/data_source_plan.md).
