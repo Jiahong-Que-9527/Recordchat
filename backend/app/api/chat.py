@@ -25,8 +25,7 @@ def _sse_event(*, event: str, data: dict) -> str:
 
 
 def stream_chat_events(message: str, model: str | None = None) -> Iterator[str]:
-    stream = answer_stream(message, model=model) if model else answer_stream(message)
-    for item in stream:
+    for item in answer_stream(message, model=model):
         yield _sse_event(event=item["event"], data=item["data"])
 
 

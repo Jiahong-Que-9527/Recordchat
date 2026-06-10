@@ -2,7 +2,12 @@ from pytest import raises
 
 from app.core.config import Settings
 from app.core.embeddings import OpenAICompatEmbeddingProvider, build_embedding_provider
-from app.core.llm import ClaudeLLMProvider, OpenAICompatLLMProvider, build_llm_provider
+from app.core.llm import (
+    ALLOWED_CHAT_MODELS,
+    ClaudeLLMProvider,
+    OpenAICompatLLMProvider,
+    build_llm_provider,
+)
 
 
 def test_embedding_factory_requires_api_key():
@@ -51,3 +56,20 @@ def test_llm_factory_builds_claude_provider():
         )
     )
     assert isinstance(provider, ClaudeLLMProvider)
+
+
+def test_llm_factory_rejects_unsupported_chat_model_override():
+    with raises(ValueError, match="Unsupported chat model"):
+        build_llm_provider(
+            Settings(
+                llm_provider="openai",
+                llm_api_key="test-key",
+                llm_model="deepseek-v4-flash",
+                llm_base_url="https://api.deepseek.com",
+            ),
+            model="deepseek-v4-fast",
+        )
+
+
+def test_allowed_chat_models_match_supported_deepseek_variants():
+    assert ALLOWED_CHAT_MODELS == {"deepseek-v4-flash", "deepseek-v4-pro"}

@@ -7,10 +7,11 @@ Do not rename fields without updating the SPEC and the frontend.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Literal
 from typing import Any
 
 from pydantic import BaseModel, Field
+
+from app.core.llm import ChatModel
 
 
 class QueryType(str, Enum):
@@ -44,7 +45,7 @@ class HealthResponse(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     conversation_id: str | None = None
-    model: Literal["deepseek-v4-fast", "deepseek-v4-pro"] | None = None
+    model: ChatModel | None = None
 
 
 class Source(BaseModel):

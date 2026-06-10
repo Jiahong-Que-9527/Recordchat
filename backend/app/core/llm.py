@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
+from typing import Literal, get_args
 
 import httpx
 
@@ -151,7 +152,11 @@ _LLM_BASE_URLS = {
 }
 
 
-ALLOWED_CHAT_MODELS = {"deepseek-v4-fast", "deepseek-v4-pro"}
+# Single source of truth for the user-facing model allowlist. The API contract
+# model (app.models.chat.ChatRequest) derives its Literal from `ChatModel`, and
+# the set below is derived from the same Literal so the two never drift.
+ChatModel = Literal["deepseek-v4-flash", "deepseek-v4-pro"]
+ALLOWED_CHAT_MODELS = set(get_args(ChatModel))
 
 
 def build_llm_provider(settings: Settings, *, model: str | None = None) -> LLMProvider:

@@ -3,7 +3,7 @@ from app.models.chat import ChatRequest
 
 
 def test_chat_stream_emits_sse_events(monkeypatch):
-    def fake_answer_stream(query: str):
+    def fake_answer_stream(query: str, model: str | None = None):
         assert query == "stream please"
         yield {"event": "token", "data": {"text": "Hello"}}
         yield {"event": "metadata", "data": {"answer": "Hello", "sources": []}}

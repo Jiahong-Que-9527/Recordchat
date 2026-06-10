@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=str(_ENV_FILE), extra="ignore")
 
     # LLM
-    llm_provider: str = "openai"           # openai | claude
+    llm_provider: str = "openai"           # openai | qwen | claude
     llm_model: str = "deepseek-v4-flash"
     llm_api_key: str = ""
     llm_base_url: str = ""

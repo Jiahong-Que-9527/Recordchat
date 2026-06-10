@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { CHAT_MODELS } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -8,7 +9,7 @@ type IncomingMessage = {
   parts?: Array<{ type?: string; text?: string }>;
 };
 
-const ALLOWED_MODELS = new Set(["deepseek-v4-fast", "deepseek-v4-pro"]);
+const ALLOWED_MODELS = new Set<string>(CHAT_MODELS);
 
 function getBackendBase(request: NextRequest): string {
   const internal = process.env.INTERNAL_API_BASE_URL?.trim();

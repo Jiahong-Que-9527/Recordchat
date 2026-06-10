@@ -88,8 +88,6 @@ def _is_synthetic_generation_query(query: str) -> bool:
         "订舱",
         "运单",
         "货件",
-        "shipment",
-        "piece",
     )
     generation_verbs = (
         "generate",

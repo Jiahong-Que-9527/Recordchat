@@ -27,9 +27,17 @@ import {
   type RecordChatMessage,
 } from "@/lib/api";
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+
+  return "";
+}
+
 export default function Home() {
   const [input, setInput] = useState("");
-  const [selectedModel, setSelectedModel] = useState<ChatModel>("deepseek-v4-fast");
+  const [selectedModel, setSelectedModel] = useState<ChatModel>("deepseek-v4-flash");
   const selectedModelRef = useRef<ChatModel>(selectedModel);
   selectedModelRef.current = selectedModel;
   const [inspectorOpen, setInspectorOpen] = useState(false);
@@ -65,6 +73,7 @@ export default function Home() {
     : undefined;
   const lastMessageId = messages[messages.length - 1]?.id;
   const userTurnCount = messages.filter((m) => m.role === "user").length;
+  const errorDetail = error ? getErrorMessage(error) : "";
 
   function ask(message: string) {
     const q = message.trim();
@@ -156,8 +165,10 @@ export default function Home() {
                 {error ? (
                   <div className="flex flex-col gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                     <span>
-                      Could not reach the RecordChat backend. Check the frontend proxy,
-                      backend server, and <code className="rounded bg-rose-100 px-1">/ingest</code> state.
+                      Could not complete the RecordChat request.{" "}
+                      {errorDetail ? `${errorDetail} ` : ""}Check the frontend
+                      proxy, backend server, and{" "}
+                      <code className="rounded bg-rose-100 px-1">/ingest</code> state.
                     </span>
                     <button
                       type="button"
@@ -187,6 +198,7 @@ export default function Home() {
             <PromptInputToolbar>
               <ModelPicker
                 value={selectedModel}
+                onChange={setSelectedModel}
                 disabled={loading}
               />
               <PromptInputSubmit
