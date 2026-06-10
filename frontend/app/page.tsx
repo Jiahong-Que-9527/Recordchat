@@ -71,7 +71,7 @@ export default function Home() {
   }, [regenerate]);
 
   return (
-    <main className="h-screen overflow-hidden">
+    <main className="h-screen overflow-hidden bg-neutral-50">
       <div
         className={`mx-auto grid h-full max-w-[1680px] grid-cols-1 ${
           desktopInspectorOpen
@@ -86,7 +86,7 @@ export default function Home() {
           }}
         />
 
-        <section className="relative flex h-full flex-col gap-3 overflow-hidden bg-white px-4 py-4 sm:px-6">
+        <section className="relative flex h-full flex-col overflow-hidden bg-neutral-50 px-4 pb-4 pt-3 sm:px-6">
           {/* Floating inspector toggle — only visible when there's something to
               open (mobile drawer, or a collapsed desktop inspector). */}
           <div className="absolute right-3 top-3 z-20 flex gap-2">
@@ -95,7 +95,7 @@ export default function Home() {
               onClick={() => setInspectorOpen(true)}
               aria-label="Open inspector"
               title="Inspector"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-rc-sm transition hover:bg-slate-100 xl:hidden"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 bg-neutral-100 text-neutral-600 transition hover:bg-neutral-200 xl:hidden"
             >
               <PanelRight className="h-4 w-4" />
             </button>
@@ -105,7 +105,7 @@ export default function Home() {
                 onClick={() => setDesktopInspectorOpen(true)}
                 aria-label="Show inspector"
                 title="Show inspector"
-                className="hidden h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-600 shadow-rc-sm transition hover:bg-slate-100 xl:inline-flex"
+                className="hidden h-8 items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-100 px-2.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-200 xl:inline-flex"
               >
                 <PanelRightOpen className="h-4 w-4" />
                 Inspector
@@ -116,7 +116,7 @@ export default function Home() {
           <Conversation className="min-h-0 flex-1">
             <ConversationContent watch={messages} newTurnKey={userTurnCount}>
               {messages.length === 0 ? (
-                <div className="flex min-h-full flex-col justify-center py-8">
+                <div className="flex min-h-full flex-col justify-center py-10">
                   <ConversationEmptyState />
                   <SuggestionList onPick={ask} />
                 </div>
@@ -181,7 +181,7 @@ export default function Home() {
             latest={latestAssistantData}
             loading={loading}
             onCollapse={() => setDesktopInspectorOpen(false)}
-            className="hidden overflow-hidden rounded-2xl border border-slate-200 shadow-rc-sm xl:flex xl:h-full xl:flex-col"
+            className="hidden overflow-hidden border-l border-neutral-200 xl:flex xl:h-full xl:flex-col"
           />
         ) : null}
       </div>

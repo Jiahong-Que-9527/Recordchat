@@ -6,7 +6,7 @@
   color-scheme: light;
   /* Brand tokens — single source for the few values used outside Tailwind utilities. */
   --rc-accent: #2563eb;
-  --rc-bg: #f6f9fc;
+  --rc-bg: #fafafa;
 }
 
 html,

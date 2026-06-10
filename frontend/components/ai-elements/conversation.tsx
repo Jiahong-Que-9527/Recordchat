@@ -118,10 +118,10 @@ export function ConversationContent({
 export function ConversationEmptyState() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col items-center text-center animate-[recordchat-rise_320ms_ease-out]">
-      <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+      <h2 className="text-3xl font-semibold text-neutral-950 sm:text-4xl">
         What can I help with?
       </h2>
-      <p className="mt-3 text-base leading-7 text-slate-500">
+      <p className="mt-3 text-sm leading-6 text-neutral-500">
         Ask a question, explore ONE Record concepts, or generate JSON-LD examples.
       </p>
     </div>
