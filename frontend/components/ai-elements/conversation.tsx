@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowDown, MessageSquareText } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Conversation({
@@ -13,10 +13,7 @@ export function Conversation({
 }) {
   return (
     <section
-      className={cn(
-        "flex min-h-0 flex-1 flex-col rounded-2xl border border-slate-200 bg-white shadow-rc-sm",
-        className
-      )}
+      className={cn("flex min-h-0 flex-1 flex-col", className)}
     >
       {children}
     </section>
@@ -94,7 +91,7 @@ export function ConversationContent({
         onScroll={handleScroll}
         className={cn("h-full overflow-y-auto px-4 py-5 sm:px-6 sm:py-6 xl:px-8", className)}
       >
-        <div className="mx-auto flex max-w-3xl flex-col gap-4">
+        <div className="mx-auto flex min-h-full max-w-3xl flex-col gap-4">
           {children}
           <div ref={endRef} />
         </div>
@@ -120,16 +117,12 @@ export function ConversationContent({
 
 export function ConversationEmptyState() {
   return (
-    <div className="mx-auto mt-10 flex max-w-md flex-col items-center text-center animate-[recordchat-rise_320ms_ease-out] sm:mt-16">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-weak text-accent">
-        <MessageSquareText className="h-6 w-6" />
-      </div>
-      <h2 className="mt-4 text-xl font-semibold text-slate-900 sm:text-2xl">
-        Ask RecordChat about IATA ONE Record
+    <div className="mx-auto flex max-w-2xl flex-col items-center text-center animate-[recordchat-rise_320ms_ease-out]">
+      <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+        What can I help with?
       </h2>
-      <p className="mt-2 text-sm leading-6 text-slate-500">
-        Grounded answers on ONE Record concepts, ontology relationships, JSON-LD,
-        API behavior, and NE:ONE implementation — with sources you can inspect.
+      <p className="mt-3 text-base leading-7 text-slate-500">
+        Ask a question, explore ONE Record concepts, or generate JSON-LD examples.
       </p>
     </div>
   );

@@ -1,75 +1,79 @@
 "use client";
 
-import { Braces, Plus } from "lucide-react";
+import { Edit2, Trash2, ChevronDown } from "lucide-react";
 import Image from "next/image";
-import { EXAMPLE_QUESTIONS, ONE_RECORD_CONCEPTS } from "@/lib/constants";
-import { Button } from "@/components/ui/button";
 
 export function Sidebar({
-  onPick,
   onNewChat,
 }: {
-  onPick: (q: string) => void;
   onNewChat: () => void;
 }) {
   return (
-    <aside className="flex w-full shrink-0 flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-rc-sm xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)]">
-      <div className="flex items-center px-1">
-        <Image
-          src="/recordchat-logo.png"
-          alt="RecordChat"
-          width={44}
-          height={44}
-          className="h-11 w-auto object-contain"
-          priority
-        />
-      </div>
-
-      <Button onClick={onNewChat} className="w-full gap-2">
-        <Plus className="h-4 w-4" />
-        New chat
-      </Button>
-
-      <div>
-        <p className="mb-2 text-xs font-semibold text-slate-500">Try asking</p>
-        <div className="flex gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
-          {EXAMPLE_QUESTIONS.map((q) => (
-            <button
-              key={q}
-              type="button"
-              onClick={() => onPick(q)}
-              className="min-w-[220px] rounded-lg px-2.5 py-2 text-left text-xs leading-5 text-slate-600 transition hover:bg-slate-100 lg:min-w-0"
-            >
-              {q}
-            </button>
-          ))}
+    <aside className="flex h-full w-full shrink-0 flex-col bg-slate-100 xl:sticky xl:top-0 xl:h-screen">
+      <div className="flex h-14 items-center justify-between px-5">
+        <div className="flex min-w-0 items-center gap-2">
+          <Image
+            src="/recordchat-mark.svg"
+            alt=""
+            width={28}
+            height={28}
+            className="h-7 w-7 shrink-0"
+            priority
+          />
+          <span className="truncate text-[15px] font-semibold leading-none tracking-normal">
+            <span className="text-blue-600">Record</span>
+            <span className="text-amber-500">Chat</span>
+          </span>
         </div>
+        <button
+          type="button"
+          onClick={onNewChat}
+          aria-label="New chat"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-200"
+        >
+          <Edit2 className="h-4 w-4" />
+        </button>
       </div>
 
-      <div>
-        <p className="mb-2 text-xs font-semibold text-slate-500">Concepts</p>
-        <div className="flex flex-wrap gap-1.5">
-          {ONE_RECORD_CONCEPTS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => onPick(`What is ${c} in ONE Record?`)}
-              className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-700 transition hover:border-accent-ring hover:bg-accent-weak hover:text-accent"
-            >
-              {c}
-            </button>
-          ))}
-        </div>
+      {/* Actions */}
+      <div className="px-2 py-1 space-y-0.5">
+        <button
+          type="button"
+          onClick={onNewChat}
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-200"
+        >
+          <Edit2 className="h-4 w-4 shrink-0 text-slate-500" />
+          New chat
+        </button>
+        <button
+          type="button"
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-200"
+        >
+          <Trash2 className="h-4 w-4 shrink-0 text-slate-500" />
+          Delete all
+        </button>
       </div>
 
-      <button
-        type="button"
-        onClick={() => onPick("Generate a JSON-LD example for a Piece.")}
-        className="mt-auto inline-flex items-center gap-2 rounded-xl border border-accent-ring bg-accent-weak px-3 py-2 text-left text-xs font-medium text-accent transition hover:bg-accent/10"
-      >
-        <Braces className="h-4 w-4" />
-        JSON-LD generator
-      </button>
+      {/* History */}
+      <div className="flex-1 overflow-y-auto px-2 py-3">
+        <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+          History
+        </p>
+      </div>
+
+      {/* User section */}
+      <div className="border-t border-slate-200 p-2">
+        <button
+          type="button"
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-200"
+        >
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-400 text-xs font-semibold text-white">
+            G
+          </div>
+          <span className="flex-1 text-left text-sm">Guest</span>
+          <ChevronDown className="h-4 w-4 text-slate-400" />
+        </button>
+      </div>
     </aside>
   );
 }

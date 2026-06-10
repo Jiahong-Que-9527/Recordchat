@@ -71,23 +71,22 @@ export default function Home() {
   }, [regenerate]);
 
   return (
-    <main className="min-h-screen px-3 py-3 sm:px-4 sm:py-4">
+    <main className="h-screen overflow-hidden">
       <div
-        className={`mx-auto grid min-h-[calc(100vh-1.5rem)] max-w-[1680px] grid-cols-1 gap-4 ${
+        className={`mx-auto grid h-full max-w-[1680px] grid-cols-1 ${
           desktopInspectorOpen
             ? "xl:grid-cols-[260px_minmax(0,1fr)_340px]"
             : "xl:grid-cols-[260px_minmax(0,1fr)]"
         }`}
       >
         <Sidebar
-          onPick={ask}
           onNewChat={() => {
             setMessages([]);
             setInput("");
           }}
         />
 
-        <section className="relative flex min-h-0 flex-col gap-3">
+        <section className="relative flex h-full flex-col gap-3 overflow-hidden bg-white px-4 py-4 sm:px-6">
           {/* Floating inspector toggle — only visible when there's something to
               open (mobile drawer, or a collapsed desktop inspector). */}
           <div className="absolute right-3 top-3 z-20 flex gap-2">
@@ -117,10 +116,10 @@ export default function Home() {
           <Conversation className="min-h-0 flex-1">
             <ConversationContent watch={messages} newTurnKey={userTurnCount}>
               {messages.length === 0 ? (
-                <>
+                <div className="flex min-h-full flex-col justify-center py-8">
                   <ConversationEmptyState />
                   <SuggestionList onPick={ask} />
-                </>
+                </div>
               ) : (
                 messages.map((message) => (
                   <Message
@@ -166,9 +165,7 @@ export default function Home() {
               onSubmitShortcut={() => ask(input)}
             />
             <PromptInputToolbar>
-              <span className="text-xs text-slate-400">
-                Enter to send · Shift+Enter for a new line
-              </span>
+              <span />
               <PromptInputSubmit
                 isLoading={loading}
                 disabled={!input.trim()}
@@ -184,7 +181,7 @@ export default function Home() {
             latest={latestAssistantData}
             loading={loading}
             onCollapse={() => setDesktopInspectorOpen(false)}
-            className="hidden overflow-hidden rounded-2xl border border-slate-200 shadow-rc-sm xl:flex xl:min-h-0 xl:flex-col"
+            className="hidden overflow-hidden rounded-2xl border border-slate-200 shadow-rc-sm xl:flex xl:h-full xl:flex-col"
           />
         ) : null}
       </div>

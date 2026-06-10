@@ -1,0 +1,61 @@
+<svg width="768" height="256" viewBox="0 0 768 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="recordchat-blue" x1="64" y1="32" x2="320" y2="224" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#315EF3"/>
+      <stop offset="1" stop-color="#0F4BE8"/>
+    </linearGradient>
+    <linearGradient id="recordchat-gold" x1="532" y1="62" x2="712" y2="194" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFBC3A"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+
+  <path
+    d="M116 24C60.7715 24 16 68.7715 16 124C16 152.871 28.2228 178.889 47.771 197.154L36.9253 226.767C35.1435 231.632 40.2884 236.099 44.8693 233.681L83.0387 213.538C93.3832 220.172 105.689 224 118.889 224C174.118 224 218.889 179.228 218.889 124C218.889 68.7715 174.118 24 118.889 24H116Z"
+    stroke="url(#recordchat-blue)"
+    stroke-width="12"
+    stroke-linejoin="round"
+  />
+
+  <rect x="83" y="74" width="74" height="104" rx="12" stroke="url(#recordchat-blue)" stroke-width="9"/>
+  <path d="M157 74L188 105V147C188 153.627 182.627 159 176 159H157V74Z" stroke="url(#recordchat-blue)" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M157 74V98C157 103.523 161.477 108 167 108H188" stroke="#FDBA31" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <path d="M111 111H149" stroke="url(#recordchat-blue)" stroke-width="9" stroke-linecap="round"/>
+  <path d="M111 133H149" stroke="url(#recordchat-blue)" stroke-width="9" stroke-linecap="round"/>
+  <path d="M111 155H137" stroke="url(#recordchat-blue)" stroke-width="9" stroke-linecap="round"/>
+
+  <path d="M83 108L53 138" stroke="url(#recordchat-blue)" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="47" cy="144" r="13" fill="white" stroke="url(#recordchat-blue)" stroke-width="9"/>
+  <path d="M188 147L218 133" stroke="url(#recordchat-blue)" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="226" cy="130" r="13" fill="white" stroke="#FDBA31" stroke-width="9"/>
+
+  <circle cx="155" cy="160" r="17" fill="#FDBA31"/>
+  <path d="M147 160L153 166L164 153" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <path d="M215 62L222 74L235 76L226 86L228 99L215 92L202 99L205 86L195 76L208 74L215 62Z" fill="url(#recordchat-blue)"/>
+  <path d="M192 120C196 131 198.038 143.257 198 156C197.932 179.252 190.949 199.095 178 214" stroke="url(#recordchat-blue)" stroke-width="5" stroke-linecap="round" stroke-dasharray="8 14"/>
+
+  <text
+    x="274"
+    y="160"
+    fill="url(#recordchat-blue)"
+    font-family="Avenir Next, Poppins, Nunito Sans, sans-serif"
+    font-size="112"
+    font-weight="700"
+    letter-spacing="-4"
+  >
+    Record
+  </text>
+  <text
+    x="531"
+    y="160"
+    fill="url(#recordchat-gold)"
+    font-family="Avenir Next, Poppins, Nunito Sans, sans-serif"
+    font-size="112"
+    font-weight="500"
+    letter-spacing="-4"
+  >
+    Chat
+  </text>
+</svg>
