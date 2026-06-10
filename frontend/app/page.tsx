@@ -131,7 +131,10 @@ export default function Home() {
           </div>
 
           <Conversation className="min-h-0 flex-1">
-            <ConversationContent watch={messages} newTurnKey={userTurnCount}>
+            <ConversationContent
+              watch={messages.length ? messages : undefined}
+              newTurnKey={userTurnCount || undefined}
+            >
               {messages.length === 0 ? (
                 <div className="flex min-h-full flex-col pb-6 pt-[30vh]">
                   <ConversationEmptyState />

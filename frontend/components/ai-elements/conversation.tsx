@@ -21,6 +21,7 @@ export function Conversation({
 }
 
 const NEAR_BOTTOM_PX = 120;
+const SMOOTH_SUPPRESS_MS = 120;
 
 export function ConversationContent({
   children,
@@ -44,6 +45,7 @@ export function ConversationContent({
   // Ignore scroll events fired by our own smooth programmatic scrolls so the
   // animation's intermediate positions don't get mistaken for a user scroll-up.
   const suppressUntil = useRef(0);
+  const frameRef = useRef<number | null>(null);
 
   const setPinnedBoth = useCallback((value: boolean) => {
     pinnedRef.current = value;
@@ -51,11 +53,26 @@ export function ConversationContent({
   }, []);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior) => {
+    const el = scrollRef.current;
+    if (!el) return;
     if (behavior === "smooth") {
-      suppressUntil.current = performance.now() + 700;
+      suppressUntil.current = performance.now() + SMOOTH_SUPPRESS_MS;
     }
-    endRef.current?.scrollIntoView({ behavior, block: "end" });
+    el.scrollTo({ top: el.scrollHeight, behavior });
   }, []);
+
+  const queueScrollToBottom = useCallback(
+    (behavior: ScrollBehavior) => {
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+      }
+      frameRef.current = requestAnimationFrame(() => {
+        frameRef.current = null;
+        scrollToBottom(behavior);
+      });
+    },
+    [scrollToBottom]
+  );
 
   // Re-evaluate pinned state on user scroll. Programmatic scrolls always land
   // at the bottom (→ near bottom → stays pinned), so a "far from bottom" event
@@ -71,7 +88,7 @@ export function ConversationContent({
   // Follow new/streaming content only while pinned — instant, no animation.
   useEffect(() => {
     if (pinnedRef.current) {
-      scrollToBottom("auto");
+      queueScrollToBottom("smooth");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watch]);
@@ -80,20 +97,31 @@ export function ConversationContent({
   useEffect(() => {
     if (newTurnKey === undefined) return;
     setPinnedBoth(true);
-    requestAnimationFrame(() => scrollToBottom("smooth"));
+    queueScrollToBottom("smooth");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newTurnKey]);
+
+  useEffect(() => {
+    return () => {
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="relative min-h-0 flex-1">
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className={cn("h-full overflow-y-auto px-4 py-5 sm:px-6 sm:py-6 xl:px-8", className)}
+        className={cn(
+          "h-full overflow-y-auto overscroll-contain scroll-smooth px-4 py-5 sm:px-6 sm:py-6 xl:px-8",
+          className
+        )}
       >
-        <div className="mx-auto flex min-h-full max-w-3xl flex-col gap-4">
+        <div className="mx-auto flex min-h-full max-w-3xl flex-col gap-4 pb-8">
           {children}
-          <div ref={endRef} />
+          <div ref={endRef} className="h-px scroll-mb-8" />
         </div>
       </div>
 
