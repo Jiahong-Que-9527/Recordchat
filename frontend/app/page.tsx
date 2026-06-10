@@ -131,18 +131,17 @@ export default function Home() {
           </div>
 
           <Conversation className="min-h-0 flex-1">
-            <ConversationContent
-              watch={messages.length ? messages : undefined}
-              newTurnKey={userTurnCount || undefined}
-            >
-              {messages.length === 0 ? (
-                <div className="flex min-h-full flex-col pb-6 pt-[30vh]">
+            {messages.length === 0 ? (
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-6 pt-[30vh] sm:px-6 xl:px-8">
+                <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
                   <ConversationEmptyState />
                   <div className="min-h-40 flex-1" />
                   <SuggestionList onPick={ask} />
                 </div>
-              ) : (
-                messages.map((message) => (
+              </div>
+            ) : (
+              <ConversationContent watch={messages} newTurnKey={userTurnCount}>
+                {messages.map((message) => (
                   <Message
                     key={message.id}
                     message={message}
@@ -150,27 +149,27 @@ export default function Home() {
                     loading={loading}
                     onRegenerate={handleRegenerate}
                   />
-                ))
-              )}
-              {loading ? (
-                <TypingIndicator label={streamingStatus || "Streaming…"} />
-              ) : null}
-              {error ? (
-                <div className="flex flex-col gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  <span>
-                    Could not reach the RecordChat backend. Check the frontend proxy,
-                    backend server, and <code className="rounded bg-rose-100 px-1">/ingest</code> state.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => regenerate()}
-                    className="self-start rounded-lg border border-rose-300 bg-white px-3 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-100"
-                  >
-                    Retry
-                  </button>
-                </div>
-              ) : null}
-            </ConversationContent>
+                ))}
+                {loading ? (
+                  <TypingIndicator label={streamingStatus || "Streaming…"} />
+                ) : null}
+                {error ? (
+                  <div className="flex flex-col gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    <span>
+                      Could not reach the RecordChat backend. Check the frontend proxy,
+                      backend server, and <code className="rounded bg-rose-100 px-1">/ingest</code> state.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => regenerate()}
+                      className="self-start rounded-lg border border-rose-300 bg-white px-3 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-100"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : null}
+              </ConversationContent>
+            )}
           </Conversation>
 
           <PromptInput
@@ -188,7 +187,6 @@ export default function Home() {
             <PromptInputToolbar>
               <ModelPicker
                 value={selectedModel}
-                onChange={setSelectedModel}
                 disabled={loading}
               />
               <PromptInputSubmit
