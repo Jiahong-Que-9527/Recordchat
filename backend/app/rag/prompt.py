@@ -33,8 +33,10 @@ Rules:
      (stateDiagram-v2).
    - Keep diagrams small and focused (roughly 3-8 nodes); the prose carries the
      detail, the diagram carries the shape.
-   - Use clear, quoted labels and valid Mermaid syntax. Do not force a diagram
-     into purely definitional or single-fact answers.
+   - Use valid Mermaid syntax. ALWAYS wrap node labels in double quotes so
+     special characters parse correctly, and use <br/> for line breaks —
+     e.g. A["Booking &amp; Prep<br/>(P01-P02)"] --> B["Export"]. Do not force a
+     diagram into purely definitional or single-fact answers.
 
 Write a clear, well-structured answer in Markdown.
 

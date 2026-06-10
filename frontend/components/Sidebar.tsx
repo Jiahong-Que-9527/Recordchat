@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   ChevronDown,
   Edit2,
@@ -11,22 +12,63 @@ import Image from "next/image";
 import { EXAMPLE_QUESTIONS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
+function CollapsibleSection({
+  title,
+  uppercase = false,
+  defaultOpen = true,
+  children,
+}: {
+  title: string;
+  uppercase?: boolean;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <section>
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        className={cn(
+          "flex w-full items-center justify-between gap-2 rounded-md px-3 py-1.5 text-left transition hover:bg-neutral-200/60",
+          uppercase
+            ? "text-[11px] font-medium uppercase tracking-wider text-neutral-500"
+            : "text-sm font-medium text-neutral-500"
+        )}
+      >
+        <span className="truncate">{title}</span>
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 shrink-0 transition-transform",
+            open ? "" : "-rotate-90"
+          )}
+        />
+      </button>
+      {open ? <div className="mt-1">{children}</div> : null}
+    </section>
+  );
+}
+
 export function Sidebar({
   onNewChat,
   onPick,
   collapsed,
   onToggleCollapsed,
+  className,
 }: {
   onNewChat: () => void;
   onPick: (question: string) => void;
   collapsed: boolean;
   onToggleCollapsed: () => void;
+  className?: string;
 }) {
   return (
     <aside
       className={cn(
-        "flex h-full w-full shrink-0 flex-col border-r border-neutral-200 bg-neutral-50 xl:sticky xl:top-0 xl:h-screen",
-        collapsed ? "items-center" : ""
+        "flex h-full shrink-0 flex-col border-r border-neutral-200 bg-neutral-50",
+        collapsed ? "items-center" : "",
+        className
       )}
     >
       <div
@@ -104,11 +146,8 @@ export function Sidebar({
         )}
       >
         {collapsed ? null : (
-          <>
-            <section className="mb-8">
-              <p className="mb-3 text-sm font-medium text-neutral-500">
-                Try asking
-              </p>
+          <div className="space-y-6">
+            <CollapsibleSection title="Try asking">
               <div className="space-y-1">
                 {EXAMPLE_QUESTIONS.map((question) => (
                   <button
@@ -121,17 +160,14 @@ export function Sidebar({
                   </button>
                 ))}
               </div>
-            </section>
+            </CollapsibleSection>
 
-            <section>
-              <p className="mb-3 text-[11px] font-medium uppercase tracking-wider text-neutral-500">
-                History
-              </p>
-              <p className="max-w-[190px] text-sm leading-5 text-neutral-500">
+            <CollapsibleSection title="History" uppercase>
+              <p className="max-w-[190px] px-3 text-sm leading-5 text-neutral-500">
                 Your ONE Record conversations will appear here once you start chatting.
               </p>
-            </section>
-          </>
+            </CollapsibleSection>
+          </div>
         )}
       </div>
 

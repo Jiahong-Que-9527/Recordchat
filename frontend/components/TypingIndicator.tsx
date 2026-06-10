@@ -1,12 +1,26 @@
-export function TypingIndicator({ label }: { label: string }) {
+import { Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export function TypingIndicator({
+  label = "Thinking...",
+  className,
+}: {
+  label?: string;
+  className?: string;
+}) {
   return (
-    <div className="inline-flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-rc-sm animate-[recordchat-rise_280ms_ease-out]">
-      <span className="flex items-center gap-1">
-        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent [animation-delay:-0.25s]" />
-        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent/70 [animation-delay:-0.1s]" />
-        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent/40" />
+    <div
+      className={cn(
+        "flex items-center gap-2.5 animate-[recordchat-rise_280ms_ease-out]",
+        className
+      )}
+    >
+      <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
+        <Sparkles className="h-4 w-4" />
       </span>
-      <span>{label}</span>
+      <span className="animate-pulse text-sm font-medium text-neutral-500">
+        {label}
+      </span>
     </div>
   );
 }

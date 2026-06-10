@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { copyText } from "@/lib/utils";
 
 export function JsonLdViewer({ data }: { data: Record<string, unknown> }) {
   const [copied, setCopied] = useState(false);
@@ -10,9 +11,10 @@ export function JsonLdViewer({ data }: { data: Record<string, unknown> }) {
   const entries = Object.entries(data);
 
   async function copy() {
-    await navigator.clipboard.writeText(serialized);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
+    if (await copyText(serialized)) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    }
   }
 
   return (

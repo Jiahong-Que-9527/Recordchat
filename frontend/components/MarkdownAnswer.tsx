@@ -12,6 +12,7 @@ import { Check, Copy, Lightbulb } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import { copyText } from "@/lib/utils";
 import { MermaidDiagram } from "./MermaidDiagram";
 
 // Matches a section header line like "Answer:", "**Related concepts:**",
@@ -28,8 +29,8 @@ function canonicalSection(label: string): "answer" | "related" | "implementation
 }
 
 // Split the model's structured answer into the parts we actually render.
-// Related concepts / Sources are dropped here (the Inspector shows them as
-// structured data); the leading "Answer:" label is stripped.
+// Related concepts / Sources are dropped here — <Message> renders them from the
+// structured response data instead; the leading "Answer:" label is stripped.
 function parseAnswerSections(text: string): { body: string; implementation?: string } {
   const lines = text.split("\n");
   const buckets: Record<string, string[]> = {
@@ -104,10 +105,10 @@ function CodeBlock({ children }: { children: ReactNode }) {
 
   async function copy() {
     const text = preRef.current?.textContent ?? "";
-    if (!text) return;
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
+    if (await copyText(text)) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    }
   }
 
   return (

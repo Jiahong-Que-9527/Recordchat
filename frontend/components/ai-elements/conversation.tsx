@@ -146,11 +146,12 @@ export function ConversationContent({
 export function ConversationEmptyState() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col items-center text-center animate-[recordchat-rise_320ms_ease-out]">
-      <h2 className="text-3xl font-semibold text-neutral-950 sm:text-4xl">
-        What can I help with?
+      <h2 className="text-2xl font-semibold leading-snug text-neutral-950 sm:text-3xl">
+        Explore ONE Record and NE:ONE.
       </h2>
       <p className="mt-3 text-sm leading-6 text-neutral-500">
-        Ask a question, explore ONE Record concepts, or generate JSON-LD examples.
+        Ask about ontology relationships, JSON-LD examples, subscriptions, and
+        NE:ONE server implementation.
       </p>
     </div>
   );

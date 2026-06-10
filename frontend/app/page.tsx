@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import { PanelRight, PanelRightOpen, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Edit2, Menu } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import {
@@ -16,16 +16,19 @@ import {
   PromptInputToolbar,
 } from "@/components/ai-elements/prompt-input";
 import { SuggestionList } from "@/components/ai-elements/suggestion-list";
-import { InspectorPanel } from "@/components/InspectorPanel";
 import { ModelPicker } from "@/components/ModelPicker";
 import { Sidebar } from "@/components/Sidebar";
-import { Message } from "@/components/Message";
+import { Message, canvasTitle } from "@/components/Message";
 import { TypingIndicator } from "@/components/TypingIndicator";
-import {
-  getMessageData,
-  type ChatModel,
-  type RecordChatMessage,
-} from "@/lib/api";
+import { Canvas } from "@/components/Canvas";
+import { cn } from "@/lib/utils";
+import { getMessageData, type ChatModel, type RecordChatMessage } from "@/lib/api";
+
+type CanvasState = {
+  messageId: string;
+  title: string;
+  data: Record<string, unknown>;
+};
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message.trim()) {
@@ -40,9 +43,9 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState<ChatModel>("deepseek-v4-flash");
   const selectedModelRef = useRef<ChatModel>(selectedModel);
   selectedModelRef.current = selectedModel;
-  const [inspectorOpen, setInspectorOpen] = useState(false);
-  const [desktopInspectorOpen, setDesktopInspectorOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [canvas, setCanvas] = useState<CanvasState | null>(null);
   const {
     messages,
     sendMessage,
@@ -58,22 +61,14 @@ export default function Home() {
     }),
   });
   const loading = status === "submitted" || status === "streaming";
-  const streamingStatus =
-    status === "submitted"
-      ? "Preparing retrieval…"
-      : status === "streaming"
-        ? "Streaming…"
-        : "";
 
-  const latestAssistantMessage = [...messages]
-    .reverse()
-    .find((message) => message.role === "assistant");
-  const latestAssistantData = latestAssistantMessage
-    ? getMessageData(latestAssistantMessage)
-    : undefined;
   const lastMessageId = messages[messages.length - 1]?.id;
   const userTurnCount = messages.filter((m) => m.role === "user").length;
   const errorDetail = error ? getErrorMessage(error) : "";
+  // While waiting for the first token there is no assistant bubble yet, so show
+  // a standalone "Thinking…" indicator. Once streaming starts the assistant
+  // <Message> renders its own indicator / streamed text.
+  const showConversationIndicator = status === "submitted";
 
   function ask(message: string) {
     const q = message.trim();
@@ -84,25 +79,82 @@ export default function Home() {
     sendMessage({ text: q });
   }
 
-  // Stable reference so memoised <Message> components don't re-render each token.
+  // Stable references so memoised <Message> components don't re-render each
+  // token. `messagesRef` lets the edit handler read the latest list without
+  // depending on it (which would change identity every render).
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+
   const handleRegenerate = useCallback(() => {
     regenerate();
   }, [regenerate]);
 
+  // Edit-and-resend: drop the edited turn and everything after it, then send
+  // the revised question — the assistant answer is regenerated from there.
+  const handleEditMessage = useCallback(
+    (messageId: string, text: string) => {
+      const index = messagesRef.current.findIndex((m) => m.id === messageId);
+      if (index === -1) {
+        return;
+      }
+      setMessages(messagesRef.current.slice(0, index));
+      sendMessage({ text });
+    },
+    [sendMessage, setMessages]
+  );
+
+  // Toggle from the artifact card: open this message's output, or close it if
+  // it is already the one on screen.
+  const handleToggleCanvas = useCallback(
+    (messageId: string, title: string, data: Record<string, unknown>) => {
+      setCanvas((current) =>
+        current?.messageId === messageId ? null : { messageId, title, data }
+      );
+    },
+    []
+  );
+
+  // Auto-open the canvas when a finished answer carries structured output.
+  // Tracked per message id so manually closing it doesn't re-trigger.
+  const autoOpenedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+    const latestAssistant = [...messages]
+      .reverse()
+      .find((message) => message.role === "assistant");
+    if (!latestAssistant || autoOpenedRef.current === latestAssistant.id) {
+      return;
+    }
+    const output = getMessageData(latestAssistant)?.structured_output;
+    if (output) {
+      autoOpenedRef.current = latestAssistant.id;
+      setCanvas({
+        messageId: latestAssistant.id,
+        title: canvasTitle(output),
+        data: output,
+      });
+    }
+  }, [messages, loading]);
+
   return (
-    <main className="h-screen overflow-hidden bg-neutral-50">
+    <main className="h-dvh overflow-hidden bg-neutral-50">
       <div
-        className={`grid h-full w-full grid-cols-1 ${
-          desktopInspectorOpen
+        className={cn(
+          "grid h-full w-full grid-cols-1",
+          canvas
             ? sidebarCollapsed
-              ? "xl:grid-cols-[48px_minmax(0,1fr)_340px]"
-              : "xl:grid-cols-[260px_minmax(0,1fr)_340px]"
+              ? "xl:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)]"
+              : "xl:grid-cols-[260px_minmax(0,1fr)_minmax(0,1fr)]"
             : sidebarCollapsed
               ? "xl:grid-cols-[48px_minmax(0,1fr)]"
               : "xl:grid-cols-[260px_minmax(0,1fr)]"
-        }`}
+        )}
       >
+        {/* Desktop sidebar — a static grid column from xl up. */}
         <Sidebar
+          className="hidden w-full xl:flex xl:sticky xl:top-0 xl:h-screen"
           collapsed={sidebarCollapsed}
           onPick={ask}
           onToggleCollapsed={() => setSidebarCollapsed((value) => !value)}
@@ -113,31 +165,32 @@ export default function Home() {
         />
 
         <section className="relative flex h-full flex-col overflow-hidden bg-neutral-50 px-4 pb-4 pt-3 sm:px-6">
-          {/* Floating inspector toggle — only visible when there's something to
-              open (mobile drawer, or a collapsed desktop inspector). */}
-          <div className="absolute right-3 top-3 z-20 flex gap-2">
+          {/* Mobile/tablet top bar — opens the sidebar drawer. */}
+          <header className="mb-2 flex items-center justify-between gap-2 xl:hidden">
             <button
               type="button"
-              onClick={() => setInspectorOpen(true)}
-              aria-label="Open inspector"
-              title="Inspector"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 bg-neutral-100 text-neutral-600 transition hover:bg-neutral-200 xl:hidden"
+              onClick={() => setMobileSidebarOpen(true)}
+              aria-label="Open menu"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-600 transition hover:bg-neutral-100"
             >
-              <PanelRight className="h-4 w-4" />
+              <Menu className="h-5 w-5" />
             </button>
-            {!desktopInspectorOpen ? (
-              <button
-                type="button"
-                onClick={() => setDesktopInspectorOpen(true)}
-                aria-label="Show inspector"
-                title="Show inspector"
-                className="hidden h-8 items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-100 px-2.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-200 xl:inline-flex"
-              >
-                <PanelRightOpen className="h-4 w-4" />
-                Inspector
-              </button>
-            ) : null}
-          </div>
+            <span className="text-sm font-semibold leading-none">
+              <span className="text-blue-600">Record</span>
+              <span className="text-amber-500">Chat</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setMessages([]);
+                setInput("");
+              }}
+              aria-label="New chat"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-600 transition hover:bg-neutral-100"
+            >
+              <Edit2 className="h-4 w-4" />
+            </button>
+          </header>
 
           <Conversation className="min-h-0 flex-1">
             {messages.length === 0 ? (
@@ -157,11 +210,12 @@ export default function Home() {
                     isLast={message.id === lastMessageId}
                     loading={loading}
                     onRegenerate={handleRegenerate}
+                    onEdit={handleEditMessage}
+                    onToggleCanvas={handleToggleCanvas}
+                    activeCanvasId={canvas?.messageId ?? null}
                   />
                 ))}
-                {loading ? (
-                  <TypingIndicator label={streamingStatus || "Streaming…"} />
-                ) : null}
+                {showConversationIndicator ? <TypingIndicator /> : null}
                 {error ? (
                   <div className="flex flex-col gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                     <span>
@@ -210,37 +264,56 @@ export default function Home() {
           </PromptInput>
         </section>
 
-        {/* Desktop inspector — collapsible to the right */}
-        {desktopInspectorOpen ? (
-          <InspectorPanel
-            latest={latestAssistantData}
-            loading={loading}
-            onCollapse={() => setDesktopInspectorOpen(false)}
-            className="hidden overflow-hidden border-l border-neutral-200 xl:flex xl:h-full xl:flex-col"
+        {/* Canvas — desktop split column */}
+        {canvas ? (
+          <Canvas
+            title={canvas.title}
+            data={canvas.data}
+            onClose={() => setCanvas(null)}
+            className="hidden border-l border-neutral-200 xl:flex"
           />
         ) : null}
       </div>
 
-      {/* Mobile inspector drawer */}
-      {inspectorOpen ? (
+      {/* Sidebar — mobile/tablet slide-over drawer */}
+      {mobileSidebarOpen ? (
         <div className="fixed inset-0 z-50 xl:hidden">
           <div
             className="absolute inset-0 bg-slate-900/40"
-            onClick={() => setInspectorOpen(false)}
+            onClick={() => setMobileSidebarOpen(false)}
           />
-          <div className="absolute right-0 top-0 flex h-full w-[min(380px,90vw)] flex-col bg-white shadow-rc-md animate-[recordchat-rise_220ms_ease-out]">
-            <button
-              type="button"
-              onClick={() => setInspectorOpen(false)}
-              aria-label="Close inspector"
-              className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <InspectorPanel
-              latest={latestAssistantData}
-              loading={loading}
-              className="flex h-full min-h-0 flex-col"
+          <div className="absolute left-0 top-0 h-full shadow-rc-md animate-[recordchat-slide-left_220ms_ease-out]">
+            <Sidebar
+              className="h-full w-[min(300px,85vw)]"
+              collapsed={false}
+              onToggleCollapsed={() => setMobileSidebarOpen(false)}
+              onPick={(question) => {
+                setMobileSidebarOpen(false);
+                ask(question);
+              }}
+              onNewChat={() => {
+                setMobileSidebarOpen(false);
+                setMessages([]);
+                setInput("");
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {/* Canvas — mobile/tablet slide-over drawer */}
+      {canvas ? (
+        <div className="fixed inset-0 z-50 xl:hidden">
+          <div
+            className="absolute inset-0 bg-slate-900/40"
+            onClick={() => setCanvas(null)}
+          />
+          <div className="absolute right-0 top-0 h-full w-[min(640px,95vw)] shadow-rc-md">
+            <Canvas
+              title={canvas.title}
+              data={canvas.data}
+              onClose={() => setCanvas(null)}
+              className="h-full"
             />
           </div>
         </div>
