@@ -83,7 +83,7 @@ export default function Home() {
   return (
     <main className="h-screen overflow-hidden bg-neutral-50">
       <div
-        className={`mx-auto grid h-full max-w-[1680px] grid-cols-1 ${
+        className={`grid h-full w-full grid-cols-1 ${
           desktopInspectorOpen
             ? sidebarCollapsed
               ? "xl:grid-cols-[48px_minmax(0,1fr)_340px]"

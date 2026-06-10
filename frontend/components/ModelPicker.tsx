@@ -1,6 +1,7 @@
 "use client";
 
-import { Search, SlidersHorizontal, Sparkles } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CHAT_MODELS, type ChatModel } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -73,7 +74,13 @@ export function ModelPicker({
                   value === model ? "bg-neutral-100 text-neutral-950" : "text-neutral-700"
                 )}
               >
-                <Sparkles className="h-4 w-4 shrink-0 text-neutral-950" />
+                <Image
+                  src="/deepseek-mark.svg"
+                  alt=""
+                  width={16}
+                  height={12}
+                  className="h-3.5 w-4 shrink-0 text-neutral-950"
+                />
                 <span className="flex-1">{MODEL_LABELS[model]}</span>
                 <SlidersHorizontal className="h-3.5 w-3.5 text-neutral-500" />
               </button>
@@ -88,7 +95,13 @@ export function ModelPicker({
         disabled={disabled}
         className="inline-flex h-8 items-center gap-2 rounded-full bg-neutral-100 px-3 text-xs font-semibold text-neutral-900 transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:text-neutral-400"
       >
-        <Sparkles className="h-4 w-4" />
+        <Image
+          src="/deepseek-mark.svg"
+          alt=""
+          width={16}
+          height={12}
+          className="h-3.5 w-4"
+        />
         {MODEL_LABELS[value]}
       </button>
     </div>
