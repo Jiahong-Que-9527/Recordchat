@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { PanelRight, PanelRightOpen, X } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -17,15 +17,24 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { SuggestionList } from "@/components/ai-elements/suggestion-list";
 import { InspectorPanel } from "@/components/InspectorPanel";
+import { ModelPicker } from "@/components/ModelPicker";
 import { Sidebar } from "@/components/Sidebar";
 import { Message } from "@/components/Message";
 import { TypingIndicator } from "@/components/TypingIndicator";
-import { getMessageData, type RecordChatMessage } from "@/lib/api";
+import {
+  getMessageData,
+  type ChatModel,
+  type RecordChatMessage,
+} from "@/lib/api";
 
 export default function Home() {
   const [input, setInput] = useState("");
+  const [selectedModel, setSelectedModel] = useState<ChatModel>("deepseek-v4-fast");
+  const selectedModelRef = useRef<ChatModel>(selectedModel);
+  selectedModelRef.current = selectedModel;
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [desktopInspectorOpen, setDesktopInspectorOpen] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const {
     messages,
     sendMessage,
@@ -37,6 +46,7 @@ export default function Home() {
   } = useChat<RecordChatMessage>({
     transport: new DefaultChatTransport<RecordChatMessage>({
       api: "/api/chat",
+      body: () => ({ model: selectedModelRef.current }),
     }),
   });
   const loading = status === "submitted" || status === "streaming";
@@ -75,11 +85,18 @@ export default function Home() {
       <div
         className={`mx-auto grid h-full max-w-[1680px] grid-cols-1 ${
           desktopInspectorOpen
-            ? "xl:grid-cols-[260px_minmax(0,1fr)_340px]"
-            : "xl:grid-cols-[260px_minmax(0,1fr)]"
+            ? sidebarCollapsed
+              ? "xl:grid-cols-[48px_minmax(0,1fr)_340px]"
+              : "xl:grid-cols-[260px_minmax(0,1fr)_340px]"
+            : sidebarCollapsed
+              ? "xl:grid-cols-[48px_minmax(0,1fr)]"
+              : "xl:grid-cols-[260px_minmax(0,1fr)]"
         }`}
       >
         <Sidebar
+          collapsed={sidebarCollapsed}
+          onPick={ask}
+          onToggleCollapsed={() => setSidebarCollapsed((value) => !value)}
           onNewChat={() => {
             setMessages([]);
             setInput("");
@@ -116,8 +133,9 @@ export default function Home() {
           <Conversation className="min-h-0 flex-1">
             <ConversationContent watch={messages} newTurnKey={userTurnCount}>
               {messages.length === 0 ? (
-                <div className="flex min-h-full flex-col justify-center py-10">
+                <div className="flex min-h-full flex-col pb-6 pt-[30vh]">
                   <ConversationEmptyState />
+                  <div className="min-h-40 flex-1" />
                   <SuggestionList onPick={ask} />
                 </div>
               ) : (
@@ -165,7 +183,11 @@ export default function Home() {
               onSubmitShortcut={() => ask(input)}
             />
             <PromptInputToolbar>
-              <span />
+              <ModelPicker
+                value={selectedModel}
+                onChange={setSelectedModel}
+                disabled={loading}
+              />
               <PromptInputSubmit
                 isLoading={loading}
                 disabled={!input.trim()}

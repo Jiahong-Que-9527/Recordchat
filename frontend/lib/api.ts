@@ -25,6 +25,9 @@ export interface ChatResponse {
   structured_output: Record<string, unknown> | null;
 }
 
+export const CHAT_MODELS = ["deepseek-v4-fast", "deepseek-v4-pro"] as const;
+export type ChatModel = (typeof CHAT_MODELS)[number];
+
 export type RecordChatDataParts = {
   recordchat: ChatResponse;
 };

@@ -8,6 +8,8 @@ type IncomingMessage = {
   parts?: Array<{ type?: string; text?: string }>;
 };
 
+const ALLOWED_MODELS = new Set(["deepseek-v4-fast", "deepseek-v4-pro"]);
+
 function getBackendBase(request: NextRequest): string {
   const internal = process.env.INTERNAL_API_BASE_URL?.trim();
   if (internal) {
@@ -81,6 +83,10 @@ export async function POST(request: NextRequest): Promise<Response> {
   const message = extractLatestUserMessage(
     Array.isArray(payload?.messages) ? payload.messages : []
   );
+  const model =
+    typeof payload?.model === "string" && ALLOWED_MODELS.has(payload.model)
+      ? payload.model
+      : undefined;
 
   if (!message) {
     return new Response(
@@ -96,7 +102,7 @@ export async function POST(request: NextRequest): Promise<Response> {
   const upstream = await fetch(`${backendBase}/chat/stream`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ message, model }),
     cache: "no-store",
   });
 

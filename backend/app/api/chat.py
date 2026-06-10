@@ -17,18 +17,22 @@ router = APIRouter()
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest) -> ChatResponse:
-    return answer(req.message)
+    return answer(req.message, model=req.model)
 
 
 def _sse_event(*, event: str, data: dict) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
-def stream_chat_events(message: str) -> Iterator[str]:
-    for item in answer_stream(message):
+def stream_chat_events(message: str, model: str | None = None) -> Iterator[str]:
+    stream = answer_stream(message, model=model) if model else answer_stream(message)
+    for item in stream:
         yield _sse_event(event=item["event"], data=item["data"])
 
 
 @router.post("/chat/stream")
 def chat_stream(req: ChatRequest) -> StreamingResponse:
-    return StreamingResponse(stream_chat_events(req.message), media_type="text/event-stream")
+    return StreamingResponse(
+        stream_chat_events(req.message, req.model),
+        media_type="text/event-stream",
+    )

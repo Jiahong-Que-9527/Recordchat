@@ -1,17 +1,46 @@
 "use client";
 
-import { Edit2, Trash2, ChevronDown } from "lucide-react";
+import {
+  ChevronDown,
+  Edit2,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Trash2,
+} from "lucide-react";
 import Image from "next/image";
+import { EXAMPLE_QUESTIONS } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 export function Sidebar({
   onNewChat,
+  onPick,
+  collapsed,
+  onToggleCollapsed,
 }: {
   onNewChat: () => void;
+  onPick: (question: string) => void;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
 }) {
   return (
-    <aside className="flex h-full w-full shrink-0 flex-col border-r border-neutral-200 bg-neutral-50 xl:sticky xl:top-0 xl:h-screen">
-      <div className="flex h-12 items-center justify-between px-4">
-        <div className="flex min-w-0 items-center gap-2">
+    <aside
+      className={cn(
+        "flex h-full w-full shrink-0 flex-col border-r border-neutral-200 bg-neutral-50 xl:sticky xl:top-0 xl:h-screen",
+        collapsed ? "items-center" : ""
+      )}
+    >
+      <div
+        className={cn(
+          "flex h-12 w-full items-center",
+          collapsed ? "justify-center px-2" : "justify-between px-4"
+        )}
+      >
+        <div
+          className={cn(
+            "flex min-w-0 items-center gap-2",
+            collapsed ? "hidden" : ""
+          )}
+        >
           <Image
             src="/recordchat-mark.svg"
             alt=""
@@ -27,51 +56,102 @@ export function Sidebar({
         </div>
         <button
           type="button"
-          onClick={onNewChat}
-          aria-label="New chat"
+          onClick={onToggleCollapsed}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className="inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition hover:bg-neutral-200 hover:text-neutral-900"
         >
-          <Edit2 className="h-4 w-4" />
+          {collapsed ? (
+            <PanelLeftOpen className="h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" />
+          )}
         </button>
       </div>
 
-      <div className="space-y-1 px-2 pb-5 pt-1">
+      <div className={cn("space-y-1 pb-5 pt-1", collapsed ? "px-2" : "px-2")}>
         <button
           type="button"
           onClick={onNewChat}
-          className="flex h-8 w-full items-center gap-2.5 rounded-full border border-neutral-300 bg-neutral-50 px-3 text-sm font-medium text-neutral-950 transition hover:bg-white"
+          aria-label="New chat"
+          title="New chat"
+          className={cn(
+            "flex h-8 items-center rounded-full border border-neutral-300 bg-neutral-50 text-sm font-medium text-neutral-950 transition hover:bg-white",
+            collapsed ? "w-8 justify-center px-0" : "w-full gap-2.5 px-3"
+          )}
         >
           <Edit2 className="h-4 w-4 shrink-0 text-neutral-700" />
-          New chat
+          <span className={collapsed ? "sr-only" : ""}>New chat</span>
         </button>
         <button
           type="button"
-          className="flex h-8 w-full items-center gap-2.5 rounded-md px-3 text-sm font-medium text-neutral-950 transition hover:bg-neutral-200"
+          aria-label="Delete all"
+          title="Delete all"
+          className={cn(
+            "flex h-8 items-center rounded-md text-sm font-medium text-neutral-950 transition hover:bg-neutral-200",
+            collapsed ? "w-8 justify-center px-0" : "w-full gap-2.5 px-3"
+          )}
         >
           <Trash2 className="h-4 w-4 shrink-0 text-neutral-700" />
-          Delete all
+          <span className={collapsed ? "sr-only" : ""}>Delete all</span>
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-3">
-        <p className="mb-3 text-[11px] font-medium uppercase tracking-wider text-neutral-500">
-          History
-        </p>
-        <p className="max-w-[190px] text-sm leading-5 text-neutral-500">
-          Your ONE Record conversations will appear here once you start chatting.
-        </p>
+      <div
+        className={cn(
+          "flex-1 overflow-y-auto py-3",
+          collapsed ? "w-full px-2" : "px-4"
+        )}
+      >
+        {collapsed ? null : (
+          <>
+            <section className="mb-8">
+              <p className="mb-3 text-sm font-medium text-neutral-500">
+                Try asking
+              </p>
+              <div className="space-y-1">
+                {EXAMPLE_QUESTIONS.map((question) => (
+                  <button
+                    key={question}
+                    type="button"
+                    onClick={() => onPick(question)}
+                    className="block w-full rounded-md px-3 py-2 text-left text-sm leading-6 text-slate-600 transition hover:bg-neutral-200 hover:text-neutral-950"
+                  >
+                    {question}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <p className="mb-3 text-[11px] font-medium uppercase tracking-wider text-neutral-500">
+                History
+              </p>
+              <p className="max-w-[190px] text-sm leading-5 text-neutral-500">
+                Your ONE Record conversations will appear here once you start chatting.
+              </p>
+            </section>
+          </>
+        )}
       </div>
 
       <div className="border-t border-neutral-200 p-2">
         <button
           type="button"
-          className="flex h-10 w-full items-center gap-2.5 rounded-md px-3 text-sm text-neutral-950 transition hover:bg-neutral-200"
+          className={cn(
+            "flex h-10 w-full items-center rounded-md text-sm text-neutral-950 transition hover:bg-neutral-200",
+            collapsed ? "justify-center px-0" : "gap-2.5 px-3"
+          )}
         >
           <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#363500] text-[10px] font-semibold text-white">
             G
           </div>
-          <span className="flex-1 text-left text-sm font-medium">Guest</span>
-          <ChevronDown className="h-4 w-4 text-neutral-400" />
+          {collapsed ? null : (
+            <>
+              <span className="flex-1 text-left text-sm font-medium">Guest</span>
+              <ChevronDown className="h-4 w-4 text-neutral-400" />
+            </>
+          )}
         </button>
       </div>
     </aside>

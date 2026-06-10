@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowUpRight } from "lucide-react";
 import { EXAMPLE_QUESTIONS } from "@/lib/constants";
 
 export function SuggestionList({
@@ -18,7 +17,6 @@ export function SuggestionList({
           className="group flex h-14 items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-neutral-50 px-4 text-center text-sm leading-5 text-neutral-600 transition hover:bg-white hover:text-neutral-950"
         >
           <span>{question}</span>
-          <ArrowUpRight className="hidden h-4 w-4 shrink-0 text-neutral-300 transition group-hover:text-neutral-600 sm:block" />
         </button>
       ))}
     </div>

@@ -323,9 +323,10 @@ def answer(
     query: str,
     retriever: Retriever | None = None,
     llm: LLMProvider | None = None,
+    model: str | None = None,
 ) -> ChatResponse:
     retriever = retriever or get_retriever()
-    llm = llm or get_llm_provider()
+    llm = llm or get_llm_provider(model=model)
 
     query_type, chunks, user_prompt = _prepare_answer_context(query, retriever)
     if query_type == QueryType.synthetic_data_generation:
@@ -358,9 +359,10 @@ def answer_stream(
     query: str,
     retriever: Retriever | None = None,
     llm: LLMProvider | None = None,
+    model: str | None = None,
 ) -> Iterator[dict]:
     retriever = retriever or get_retriever()
-    llm = llm or get_llm_provider()
+    llm = llm or get_llm_provider(model=model)
 
     query_type, chunks, user_prompt = _prepare_answer_context(query, retriever)
     if query_type == QueryType.synthetic_data_generation:

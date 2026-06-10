@@ -151,16 +151,24 @@ _LLM_BASE_URLS = {
 }
 
 
-def build_llm_provider(settings: Settings) -> LLMProvider:
+ALLOWED_CHAT_MODELS = {"deepseek-v4-fast", "deepseek-v4-pro"}
+
+
+def build_llm_provider(settings: Settings, *, model: str | None = None) -> LLMProvider:
     provider = settings.llm_provider.lower()
     if not settings.llm_api_key:
         raise ValueError(
             f"LLM provider {provider!r} requires LLM_API_KEY to be configured."
         )
+    selected_model = model or settings.llm_model
+    if model and model not in ALLOWED_CHAT_MODELS:
+        raise ValueError(
+            f"Unsupported chat model {model!r}. Expected one of: {', '.join(sorted(ALLOWED_CHAT_MODELS))}."
+        )
 
     if provider == "claude":
         return ClaudeLLMProvider(
-            model=settings.llm_model,
+            model=selected_model,
             api_key=settings.llm_api_key,
             base_url=settings.llm_base_url,
         )
@@ -172,15 +180,16 @@ def build_llm_provider(settings: Settings) -> LLMProvider:
         )
 
     return OpenAICompatLLMProvider(
-        model=settings.llm_model,
+        model=selected_model,
         api_key=settings.llm_api_key,
         base_url=base_url,
     )
-_provider: LLMProvider | None = None
+_providers: dict[str, LLMProvider] = {}
 
 
-def get_llm_provider() -> LLMProvider:
-    global _provider
-    if _provider is None:
-        _provider = build_llm_provider(get_settings())
-    return _provider
+def get_llm_provider(*, model: str | None = None) -> LLMProvider:
+    settings = get_settings()
+    selected_model = model or settings.llm_model
+    if selected_model not in _providers:
+        _providers[selected_model] = build_llm_provider(settings, model=model)
+    return _providers[selected_model]
