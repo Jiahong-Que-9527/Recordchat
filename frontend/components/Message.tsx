@@ -182,7 +182,7 @@ function MessageComponent({
 
     return (
       <div className="group flex flex-col items-end gap-1 animate-[recordchat-rise_220ms_ease-out]">
-        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-neutral-100 px-4 py-2.5 text-sm leading-6 text-neutral-900">
+        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-accent-soft px-4 py-2.5 text-sm leading-6 text-slate-800">
           {text}
         </div>
         <div className={ACTION_ROW_CLASS}>

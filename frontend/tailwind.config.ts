@@ -14,6 +14,7 @@ const config: Config = {
           DEFAULT: "#2563eb", // blue-600
           hover: "#1d4ed8", // blue-700
           weak: "#eff6ff", // blue-50
+          soft: "#dbeafe", // blue-100
           ring: "#bfdbfe", // blue-200
           fg: "#ffffff",
         },
