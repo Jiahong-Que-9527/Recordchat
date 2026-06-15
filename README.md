@@ -43,7 +43,7 @@ starter questions; the main area offers the same prompts as one-click tiles so
 you can begin without typing.
 
 <div align="center">
-  <img src="assets/screenshot-welcome.png" alt="RecordChat welcome screen with suggested ONE Record prompts" width="900">
+  <img src="assets/screenshot-welcome.png" alt="RecordChat welcome screen with suggested ONE Record prompts" width="80%">
 </div>
 
 ### Grounded answers with diagrams
@@ -53,7 +53,7 @@ is easier to grasp visually, RecordChat renders a Mermaid diagram inline with
 the answer.
 
 <div align="center">
-  <img src="assets/screenshot-qa-diagram.png" alt="RecordChat answer about IATA ONE Record with network diagram and key benefits" width="900">
+  <img src="assets/screenshot-qa-diagram.png" alt="RecordChat answer about IATA ONE Record with network diagram and key benefits" width="80%">
 </div>
 
 ### JSON-LD examples, sources & related concepts
@@ -63,7 +63,7 @@ cards, a structured/raw viewer panel, source citations, and clickable related
 concepts for follow-up exploration.
 
 <div align="center">
-  <img src="assets/screenshot-jsonld-sources.png" alt="RecordChat JSON-LD Piece example with source citations and related concepts panel" width="900">
+  <img src="assets/screenshot-jsonld-sources.png" alt="RecordChat JSON-LD Piece example with source citations and related concepts panel" width="80%">
 </div>
 
 ### Model selection
@@ -72,7 +72,7 @@ Switch between supported LLM providers and models from the prompt bar — useful
 when you want faster responses or a different reasoning style.
 
 <div align="center">
-  <img src="assets/screenshot-model-picker.png" alt="RecordChat prompt input with DeepSeek model picker dropdown" width="900">
+  <img src="assets/screenshot-model-picker.png" alt="RecordChat prompt input with DeepSeek model picker dropdown" width="80%">
 </div>
 
 ## Quickstart
