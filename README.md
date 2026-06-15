@@ -34,6 +34,47 @@ or flow clearer.
 - **NE:ONE implementation** — practical guidance on running and using the NE:ONE server.
 - **Visual when useful** — renders Mermaid diagrams for relationships and flows.
 
+## Screenshots
+
+### Welcome & suggested prompts
+
+The landing view orients new users around ONE Record topics. The sidebar lists
+starter questions; the main area offers the same prompts as one-click tiles so
+you can begin without typing.
+
+<div align="center">
+  <img src="assets/screenshot-welcome.png" alt="RecordChat welcome screen with suggested ONE Record prompts" width="900">
+</div>
+
+### Grounded answers with diagrams
+
+Ask in plain language and get a cited explanation. When a relationship or flow
+is easier to grasp visually, RecordChat renders a Mermaid diagram inline with
+the answer.
+
+<div align="center">
+  <img src="assets/screenshot-qa-diagram.png" alt="RecordChat answer about IATA ONE Record with network diagram and key benefits" width="900">
+</div>
+
+### JSON-LD examples, sources & related concepts
+
+For ontology and payload questions, answers can include interactive JSON-LD
+cards, a structured/raw viewer panel, source citations, and clickable related
+concepts for follow-up exploration.
+
+<div align="center">
+  <img src="assets/screenshot-jsonld-sources.png" alt="RecordChat JSON-LD Piece example with source citations and related concepts panel" width="900">
+</div>
+
+### Model selection
+
+Switch between supported LLM providers and models from the prompt bar — useful
+when you want faster responses or a different reasoning style.
+
+<div align="center">
+  <img src="assets/screenshot-model-picker.png" alt="RecordChat prompt input with DeepSeek model picker dropdown" width="900">
+</div>
+
 ## Quickstart
 
 Requires Docker. The included `Makefile` wraps the common commands:
