@@ -48,21 +48,22 @@ The repo is now in a transitional but much healthier state:
 
 - `data/raw/_staging/` is treated as download-and-normalization workspace
 - the loader and ontology graph skip `_staging` by default
-- the first normalized P0 batch is already present under the final folders
-- core official docs, ontology, API specs, and example payload sets are now
-  moving under source-governance checks with registry-linked sidecars
-- the remaining work is mainly conversion, metadata, ingest verification, and
-  eval expansion
+- the P0 official + NE:ONE batch is in the final folders with sidecars
+- remaining import work (`#23`) is optional
+- **ingest hygiene next**: overlapping ontology copies (2023-12 / 2025-07 /
+  working draft / spec bundles / NE:ONE copies) should not all be live — see
+  Retrieval Quality `#27` in [project_plan.md](project_plan.md)
 
 ## 3. Execution Order
 
 The next work should follow this order:
 
-1. `D0` Minimal source pack for "basically meets requirements"
-2. `D1` Normalize and import sources into `data/raw`
-3. `D2` Expand implementation knowledge with NE:ONE
-4. `D3` Add ALH and broader narrative data
-5. `D4` Add RecordForge-facing and community example data
+1. `D0` Minimal source pack — **done**
+2. `D1` Normalize and import sources into `data/raw` — **core done**; `#23` leftover
+3. Retrieval Quality (`#27`) before ingesting more ontology copies
+4. `D2` Expand implementation knowledge with NE:ONE — **baseline done**
+5. `D3` Add ALH and broader narrative data — deferred
+6. `D4` Add RecordForge-facing and community example data — after workflow
 
 ## 4. Source Matrix
 

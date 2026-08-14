@@ -104,10 +104,13 @@ model. See [SPEC.md](SPEC.md) for the no-Docker path and full configuration.
 backend/    FastAPI service — API, RAG pipeline, domain layer, tests
 frontend/   Next.js + Tailwind chat UI (streaming, citations, diagrams)
 data/       public raw sources and processed artifacts
-docs/       architecture, roadmap, data-source & compliance notes
+docs/       architecture, **project plan**, roadmap, data-source & compliance notes
 scripts/    ingestion, evaluation, and data-governance helpers
-SPEC.md     single source of truth (contracts, structure, setup)
+SPEC.md     v0.1 contracts (API, modules, setup)
 ```
+
+Planning: [docs/project_plan.md](docs/project_plan.md) is the current status and
+next-slice map. [docs/roadmap.md](docs/roadmap.md) is the milestone narrative.
 
 ## Open data & compliance
 

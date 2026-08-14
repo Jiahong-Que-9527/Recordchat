@@ -1,26 +1,31 @@
 # RecordChat Roadmap
 
+The **current** plan (status, next slice, issue map) lives in
+[project_plan.md](project_plan.md). This file is the milestone narrative.
+
 ## Status
 
 - **v0.1**: complete and demoable
-- **Data Foundation**: partially landed; `_staging` is now excluded from ingest
-  and a first normalized official/NE:ONE source batch is in final folders
-- **v0.2.1 ontology-aware retrieval**: landed and validated on the broadened
-  official source pack, including official OWL ingest, ontology-aware reranking,
-  and multilingual ontology queries
-- **v0.2.2 NE:ONE implementation knowledge**: landed at a useful baseline with
-  implementation query routing, NE:ONE source citation, and eval/demo coverage
-- **next priority**: move from knowledge-quality validation into stronger user
-  interaction and execution layers: streaming UI first, workflow orchestration
-  second
+- **Data Foundation**: core official + NE:ONE pack is in final folders;
+  `_staging` is excluded from ingest. Leftover: `#23` (manual overview/PDF pack)
+- **v0.2.1 ontology-aware retrieval**: done (GitHub milestone closed)
+- **v0.2.2 NE:ONE implementation knowledge**: done at a useful baseline
+- **v0.2.3 streaming frontend**: done (GitHub milestone closed)
+- **next priority**: **Retrieval Quality** (`#27`–`#31`) — pin one ontology
+  version, gold-chunk eval, hybrid + filters, follow-up rewrite, citation filter
+- **after that**: finish v0.2.4 workflow (`#32`), then RecordForge (`#13` `#14`)
 
 Source acquisition and import plan:
 [docs/data_source_plan.md](data_source_plan.md)
 
-GitHub issue starting points:
+GitHub tracking:
 
-- data foundation and source import: `#21` - `#26`
-- existing downstream milestone issues: `#7` - `#20`
+- Retrieval Quality (current): `#27`–`#31`
+- workflow remainder: `#32`
+- RecordForge: `#13` `#14`
+- ALH (deferred): `#7`–`#10`
+- data leftover: `#23`
+- closed foundation / ontology / frontend: `#1`–`#6`, `#11` `#12`, `#15`–`#22`, `#24`–`#26`
 
 ## v0.1 — ONE Record RAG assistant (completed baseline)
 
@@ -39,9 +44,8 @@ Delivered:
 
 ## Cross-Cutting Prerequisite — Data Foundation
 
-Before the next milestone work is considered "basically meets requirements", the
-knowledge base must be expanded from the current illustrative subset to the
-official and implementation-level source pack.
+The core official + NE:ONE pack is in the final folders. Remaining import work
+(`#23`) is optional and must not jump the Retrieval Quality queue.
 
 Scope:
 
@@ -57,10 +61,9 @@ Execution details:
 
 Current remaining work:
 
-- finish converting HTML/PDF/manual-download material into ingestible text
-- add sidecar metadata for imported source families
-- rerun `/ingest` on the normalized corpus and verify source/chunk coverage
-- extend eval so official docs and NE:ONE materials are exercised directly
+- `#23` manual overview / PDF / community captures (not a Retrieval Quality blocker)
+- do **not** ingest additional community HTML/PDF until ontology de-duplication
+  (`#27`) and gold-chunk eval (`#28`) exist — more files would amplify duplicates
 
 Canonical data-foundation conventions:
 
@@ -93,25 +96,19 @@ Primary GitHub issues:
 
 ## Recommended Next Order
 
-1. **Data Foundation**
-   Finish normalization, metadata, ingest verification, and eval coverage for the
-   required official and NE:ONE sources.
-2. **v0.2.1 Validation**
-   Re-run ontology-aware retrieval against the expanded source set and close any
-   quality gaps.
-3. **v0.2.2 NE:ONE implementation knowledge**
-   Make the assistant useful for setup, config, payload, and troubleshooting questions.
-4. **v0.2.3 Frontend upgrade**
-   Replace the hand-rolled UI with a streaming AI-chat surface.
-5. **v0.2.4 Workflow orchestration**
-   Add connector abstractions and business-flow execution paths for ONE Record
-   tasks before integrating external generators.
-6. **v0.2.5 RecordForge integration**
-   Add synthetic data generation and workflow execution once the orchestration
-   layer and UI are ready.
-7. **v0.2.6 AviationLakehouse narrative**
-   Defer the Bronze/Silver/Gold platform story until the ONE Record core
-   assistant, streaming UX, and workflow integrations are strong.
+1. **Retrieval Quality** (current)
+   Pin one ontology version, replace smoke eval with gold-chunk metrics, add
+   hybrid retrieval and query-type filters, then follow-up rewrite and citation
+   filtering. Issues `#27`–`#31`.
+2. **Finish v0.2.4 workflow orchestration**
+   Structured workflow results and an execution path on the existing Connector
+   ABC (`#32`). `#11` / `#12` already landed the seam.
+3. **v0.2.5 RecordForge integration**
+   Synthetic data generation behind the connector (`#13` `#14`).
+4. **v0.2.6 AviationLakehouse narrative**
+   Bronze / Silver / Gold story last (`#7`–`#10`).
+5. **Data Foundation leftover (`#23`)**
+   Optional community / PDF pack; do not let it jump the retrieval-quality queue.
 
 ## v0.2.1 — Ontology-aware retrieval
 
@@ -141,17 +138,32 @@ Current state:
 - implementation questions have dedicated classifier and prompt steering
 - eval/demo coverage includes NE:ONE setup and troubleshooting flows
 
+## Retrieval Quality
+
+Goal:
+
+- stop indexing overlapping ontology copies
+- measure retrieval (recall@5 / MRR / source family), not just “answer non-empty”
+- hybrid + metadata filters so implementation/API questions hit the right family
+- follow-up questions keep entities; citations match used chunks
+
+Current state:
+
+- ontology-aware rerank is in the pipeline, but the index still contains
+  multiple versions of the same classes
+- `evaluate_rag.py` is a keyword smoke test
+- search is dense-only; conversation history is not used for retrieval
+
+Issues: `#27`–`#31`. Details: [project_plan.md](project_plan.md) §4.
+
 ## v0.2.3 — Frontend upgrade
 
 Goal:
 
 - move from the v0.1 hand-rolled UI to a more capable streaming chat UI
 
-Needs:
-
-- streaming `POST /chat/stream`
-- AI SDK / Vercel chatbot style frontend
-- preserve RecordChat-specific domain panels: sources, related concepts, JSON-LD
+Status: **done**. Streaming `POST /chat/stream`, AI SDK chat UI, sources /
+related concepts / JSON-LD panels.
 
 ## v0.2.4 — Workflow orchestration
 
@@ -159,6 +171,9 @@ Goal:
 
 - support real business workflow questions and multi-step execution flows around
   ONE Record operations, not just static Q&A
+
+Status: **partial**. Connector ABC and synthetic-generation routing exist;
+structured results and execution are `#32`. Blocked on Retrieval Quality.
 
 Scope:
 

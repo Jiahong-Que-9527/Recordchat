@@ -7,7 +7,8 @@ body:
     attributes:
       value: |
         Describe the problem you want solved and how it fits the ONE Record RAG assistant scope.
-        See [SPEC.md](../../SPEC.md) and [docs/roadmap.md](../../docs/roadmap.md) for current direction.
+        See [docs/project_plan.md](../../docs/project_plan.md) for current status
+        and [SPEC.md](../../SPEC.md) for API/module contracts.
 
   - type: dropdown
     id: area

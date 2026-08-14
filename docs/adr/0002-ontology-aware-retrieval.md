@@ -3,10 +3,10 @@
 ## Status
 Accepted (v0.2.1)
 
-> Note (2026-06): this ADR explains the original v0.2.1 retrieval design.
-> The current project-level priority is to validate this design against a
-> broader official ONE Record source pack instead of treating the illustrative
-> subset as sufficient for the next phase.
+> Note (2026-08): the parser/graph/rerank design in this ADR is landed.
+> Follow-up is Retrieval Quality (`#27`–`#31`): pin one ontology version,
+> stop merging every TTL into one graph, and measure ranking. See
+> [project_plan.md](../project_plan.md).
 
 ## Context
 v0.1 retrieval is pure vector search over embedded chunks plus a **manually

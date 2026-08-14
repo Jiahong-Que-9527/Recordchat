@@ -4,9 +4,9 @@
 > 本文档是给人和 coding agent 共同阅读的**单一事实来源（Single Source of Truth）**。
 > 任何实现都应以本文档的契约（API 契约、数据模型、目录结构、验收标准）为准。
 >
-> **状态说明（2026-06）**：本 SPEC 定义的是 `v0.1` 的交付边界。`v0.1`
-> 已可运行和演示。后续阶段的首要任务不是继续堆功能，而是先把知识底座从当前最小
-> 示例集扩展到更完整的官方 ONE Record 与 NE:ONE 资料。
+> **状态说明（2026-08）**：本 SPEC 定义的是 `v0.1` 的交付边界与 API/模块契约。
+> `v0.1` 已完成；v0.2.1–v0.2.3 也已落地。当前执行计划以
+> [docs/project_plan.md](docs/project_plan.md) 为准，不要用第 15 章的旧编号排期。
 
 ---
 
@@ -563,15 +563,18 @@ api/chat.py → rag/pipeline.py → {retriever.py | prompt.py | core/llm.py | do
 
 ---
 
-## 15. 后续路线（仅记录，不在 v0.1 实现）
+## 15. 后续路线
 
-- **前置任务：知识底座扩充**：先导入更完整的官方 ONE Record 与 NE:ONE 资料，再做后续能力验证。
-- **v0.2.1** Ontology-aware retrieval：entity-first 检索（识别 query 中的 ONE Record 实体后优先检索相关 chunk），并在更完整官方资料上重新验证。
-- **v0.2.2** NE:ONE implementation knowledge：支持 setup、config、payload、troubleshooting 问答。
-- **v0.2.3** ALH 集成：解释 ONE Record 对象如何 land 到 Bronze/Silver/Gold。
-- **v0.2.4** Frontend upgrade：流式对话 UI，保留 sources / related concepts / JSON-LD。
-- **v0.2.5** RecordForge 集成：`User: Generate 5 synthetic shipments` → RecordChat 调 RecordForge 出 JSON-LD。
-- **v0.3** 认证 / 会话记忆 / source versioning / OpenTelemetry / 评估 dashboard / 三大 connector。
+执行顺序与 issue 以 [docs/project_plan.md](docs/project_plan.md) 为准。
+下面只保留方向，**编号已过时，不要按本节排期**：
+
+- 知识底座扩充（核心包已导入；`#23` 为可选残留）
+- Ontology-aware retrieval（已落地为 v0.2.1）
+- NE:ONE implementation knowledge（已落地为 v0.2.2）
+- Frontend streaming UI（已落地为 v0.2.3）
+- **当前：Retrieval Quality**（本体去重、gold-chunk 评测、hybrid、多轮改写、引用过滤）
+- Workflow orchestration 收尾 → RecordForge → ALH 叙事
+- v0.3：认证 / 会话记忆 / source versioning / OpenTelemetry / 评估 dashboard / 三大 connector
 
 ---
 

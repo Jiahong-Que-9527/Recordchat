@@ -9,10 +9,10 @@
 > - [docs/architecture.md](docs/architecture.md) — 架构图与设计决策
 > - 本文（GUIDE.md）— 面向**开发者/制作者**的逐步实现细节
 >
-> **状态说明（2026-06）**：本文主体仍以 `v0.1` 的构建过程为主，但项目接下来的
-> 优先级已经调整为：**先补知识底座，再继续堆功能。** 具体见
-> [docs/data_source_plan.md](docs/data_source_plan.md) 与
-> [docs/v0.2_development_plan.md](docs/v0.2_development_plan.md)。
+> **状态说明（2026-08）**：本文主体仍以 `v0.1` 的构建过程为主。产品已交付到
+> v0.2.3。当前执行计划见 [docs/project_plan.md](docs/project_plan.md)
+> （下一步是 Retrieval Quality，不是继续堆 RecordForge/ALH）。
+> 契约仍以 [SPEC.md](SPEC.md) 为准。
 >
 > 阅读建议：第 1–2 章建立整体认知；第 3 章是目录地图；第 4 章是**按序制作步骤**（核心）；
 > 第 5–9 章是各模块的代码级细节；第 10 章起是运行、测试、Docker、扩展与排错。
@@ -44,9 +44,9 @@
 （概念、数据模型、JSON-LD、API、实体关系），系统用 RAG（检索增强生成）从 ONE Record 知识库
 检索证据，再让 LLM 基于证据回答，并**附带来源引用**。
 
-当前阶段最重要的工程判断是：**先扩充真实知识源，再继续下游功能。** `v0.1`
-已经证明了端到端链路可运行；下一步不该优先追求更花哨的功能，而是把官方 ONE
-Record 与 NE:ONE 资料真正导入进来，让后续问答建立在更扎实的语料上。
+当前阶段最重要的工程判断是：**先把检索做可度量、去重，再继续下游执行能力。**
+v0.2.3 已经证明流式、带引用的助手可演示；下一步见
+[docs/project_plan.md](docs/project_plan.md)。
 
 它不是普通 chatbot，制作时贯穿四条设计哲学（违反它们就是做错了）：
 
@@ -496,19 +496,16 @@ cd backend && uv run python ../scripts/evaluate_rag.py
 ## 13. 扩展方向（v0.2 / v0.3）
 
 代码里已留好"缝"，扩展时不必大改：
-- **`reranker.py` 是 no-op**：v0.2 在此接 cross-encoder / LLM rerank，调用点不变。
-- **`Retriever` 抽象**：可加 entity-first / 混合检索实现。
+- **`reranker.py`**：v0.2.1 已接 ontology entity boost；下一步是 hybrid / 引用过滤，不是再做一个 no-op。
+- **`Retriever` 抽象**：可加混合检索实现（`#29`）。
 - **`classify_query` 规则**：可替换为 LLM 分类器，签名不变。
 
-路线已经调整为“先补知识底座，再扩功能”：
-- **前置任务：数据底座扩充**：导入官方 ONE Record repo/spec/ontology/OpenAPI/JSON-LD examples，
-  以及 NE:ONE docs/config/examples。见 [docs/data_source_plan.md](docs/data_source_plan.md)。
-- **v0.2.1 本体感知检索验证**：在更完整官方资料上验证并收紧 ontology-aware retrieval。
-- **v0.2.2 NE:ONE implementation knowledge**：回答 setup、config、payload、排错问题。
-- **v0.2.3 ALH 叙事**：回答"对象如何落到 Bronze/Silver/Gold"。
-- **v0.2.4 前端升级**：流式对话 UI，但前提仍是知识底座更扎实。
-- **v0.2.5 RecordForge 集成**：pipeline 识别"生成 N 条合成数据"→ 调 RecordForge → JSON-LD。
-- **v0.3**：认证、会话记忆、source versioning、OpenTelemetry、评估面板、三大 connector。
+当前执行计划见 [docs/project_plan.md](docs/project_plan.md)。顺序是：
+
+- 数据底座核心包、v0.2.1 本体检索、v0.2.2 NE:ONE、v0.2.3 流式前端 — **已完成**
+- **当前：Retrieval Quality**（`#27`–`#31`）本体去重、gold-chunk 评测、hybrid、多轮、引用过滤
+- 然后收尾 workflow（`#32`）→ RecordForge → ALH 叙事
+- v0.3：认证、会话记忆、source versioning、OpenTelemetry、评估面板、三大 connector
 
 ---
 

@@ -10,10 +10,11 @@ a (provider-abstracted) LLM, and enriches the answer with domain tools
 
 Current project priority:
 
-- `v0.1` is already demoable
-- the next step is expanding the knowledge base from the current minimal subset
-  to the broader official ONE Record + NE:ONE source pack
-- downstream features should follow that, not outrun it
+- `v0.1` through `v0.2.3` are delivered
+- the next slice is **Retrieval Quality**: pin one ontology version, gold-chunk
+  eval, hybrid retrieval, follow-up rewrite, citation filtering
+- workflow / RecordForge / ALH follow that order — see
+  [project_plan.md](project_plan.md)
 
 ```
 ┌──────────────────────────── Frontend (Next.js) ────────────────────────────┐
@@ -54,9 +55,10 @@ data/raw/**            loader.py            chunker.py              retriever.py
 `rag/ingest.run_ingest()` always merges the curated `domain/glossary.py`
 entries with whatever is in `data/raw/`, so the knowledge base is never empty.
 
-That said, "never empty" is not the same thing as "broad enough". The current
-demo subset is intentionally small; the next milestone work should focus first
-on expanding imported sources before piling on more feature branches.
+That said, "never empty" is not the same thing as "clean enough to rank". The
+core pack is in place, but overlapping ontology copies still share the index.
+Retrieval Quality (`#27`–`#31`) is the next ingest/ranking work, not another
+feature branch.
 
 ## Key design decisions
 
@@ -103,13 +105,10 @@ one_record_schema  ->  ontology neighbors first, manual map fallback
 
 Recommended order:
 
-1. expand official and NE:ONE source coverage
-2. validate ontology-aware retrieval on that broader source pack
-3. add NE:ONE implementation knowledge
-4. upgrade the frontend with streaming and stronger interaction patterns
-5. add workflow orchestration for real ONE Record business tasks
-6. integrate RecordForge
-7. add ALH narrative last, after the core ONE Record path is strong
+1. Retrieval Quality (de-dupe ontology, gold-chunk eval, hybrid, history, citations)
+2. finish workflow orchestration (structured results / execution)
+3. integrate RecordForge
+4. add ALH narrative last, after the core ONE Record path is strong
 
 - **RecordForge**: a synthetic-data tool callable from the pipeline to fulfil
   "generate N shipments" requests, returning JSON-LD.
