@@ -121,6 +121,58 @@ adding more execution features.
 Suggested order inside the slice: **#27 → #28 → #29 → #30 / #31**. Eval (#28)
 should land early so later retrieval changes have a regression gate.
 
+### 4.6 External expert mini interviews — TODO (parallel, non-blocking)
+
+Run a short formative validation round with **3–5 external IATA ONE Record
+practitioners**. This is a discovery activity that can start now; it does not
+replace the automated retrieval acceptance criteria above and must not block
+`#27`–`#31`.
+
+**Format:** one 10–20 minute session per participant. After a brief product
+introduction, ask the expert to enter 2–3 real questions from their work. Keep
+two standard fallback questions so results remain comparable. For each answer,
+ask whether the conclusion is correct, whether its cited sources support it,
+and whether the expert could act on it.
+
+**TODO**
+
+- [ ] **Before interviews — freeze the test environment:** pin the app revision,
+  selected model, prompt configuration, corpus, and canonical ontology version;
+  run a fresh ingest and record those values in the session log.
+- [ ] **Before interviews — run an internal smoke pass:** test 10–15 questions
+  spanning concepts, relationships, ontology, API/NE:ONE implementation, and
+  JSON-LD; resolve empty answers, broken source links, clearly irrelevant
+  citations, and structured-output rendering failures before external sessions.
+- [ ] **Before interviews — make evidence inspectable:** ensure each response
+  visibly identifies its source name, section, and working link; prefer no
+  citation over a citation that does not support the conclusion.
+- [ ] **Before interviews — capture diagnostic evidence:** save the question,
+  answer, returned source chunks and ranking, model/configuration, corpus
+  version, latency, and any error for every tested turn.
+- [ ] **Before interviews — add uncertainty guardrails:** where evidence is
+  missing, ambiguous, or version-sensitive, have answers state their limits
+  rather than presenting an unsupported conclusion as certain.
+- [ ] **Before interviews — give lightweight onboarding:** provide a one-screen
+  scope prompt (concepts, ontology, JSON-LD, API, and NE:ONE troubleshooting)
+  so experts can start with relevant questions without constraining their
+  real-world queries.
+- [ ] Recruit 3–5 participants spanning ONE Record standard/ontology, business
+  implementation, and API/NE:ONE integration perspectives.
+- [ ] Prepare a lightweight interview script, consent/recording note if
+  applicable, and two standard fallback questions.
+- [ ] Capture an expert verdict for each response: correct / partly correct /
+  incorrect / cannot assess; also record citation trust and actionability.
+- [ ] Tag findings by severity (trust-breaking, core-task blocker, improvement)
+  and synthesize the recurring gaps.
+- [ ] Convert reviewed questions into a small gold evaluation set with expected
+  answer points and acceptable source chunks; feed the retrieval-specific cases
+  into `#28` and citation failures into `#31`.
+
+**Success signal:** identify the top expert-valued use cases, the most serious
+trust failures, and at least 10 reviewed question-and-source cases suitable for
+regression evaluation. Do not treat this small qualitative sample as a product
+accuracy claim.
+
 ---
 
 ## 5. Remaining v0.2
