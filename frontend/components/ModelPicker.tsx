@@ -58,8 +58,8 @@ export function ModelPicker({
         aria-label="Select model"
         onClick={() => setOpen((current) => !current)}
         className={cn(
-          "relative inline-flex h-8 items-center gap-2 rounded-full border border-neutral-200 bg-neutral-100 pl-3 pr-8 text-xs font-semibold text-neutral-900 transition hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60",
-          open && "border-neutral-300 bg-white shadow-rc-sm"
+          "relative inline-flex h-8 items-center gap-2 rounded-full border border-slate-200 bg-white/80 pl-3 pr-8 text-xs font-medium text-slate-700 shadow-rc-sm backdrop-blur transition hover:border-accent-ring hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60",
+          open && "border-accent-ring shadow-rc-md"
         )}
       >
         <Image
@@ -73,7 +73,7 @@ export function ModelPicker({
         <ChevronDown
           aria-hidden="true"
           className={cn(
-            "pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-neutral-500 transition-transform",
+            "pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400 transition-transform",
             open && "rotate-180"
           )}
         />
@@ -83,7 +83,7 @@ export function ModelPicker({
         <div
           role="listbox"
           aria-label="Model options"
-          className="absolute bottom-full left-0 z-50 mb-2 min-w-[220px] overflow-hidden rounded-xl border border-neutral-200 bg-white p-1 shadow-rc-md animate-[recordchat-rise_180ms_ease-out]"
+          className="absolute bottom-full left-0 z-50 mb-2 min-w-[220px] overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-rc-lg animate-[recordchat-rise_180ms_ease-out]"
         >
           {CHAT_MODELS.map((model) => {
             const selected = model === value;
@@ -99,20 +99,22 @@ export function ModelPicker({
                   setOpen(false);
                 }}
                 className={cn(
-                  "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xs font-medium text-neutral-800 transition hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-ring",
-                  selected && "bg-neutral-100"
+                  "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-accent-weak hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-ring",
+                  selected && "bg-accent-weak text-accent"
                 )}
               >
-                <Image
-                  src="/deepseek-mark.svg"
-                  alt=""
-                  width={16}
-                  height={12}
-                  className="h-3.5 w-4 shrink-0"
-                />
+                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100">
+                  <Image
+                    src="/deepseek-mark.svg"
+                    alt=""
+                    width={16}
+                    height={12}
+                    className="h-3.5 w-4"
+                  />
+                </span>
                 <span className="flex-1">{MODEL_LABELS[model]}</span>
                 {selected ? (
-                  <Check aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-neutral-600" />
+                  <Check aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-accent" />
                 ) : (
                   <span aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                 )}

@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/recordchat-logo.png" alt="RecordChat logo" width="90%">
+  <img src="assets/recordchat-logo.png" alt="RecordChat logo" width="260">
 </div>
 
 # RecordChat

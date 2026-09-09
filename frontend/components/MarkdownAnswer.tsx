@@ -112,17 +112,19 @@ function CodeBlock({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="group relative">
+    <div className="group relative mt-4 overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50/90 shadow-rc-sm">
       <button
         type="button"
         onClick={copy}
         aria-label="Copy code"
-        className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800/80 px-2 py-1 text-[11px] font-medium text-slate-200 opacity-0 transition hover:bg-slate-700 focus-visible:opacity-100 group-hover:opacity-100"
+        className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-xl border border-slate-200/90 bg-white/80 px-2 py-1 text-[11px] font-medium text-slate-600 opacity-0 shadow-rc-sm transition hover:border-accent-ring hover:text-accent focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-45"
       >
         {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
         {copied ? "Copied" : "Copy"}
       </button>
-      <pre ref={preRef}>{children}</pre>
+      <pre ref={preRef} className="rc-code-block text-[13px] leading-relaxed">
+        {children}
+      </pre>
     </div>
   );
 }
@@ -198,7 +200,7 @@ export function MarkdownAnswer({
               return (
                 <code
                   {...props}
-                  className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[0.92em] text-slate-900"
+                  className="rounded-md border border-accent-ring/40 bg-accent-weak/50 px-1.5 py-0.5 font-mono text-[0.92em] text-slate-800"
                 >
                   {children}
                 </code>

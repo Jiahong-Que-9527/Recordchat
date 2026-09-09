@@ -24,7 +24,11 @@ npm-debug.log*
 *.tsbuildinfo
 
 # Data (local only — not versioned)
-data/
+# Exception: data/eval/ holds OUR OWN authored eval questions (no third-party
+# content) and MUST stay versioned — see AGENTS.md hard rule 7 and SPEC Phase 9.
+data/*
+!data/eval/
+!data/eval/**
 
 # OS
 .DS_Store

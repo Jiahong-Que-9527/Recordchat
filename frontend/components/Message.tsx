@@ -8,13 +8,13 @@ import {
   Maximize2,
   Pencil,
   RefreshCw,
-  Sparkles,
   ThumbsDown,
   ThumbsUp,
   X,
 } from "lucide-react";
 import { getMessageData, getMessageText, type RecordChatMessage } from "@/lib/api";
 import { cn, copyText } from "@/lib/utils";
+import { RecordChatIcon } from "./RecordChatIcon";
 import { MarkdownAnswer } from "./MarkdownAnswer";
 import { Sources } from "./Sources";
 import { TypingIndicator } from "./TypingIndicator";
@@ -58,7 +58,7 @@ function ActionButton({
       title={label}
       className={cn(
         "inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600",
-        active && "bg-slate-100 text-slate-700"
+        active && "bg-accent-weak text-accent"
       )}
     >
       {children}
@@ -73,16 +73,13 @@ const ACTION_ROW_CLASS =
   "flex items-center gap-0.5 opacity-100 transition xl:opacity-0 group-hover:opacity-100 focus-within:opacity-100";
 
 function AssistantAvatar() {
-  return (
-    <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
-      <Sparkles className="h-4 w-4" />
-    </span>
-  );
+  return <RecordChatIcon size="sm" />;
 }
 
 function MetadataLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+    <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+      <span aria-hidden="true" className="rc-gradient-bg h-1 w-1 rounded-full" />
       {children}
     </p>
   );
@@ -153,7 +150,7 @@ function MessageComponent({
                   setDraft(text);
                 }
               }}
-              className="w-full resize-none rounded-2xl border border-neutral-300 bg-white px-4 py-2.5 text-sm leading-6 text-neutral-900 shadow-rc-sm outline-none focus-visible:border-accent-ring focus-visible:ring-2 focus-visible:ring-accent-ring"
+              className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm leading-6 text-slate-900 shadow-rc-sm outline-none transition focus-visible:border-accent-ring focus-visible:ring-2 focus-visible:ring-accent-ring"
             />
             <div className="mt-2 flex justify-end gap-2">
               <button
@@ -162,7 +159,7 @@ function MessageComponent({
                   setEditing(false);
                   setDraft(text);
                 }}
-                className="rounded-lg border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-100"
+                className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
               >
                 Cancel
               </button>
@@ -170,7 +167,7 @@ function MessageComponent({
                 type="button"
                 onClick={submitEdit}
                 disabled={!draft.trim()}
-                className="rounded-lg bg-accent px-3 py-1 text-xs font-semibold text-white transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+                className="rc-gradient-bg rounded-lg px-3 py-1 text-xs font-semibold text-white shadow-rc-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Send
               </button>
@@ -182,7 +179,7 @@ function MessageComponent({
 
     return (
       <div className="group flex flex-col items-end gap-1 animate-[recordchat-rise_220ms_ease-out]">
-        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-accent-soft px-4 py-2.5 text-sm leading-6 text-slate-800">
+        <div className="rc-gradient-bg max-w-[85%] rounded-2xl rounded-br-md px-4 py-2.5 text-sm leading-6 text-white shadow-rc-glow">
           {text}
         </div>
         <div className={ACTION_ROW_CLASS}>
@@ -235,29 +232,29 @@ function MessageComponent({
                 className={cn(
                   "mt-4 flex w-full items-stretch gap-3 rounded-xl border px-3 py-3 text-left transition",
                   canvasOpen
-                    ? "border-accent bg-accent-weak"
-                    : "border-accent-ring bg-accent-weak/50 hover:bg-accent-weak"
+                    ? "border-accent bg-accent-weak shadow-rc-md"
+                    : "border-accent-ring/70 bg-white/80 hover:border-accent hover:bg-accent-weak/60 hover:shadow-rc-sm"
                 )}
               >
-                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-accent shadow-rc-sm">
+                <span className="rc-gradient-bg inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white shadow-rc-sm">
                   <Braces className="h-4 w-4" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold text-neutral-900">
+                  <span className="block truncate text-sm font-semibold text-slate-900">
                     {canvasTitle(output)}
                   </span>
-                  <span className="block text-xs text-neutral-500">
+                  <span className="block text-xs text-slate-500">
                     Structured output (JSON-LD) ·{" "}
                     {canvasOpen ? "Click to close" : "Click to open"}
                   </span>
-                  <pre className="mt-1.5 max-h-12 overflow-hidden whitespace-pre-wrap break-all font-mono text-[10px] leading-4 text-neutral-400">
+                  <pre className="mt-1.5 max-h-12 overflow-hidden whitespace-pre-wrap break-all font-mono text-[10px] leading-4 text-slate-400">
                     {canvasPreview(output)}
                   </pre>
                 </span>
                 {canvasOpen ? (
-                  <X className="h-4 w-4 shrink-0 text-neutral-400" />
+                  <X className="h-4 w-4 shrink-0 text-slate-400" />
                 ) : (
-                  <Maximize2 className="h-4 w-4 shrink-0 text-neutral-400" />
+                  <Maximize2 className="h-4 w-4 shrink-0 text-slate-400" />
                 )}
               </button>
             );
@@ -278,8 +275,12 @@ function MessageComponent({
               {data.related_concepts.map((concept) => (
                 <span
                   key={concept}
-                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/90 px-3 py-1 text-xs font-medium text-slate-600 shadow-rc-sm transition hover:border-accent-ring hover:text-accent"
                 >
+                  <span
+                    aria-hidden="true"
+                    className="rc-gradient-bg h-1.5 w-1.5 rounded-full"
+                  />
                   {concept}
                 </span>
               ))}

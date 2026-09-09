@@ -3,10 +3,10 @@ import type { Source } from "@/lib/api";
 
 function SourceChip({ source, index }: { source: Source; index: number }) {
   const className =
-    "inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 transition";
+    "inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/90 px-2 py-1 text-xs font-medium text-slate-600 shadow-rc-sm transition";
   const inner = (
     <>
-      <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-slate-800 px-1 text-[10px] font-semibold text-white">
+      <span className="rc-gradient-bg inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white">
         {index + 1}
       </span>
       <span className="max-w-[22rem] truncate">{source.source_name}</span>
@@ -24,7 +24,7 @@ function SourceChip({ source, index }: { source: Source; index: number }) {
         target="_blank"
         rel="noreferrer"
         title={title}
-        className={`${className} hover:border-accent-ring hover:text-accent`}
+        className={`${className} hover:-translate-y-px hover:border-accent-ring hover:text-accent hover:shadow-rc-md`}
       >
         {inner}
       </a>

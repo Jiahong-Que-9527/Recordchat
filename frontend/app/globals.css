@@ -4,24 +4,114 @@
 
 :root {
   color-scheme: light;
-  /* Brand tokens — single source for the few values used outside Tailwind utilities. */
-  --rc-accent: #2563eb;
-  --rc-bg: #fafafa;
+  /* Brand tokens — derived from recordchat_icon.png (azure #0b65fe family). */
+  --rc-accent: #0b65fe;
+  --rc-accent-deep: #0b4efd;
+  --rc-bg: #f4f8fe;
+  --rc-surface: #ffffff;
+  --rc-border: #e3ecf9;
+  --rc-text: #0f172a;
+  --rc-text-muted: #64748b;
+  --rc-grad: linear-gradient(135deg, #1479ff 0%, #0b4efd 100%);
 }
 
-html,
-body {
-  background: var(--rc-bg);
+html {
+  height: 100%;
 }
 
 body {
+  height: 100%;
+  color: var(--rc-text);
+  /* Soft ambient brand glow behind the whole app — azure tints from the icon. */
+  background:
+    radial-gradient(1100px 520px at 12% -12%, rgba(11, 101, 254, 0.10), transparent 60%),
+    radial-gradient(900px 460px at 100% -8%, rgba(20, 121, 255, 0.07), transparent 60%),
+    radial-gradient(900px 540px at 50% 115%, rgba(11, 78, 253, 0.05), transparent 60%),
+    var(--rc-bg);
+  background-attachment: fixed;
   @apply text-slate-900 antialiased;
 }
 
 ::selection {
-  background: rgba(37, 99, 235, 0.18);
+  background: rgba(11, 101, 254, 0.18);
 }
 
+/* --- Refined scrollbars (global, subtle) -------------------------------- */
+* {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgb(203 213 225) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgb(203 213 225);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgb(148 163 184);
+  background-clip: padding-box;
+}
+
+/* --- Component utilities ------------------------------------------------ */
+@layer components {
+  /* Brand gradient text (hero headings, sidebar brand). */
+  .rc-gradient-text {
+    background: linear-gradient(120deg, #1479ff 0%, #0b65fe 55%, #0b4efd 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Brand gradient surface (primary buttons, avatars, badges). */
+  .rc-gradient-bg {
+    background-image: linear-gradient(135deg, #1479ff 0%, #0b4efd 100%);
+  }
+
+  /* Soft elevated card surface. */
+  .rc-surface {
+    background: var(--rc-surface);
+    border: 1px solid rgb(226 232 240 / 0.85);
+  }
+
+  /* Frosted glass surface — mirrors the icon's translucent shell. */
+  .rc-glass {
+    background: rgb(255 255 255 / 0.68);
+    border: 1px solid rgb(255 255 255 / 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  /* Keyboard key look for shortcut hints. */
+  .rc-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    padding: 0 0.3rem;
+    border: 1px solid rgb(203 213 225);
+    border-bottom-width: 2px;
+    border-radius: 0.375rem;
+    background: #fff;
+    color: rgb(71 85 105);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    line-height: 1.4;
+  }
+}
+
+/* --- Keyframes ----------------------------------------------------------- */
 @keyframes recordchat-rise {
   from {
     opacity: 0;
@@ -72,6 +162,7 @@ body {
   }
 }
 
+/* --- Markdown answer typography ----------------------------------------- */
 .recordchat-markdown > :first-child {
   margin-top: 0;
 }
@@ -95,6 +186,7 @@ body {
   margin-top: 1.25rem;
   margin-bottom: 0.25rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
   color: rgb(15 23 42);
 }
 
@@ -110,20 +202,27 @@ body {
   font-size: 0.95rem;
 }
 
-.recordchat-markdown pre {
-  margin-top: 1rem;
+/* Markdown fenced code blocks — light glass, matches JSON-LD canvas. */
+.recordchat-markdown .rc-code-block {
+  margin-top: 0;
   overflow-x: auto;
-  border-radius: 12px;
-  border: 1px solid rgb(30 41 59 / 0.4);
-  background: rgb(15 23 42);
+  border-radius: 0;
+  border: 0;
+  background: transparent;
   padding: 1rem;
-  color: rgb(226 232 240);
+  padding-top: 2.5rem;
+  color: rgb(51 65 85);
+  box-shadow: none;
 }
 
-.recordchat-markdown pre code {
+.recordchat-markdown .rc-code-block code {
   background: transparent;
   padding: 0;
   color: inherit;
+}
+
+.recordchat-markdown code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .recordchat-markdown blockquote {
@@ -149,6 +248,18 @@ body {
   text-align: left;
 }
 
+.recordchat-markdown tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.recordchat-markdown tbody tr {
+  transition: background-color 120ms ease;
+}
+
+.recordchat-markdown tbody tr:hover {
+  background: rgb(248 250 252);
+}
+
 .recordchat-markdown th {
   background: rgb(248 250 252);
   font-weight: 600;
@@ -156,29 +267,46 @@ body {
 
 .recordchat-markdown .hljs-keyword,
 .recordchat-markdown .hljs-selector-tag,
-.recordchat-markdown .hljs-literal {
-  color: rgb(125 211 252);
+.recordchat-markdown .hljs-literal,
+.recordchat-markdown .hljs-built_in {
+  color: var(--rc-accent);
 }
 
 .recordchat-markdown .hljs-string,
 .recordchat-markdown .hljs-attr,
 .recordchat-markdown .hljs-template-tag {
-  color: rgb(134 239 172);
+  color: #047857;
 }
 
 .recordchat-markdown .hljs-number,
 .recordchat-markdown .hljs-symbol,
 .recordchat-markdown .hljs-bullet {
-  color: rgb(253 224 71);
+  color: #b45309;
 }
 
 .recordchat-markdown .hljs-title,
 .recordchat-markdown .hljs-section,
-.recordchat-markdown .hljs-type {
-  color: rgb(196 181 253);
+.recordchat-markdown .hljs-type,
+.recordchat-markdown .hljs-name {
+  color: #6d28d9;
 }
 
 .recordchat-markdown .hljs-comment,
 .recordchat-markdown .hljs-quote {
-  color: rgb(148 163 184);
+  color: #64748b;
+}
+
+/* --- Reduced motion: keep transitions but drop parallax/float ----------------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

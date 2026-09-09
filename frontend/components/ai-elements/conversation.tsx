@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDown } from "lucide-react";
+import { RecordChatIcon } from "@/components/RecordChatIcon";
 import { cn } from "@/lib/utils";
 
 export function Conversation({
@@ -119,7 +120,7 @@ export function ConversationContent({
           className
         )}
       >
-        <div className="mx-auto flex min-h-full max-w-3xl flex-col gap-4 pb-8">
+        <div className="mx-auto flex min-h-full max-w-3xl flex-col gap-4 pb-10">
           {children}
           <div ref={endRef} className="h-px scroll-mb-8" />
         </div>
@@ -133,7 +134,7 @@ export function ConversationContent({
             scrollToBottom("smooth");
           }}
           aria-label="Scroll to latest message"
-          className="absolute bottom-4 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-rc-md transition hover:border-accent-ring hover:text-accent"
+          className="absolute bottom-4 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-600 shadow-rc-md backdrop-blur transition hover:border-accent-ring hover:text-accent"
         >
           <ArrowDown className="h-3.5 w-3.5" />
           Latest
@@ -145,13 +146,25 @@ export function ConversationContent({
 
 export function ConversationEmptyState() {
   return (
-    <div className="mx-auto flex max-w-2xl flex-col items-center text-center animate-[recordchat-rise_320ms_ease-out]">
-      <h2 className="text-2xl font-semibold leading-snug text-neutral-950 sm:text-3xl">
-        Explore ONE Record and NE:ONE.
+    <div className="relative mx-auto flex max-w-2xl flex-col items-center text-center animate-[recordchat-rise_320ms_ease-out]">
+      {/* Ambient glow behind the hero mark — matches the icon's icy azure palette. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-28 left-1/2 h-64 w-[28rem] -translate-x-1/2 rounded-full bg-gradient-to-br from-[#1479ff]/20 via-[#0b65fe]/12 to-transparent blur-3xl"
+      />
+      <RecordChatIcon
+        size="hero"
+        priority
+        animated
+        alt="RecordChat"
+        className="mb-5"
+      />
+      <h2 className="text-2xl font-semibold leading-snug text-slate-950 sm:text-3xl">
+        Explore <span className="rc-gradient-text">ONE Record</span> and NE:ONE.
       </h2>
-      <p className="mt-3 text-sm leading-6 text-neutral-500">
+      <p className="mt-3 max-w-md text-sm leading-6 text-slate-500">
         Ask about ontology relationships, JSON-LD examples, subscriptions, and
-        NE:ONE server implementation.
+        NE:ONE server implementation — every answer is grounded and cited.
       </p>
     </div>
   );

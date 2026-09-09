@@ -1,8 +1,17 @@
 # RecordChat Project Plan
 
-**Status date:** 2026-08-15
+**Status date:** 2026-09-08
 **Current delivered line:** v0.2.3 (streaming, source-grounded ONE Record assistant)
-**Current next work:** Retrieval Quality (`#27`–`#31`), then finish workflow
+**Current next work:** 2026-09 audit fixes (AUD-01…AUD-04) folded into Retrieval
+Quality (`#27`–`#31`), then finish workflow.
+
+> **2026-09 addendum.** This plan is the single source of truth for where we are
+> and what is next. A code review on 2026-09-08 surfaced concrete findings
+> (missing versioned eval set, un-pinned ontology/OpenAPI duplicates, a reranker
+> whose entity boosts override vector rank, incoherent config/model defaults,
+> and no request diagnostics). They are captured as **AUD-01…AUD-10** in §4.7
+> below and are the immediate P0/P1 work items. Agents: read §4.7 before writing
+> code.
 
 This is the **current** project plan. Use it when documents disagree.
 
@@ -46,7 +55,8 @@ AviationLakehouse = analytical backend (Bronze / Silver / Gold, deferred)
 | v0.2.1 ontology-aware retrieval | **done** | milestone closed; `#1`–`#6` `#26` |
 | v0.2.2 NE:ONE implementation Q&A | **done** (baseline) | `#24` `#25` |
 | v0.2.3 streaming frontend | **done** | milestone closed; `#15`–`#20` |
-| **Retrieval Quality** | **next / in progress** | `#27`–`#31` |
+| **2026-09 audit P0** (AUD-01…04) | **next / in progress** | no issues yet; see §4.7 |
+| **Retrieval Quality** | **next / in progress** | `#27`–`#31` (+ AUD-01/02 inside) |
 | v0.2.4 workflow orchestration | **partial** (`#11` `#12` done) | remainder `#32`; blocked on retrieval quality |
 | v0.2.5 RecordForge | **not started** | `#13` `#14` |
 | v0.2.6 AviationLakehouse narrative | **deferred** | `#7`–`#10` |
@@ -58,28 +68,39 @@ AviationLakehouse = analytical backend (Bronze / Silver / Gold, deferred)
 
 ```text
 v0.1  ──► Data Foundation  ──► v0.2.1  ──► v0.2.2  ──► v0.2.3
-                                              │
-                                              ▼
-                                    Retrieval Quality   ◄── you are here
+                                               │
+                                               ▼
+                              2026-09 audit P0 fixes   ◄── you are here
+                              (AUD-01 eval set versioned   )
+                              (AUD-02 canonical versions   )
+                              (AUD-03 reranker weighting   )
+                              (AUD-04 config/model         )
+                                               │
+                                               ▼
+                                    Retrieval Quality
                                     (#27 ontology pin
                                      #28 gold eval
                                      #29 hybrid + filters
                                      #30 history / rewrite
                                      #31 citation filter)
-                                              │
-                                              ▼
+                                               │
+                                               ▼
                                     finish v0.2.4 (#32)
-                                              │
-                                              ▼
+                                               │
+                                               ▼
                                     v0.2.5 RecordForge (#13 #14)
-                                              │
-                                              ▼
+                                               │
+                                               ▼
                                     v0.2.6 ALH narrative (#7–#10)
-                                              │
-                                              ▼
+                                               │
+                                               ▼
                                     v0.3 platform (auth, memory,
                                     source versioning, tracing)
 ```
+
+AUD-01 / AUD-02 land **inside** the Retrieval Quality slice (they are its
+prerequisite); AUD-03 / AUD-04 are independent one-shot fixes that can be done
+first. AUD-05…AUD-10 are P1/P2 and follow the same slice.
 
 Do not start RecordForge or ALH while retrieval still fails open (duplicate
 ontology chunks, keyword-only eval, no hybrid, no follow-up context).
@@ -91,24 +112,29 @@ ontology chunks, keyword-only eval, no hybrid, no follow-up context).
 Ontology-aware rerank already exists. That is not the same as “retrieval is
 good enough.” The live corpus currently indexes overlapping ontology copies
 (2023-12, 2025-07, working draft, spec bundles, NE:ONE copies, community
-Checks TTL). Eval treats “any source returned” as a hit. Search is dense-only
-with a pool of at most 20. The chat adapter sends only the latest user
-sentence.
+Checks TTL). Duplication is **broader than ontology**: `api_specs/official/`
+holds 3 OpenAPI versions (2023-12 / 2024-12 / working draft) and
+`one_record_docs/` nests `spec_2023_12/` beside `spec_2025_07/` and a
+`spec_development/`. Eval treats “any source returned” as a hit. Search is
+dense-only with a pool of at most 20. The chat adapter sends only the latest
+user sentence. `scripts/evaluate_rag.py` also crashes today because
+`data/eval/questions.yaml` is missing and never versioned.
 
 ### Goal
 
 Make retrieval **measurable, de-duplicated, and query-type-aware** before
-adding more execution features.
+adding more execution features. The 2026-09 audit items (§4.7) are the concrete
+first steps of this goal.
 
 ### Work
 
 | Step | Issue | Outcome |
 |---|---|---|
-| 4.1 | [#27](https://github.com/Jiahong-Que-9527/Recordchat/issues/27) | Pin one canonical ontology (recommended: 2025-07); exclude duplicate TTL from ingest and from `OntologyGraph` |
-| 4.2 | [#28](https://github.com/Jiahong-Que-9527/Recordchat/issues/28) | Gold-chunk eval: recall@5, MRR, source-family / version accuracy |
-| 4.3 | [#29](https://github.com/Jiahong-Que-9527/Recordchat/issues/29) | Hybrid / lexical candidates + metadata filters by query type |
-| 4.4 | [#30](https://github.com/Jiahong-Que-9527/Recordchat/issues/30) | Follow-up questions keep entities (history + rewrite) |
-| 4.5 | [#31](https://github.com/Jiahong-Que-9527/Recordchat/issues/31) | `sources` lists chunks that support the answer |
+| 4.1 | [#27](https://github.com/Jiahong-Que-9527/Recordchat/issues/27) | Pin one canonical version per source family (recommended ontology: 2025-07; one OpenAPI; keep `development` + `2025-07` specs). Exclude duplicate TTL / YAML / markdown from ingest and from `OntologyGraph`. Context: AUD-02. |
+| 4.2 | [#28](https://github.com/Jiahong-Que-9527/Recordchat/issues/28) | Gold-chunk eval: recall@5, MRR, source-family / version accuracy. Requires the eval set restored first (AUD-01). |
+| 4.3 | [#29](https://github.com/Jiahong-Que-9527/Recordchat/issues/29) | Hybrid / lexical candidates + metadata filters by query type. |
+| 4.4 | [#30](https://github.com/Jiahong-Que-9527/Recordchat/issues/30) | Follow-up questions keep entities (history + rewrite). Context: AUD-06. |
+| 4.5 | [#31](https://github.com/Jiahong-Que-9527/Recordchat/issues/31) | `sources` lists chunks that support the answer. Context: AUD-05. |
 
 ### Acceptance
 
@@ -116,10 +142,37 @@ adding more execution features.
 - [ ] Eval can fail because the wrong source family or ontology version ranked first
 - [ ] NE:ONE setup/config questions cite docs/config, not bulk example JSON
 - [ ] “What is a Piece?” → “how does it relate to Shipment?” still retrieves both entities
+- [ ] `data/eval/questions.yaml` exists, is committed, and `evaluate_rag.py` loads it (AUD-01)
 - [ ] `/chat` field names stay stable
 
-Suggested order inside the slice: **#27 → #28 → #29 → #30 / #31**. Eval (#28)
-should land early so later retrieval changes have a regression gate.
+Suggested order inside the slice: **AUD-01 → #27 (with AUD-02) → #28 → #29 →
+#30 / #31**, with AUD-03 / AUD-04 done as one-shot fixes before or alongside.
+Eval (#28) should land early so later retrieval changes have a regression gate.
+
+### 4.7 2026-09 audit findings (AUD-01…AUD-10)
+
+Findings from the 2026-09-08 code review. Each item lists the evidence and the
+agreed fix. Priority: P0 = do now (blocks trustworthy retrieval), P1 = this
+slice, P2 = next slice. **Agents must check this table before starting work —
+some of these invalidate assumptions in older docs.**
+
+| ID | Priority | Finding (evidence) | Fix / direction |
+|---|---|---|---|
+| AUD-01 | **P0** | `data/eval/questions.yaml` does not exist and was **never committed** (git history has no copy; `data/` is fully gitignored). `scripts/evaluate_rag.py:36` hard-reads it → eval crashes. SPEC Phase 9 “≥10 questions” is effectively under-delivered. | Restore a ≥10-question eval set; **exempt `data/eval/` from the `data/` gitignore** so the set is versioned (it is our own authored content, no third-party rights). Update `evaluate_rag.py` to fail with a clear message when the file is absent. |
+| AUD-02 | **P0** | Canonical-version duplication is broader than ontology: `ontology/official/` has 2023-12 + 2025-07 + working_draft + `api_ontology.current` (TTL/OWL/JSON-LD each); `api_specs/official/` has 3 OpenAPI versions; `one_record_docs/` nests 3 spec versions live at once. One class/property yields 4+ chunks. | Introduce a **canonical source version policy** (see `docs/data_source_plan.md` §10): config-driven `source family → canonical version` mapping; `loader.py` skips non-canonical versions; extend `verify_source_governance.py` with a duplicate-chunk report. |
+| AUD-03 | **P0** | `reranker.py` score = `(len - index) + boost`; boosts (10/12) exceed the max possible rank gap (1), so **entity boosts fully override vector similarity**. Any `detect_entities` false positive drags an unrelated ontology chunk to position 1. | Re-weight: keep vector rank dominant (e.g. multiplicative or much smaller additive boosts); add a regression test asserting non-entity queries preserve vector order and entity boost cannot reorder unrelated chunks to rank 1. |
+| AUD-04 | **P0** | Default-drift between docs and runtime: `SPEC.md` §8 / README still present `qwen`/`qwen-plus` as the default provider/model, while `config.py`, `.env.example`, and `docker-compose.yml` all default to `openai` + `kimi-k3` (flash). The frontend `CHAT_MODELS` allowlist and `ModelPicker` labels do match the backend `llm.py` Literal (flash + pro), but the list is hardcoded in three places, so any backend change silently breaks the picker. | Reconcile the docs with the runtime defaults (or vice versa); expose the model allowlist from the backend (e.g. `GET /models`) so the frontend picker derives from the same source and cannot drift. |
+| AUD-05 | P1 | `sources` returns the full retrieved candidate list, not just chunks that actually support the answer (citation noise; fails “prefer no citation over a wrong citation”). | `#31`: prompt requires per-source references; backend filters `sources` to cited chunks. |
+| AUD-06 | P1 | Multi-turn context is lost: frontend `useChat` has history but only sends `model`; backend retrieves on the bare follow-up sentence (“how does it relate to Shipment?” loses “Piece”). | `#30`: send `conversation_id` + history from frontend; backend does query rewrite / entity carry-over before retrieval (keep it inside `pipeline.py`). |
+| AUD-07 | P1 | No diagnostic evidence capture: `answer()` logs nothing structured (query, query_type, retrieved chunks/rank, latency, errors). Blocks §4.6 expert-interview evidence and `#31` debugging. | Add a lightweight JSONL request log (stdout or `data/logs/`, gitignored) recording query, type, ranked chunk ids + scores, latency, model/config. Do **not** add heavy tracing yet (that is v0.3). |
+| AUD-08 | P2 | `answer()` and `answer_stream()` duplicate ~60% of orchestration; `_is_ontology_query()` is defined twice (pipeline + reranker) with **different** rule sets (reranker copy lacks the Chinese markers). | Extract shared helpers into one module; single source for `_is_ontology_query`. Refactor only — no behavior change beyond AUD-03. |
+| AUD-09 | P2 | Infra pinning: `docker-compose.yml` uses `qdrant:latest`; Qdrant unauthenticated (acceptable local, must be resolved before any public deployment); backend default `llm_model` is incoherent (see AUD-04). | Pin qdrant image version; document auth posture; revisit before any hosted deployment. |
+| AUD-10 | P2 | Eval is not in CI (needs real API keys). Risk: retrieval regressions (e.g. `#27`/`#29`) land unnoticed. | Add a **CI-safe retrieval regression test** using a fake embedding provider over a tiny fixture corpus with gold chunks — asserts recall and canonical-version ranking without network. |
+
+Execution note for agents: AUD-01 and AUD-02 are prerequisites for `#28` and
+`#27` respectively; AUD-03 and AUD-04 are small, independent, and can be
+delivered immediately. AUD-07 should land before the §4.6 expert interviews so
+sessions produce captureable evidence.
 
 ### 4.6 External expert mini interviews — TODO (parallel, non-blocking)
 
@@ -148,7 +201,8 @@ and whether the expert could act on it.
   citation over a citation that does not support the conclusion.
 - [ ] **Before interviews — capture diagnostic evidence:** save the question,
   answer, returned source chunks and ranking, model/configuration, corpus
-  version, latency, and any error for every tested turn.
+  version, latency, and any error for every tested turn. Depends on AUD-07
+  (request logging), which must land before the interviews start.
 - [ ] **Before interviews — add uncertainty guardrails:** where evidence is
   missing, ambiguous, or version-sensitive, have answers state their limits
   rather than presenting an unsupported conclusion as certain.
@@ -222,11 +276,27 @@ No GitHub issues yet. Do not pull these into v0.2.
 - replacing the retriever ABC with a framework-specific chain
 - letting the LLM emit JSON-LD structure (templates stay in `domain/`)
 - ALH / RecordForge work that skips Retrieval Quality
+- heavy tracing / auth / eval dashboard — these stay in the §6 v0.3 sketch (see AUD-07 for the lightweight logging that *is* in scope)
 
 ---
 
 ## 8. Definition of done for the current iteration
 
-Retrieval Quality is done when #27–#31 meet their issue acceptance criteria and
-`scripts/evaluate_rag.py` reports retrieval metrics that can go red. After that,
-v0.2.4 (#32) is unblocked.
+The current iteration (2026-09 audit P0 + Retrieval Quality) is done when:
+
+- [ ] **AUD-01** — `data/eval/questions.yaml` exists (≥10 questions), is
+      committed (gitignored-exempt), and `evaluate_rag.py` runs without
+      crashing.
+- [ ] **AUD-02** — one live canonical version per source family (ontology +
+      OpenAPI + spec docs); `verify_source_governance.py` reports no live
+      duplicates; a class/property yields one canonical chunk (+glossary).
+- [ ] **AUD-03** — reranker no longer lets entity boosts override vector rank;
+      non-entity queries keep vector order (covered by a regression test).
+- [ ] **AUD-04** — runtime defaults coherent with docs; frontend model list is
+      derived from the backend allowlist (no drift).
+- [ ] `#27`–`#31` meet their issue acceptance criteria (§4), and
+      `scripts/evaluate_rag.py` reports retrieval metrics (recall@5 / MRR /
+      source-family accuracy) that can go red.
+- [ ] Backend tests green, frontend builds, `verify_source_governance.py` green.
+
+After that, v0.2.4 (#32) is unblocked.

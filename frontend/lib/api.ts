@@ -22,9 +22,11 @@ export interface ChatResponse {
   query_type: QueryType;
   sources: Source[];
   related_concepts: string[];
-  structured_output: Record<string, unknown> | null;
+structured_output: Record<string, unknown> | null;
 }
 
+// Mirrors the backend allowlist (`backend/app/core/llm.py` → ChatModel).
+// Keep exactly one entry per allowed model, in the same order as the backend.
 export const CHAT_MODELS = ["deepseek-v4-flash", "deepseek-v4-pro"] as const;
 export type ChatModel = (typeof CHAT_MODELS)[number];
 

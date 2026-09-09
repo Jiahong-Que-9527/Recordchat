@@ -11,8 +11,10 @@ a (provider-abstracted) LLM, and enriches the answer with domain tools
 Current project priority:
 
 - `v0.1` through `v0.2.3` are delivered
-- the next slice is **Retrieval Quality**: pin one ontology version, gold-chunk
-  eval, hybrid retrieval, follow-up rewrite, citation filtering
+- the next slice is **2026-09 audit P0 (AUD-01…AUD-04) folded into Retrieval
+  Quality**: version the eval set, pin canonical source versions, fix reranker
+  weighting, reconcile config/model defaults — then gold-chunk eval, hybrid
+  retrieval, follow-up rewrite, citation filtering
 - workflow / RecordForge / ALH follow that order — see
   [project_plan.md](project_plan.md)
 

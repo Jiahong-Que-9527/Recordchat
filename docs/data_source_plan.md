@@ -52,7 +52,9 @@ The repo is now in a transitional but much healthier state:
 - remaining import work (`#23`) is optional
 - **ingest hygiene next**: overlapping ontology copies (2023-12 / 2025-07 /
   working draft / spec bundles / NE:ONE copies) should not all be live — see
-  Retrieval Quality `#27` in [project_plan.md](project_plan.md)
+  Retrieval Quality `#27` in [project_plan.md](project_plan.md). The duplication
+  actually extends beyond ontology (multiple OpenAPI versions, multiple spec
+  releases live at once) — see AUD-02 and §10.
 
 ## 3. Execution Order
 
@@ -234,3 +236,39 @@ Use these ingestion rules:
 
 - proceed with NE:ONE implementation knowledge
 - proceed with ALH and RecordForge only after the knowledge base is broad enough
+
+## 10. Canonical source version policy (2026-09, AUD-02)
+
+**Principle:** a given class, property, endpoint, or spec release should have
+**one live canonical version** in the corpus (plus the curated glossary). Do not
+let near-duplicate versions of the same content compete for ranking. This is the
+corpus-side rule behind Retrieval Quality `#27` / AUD-02.
+
+How to decide a canonical version:
+
+1. A source family is a set of files with the same `document_type` + `domain`
+   that describe the **same subject** (e.g. the ONE Record ontology, the ONE
+   Record API, a spec release).
+2. Pick **one** version per family as canonical. Defaults already agreed:
+   - ontology → **2025-07** (keep `working_draft` and `2023-12` out of live ingest)
+   - OpenAPI → **one** canonical file (do not ingest all of 2023-12 / 2024-12 /
+     working_draft at once)
+   - spec docs → **`development` + `2025-07`** only (drop the `2023-12`
+     `repo_release` copy and any `spec_*` release duplicates)
+3. Any non-canonical copy may stay on disk as **bundle/reference material** (in
+   `_staging/` or a non-ingested folder) but must not be indexed. It is **never**
+   a reason to add a second identical file to a final ingest folder.
+
+Implementation contract:
+
+- A config-driven `canonical sources` mapping lives in `backend/app/core/config.py`
+  (source family → canonical version), consumed by `rag/loader.py` to skip
+  non-canonical versions at ingest time.
+- `scripts/verify_source_governance.py` gains a **duplicate-chunk report**: it
+  flags when the same `entity` / `section_title` appears in live chunks under
+  more than one `version`, and fails the check if the corpus is not canonical.
+- `OntologyGraph` and ontology traversal only consider the canonical ontology
+  version.
+
+Do not bulk-ingest more community HTML/PDF or a second copy of an existing
+source until this policy is wired up — more files only amplify duplicates.

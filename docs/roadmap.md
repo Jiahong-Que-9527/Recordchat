@@ -11,8 +11,12 @@ The **current** plan (status, next slice, issue map) lives in
 - **v0.2.1 ontology-aware retrieval**: done (GitHub milestone closed)
 - **v0.2.2 NE:ONE implementation knowledge**: done at a useful baseline
 - **v0.2.3 streaming frontend**: done (GitHub milestone closed)
-- **next priority**: **Retrieval Quality** (`#27`–`#31`) — pin one ontology
-  version, gold-chunk eval, hybrid + filters, follow-up rewrite, citation filter
+- **2026-09 audit**: the P0 findings (AUD-01 eval set, AUD-02 canonical
+  versions, AUD-03 reranker weighting, AUD-04 config/model) are now the first
+  work items — details in [project_plan.md §4.7](project_plan.md#47-2026-09-audit-findings-aud-01aud-10)
+- **next priority**: **Retrieval Quality** (`#27`–`#31`), starting with the
+  audit P0 fixes — pin one version per source family, gold-chunk eval, hybrid +
+  filters, follow-up rewrite, citation filter
 - **after that**: finish v0.2.4 workflow (`#32`), then RecordForge (`#13` `#14`)
 
 Source acquisition and import plan:
@@ -96,10 +100,13 @@ Primary GitHub issues:
 
 ## Recommended Next Order
 
-1. **Retrieval Quality** (current)
-   Pin one ontology version, replace smoke eval with gold-chunk metrics, add
-   hybrid retrieval and query-type filters, then follow-up rewrite and citation
-   filtering. Issues `#27`–`#31`.
+0. **2026-09 audit P0 fixes** (AUD-01–04; §4.7 of `project_plan.md`) — restore
+   and version the eval set, de-duplicate canonical sources, fix the reranker
+   weighting, reconcile config/model defaults.
+1. **Retrieval Quality** (current after the audit P0)
+   Pin one canonical version per source family, replace smoke eval with
+   gold-chunk metrics, add hybrid retrieval and query-type filters, then
+   follow-up rewrite and citation filtering. Issues `#27`–`#31`.
 2. **Finish v0.2.4 workflow orchestration**
    Structured workflow results and an execution path on the existing Connector
    ABC (`#32`). `#11` / `#12` already landed the seam.
@@ -109,6 +116,23 @@ Primary GitHub issues:
    Bronze / Silver / Gold story last (`#7`–`#10`).
 5. **Data Foundation leftover (`#23`)**
    Optional community / PDF pack; do not let it jump the retrieval-quality queue.
+
+## Strategic guidance (product-level)
+
+- **Credibility before capability.** The biggest risk is not missing features,
+  but retrieving unclearly and then building connectors on an unstable corpus.
+  Treat `#27`–`#31` (and the audit P0) as a **release gate**, and run the
+  external expert interviews (§4.6 of `project_plan.md`) before expanding the
+  ecosystem.
+- **RecordForge / ALH are narrative-first.** Their value is telling the
+  "closed ecosystem" story for a portfolio, not full integration. Build the
+  **minimum demoable connector** (generate N shipments → JSON-LD; explain
+  ONE Record → Bronze/Silver/Gold) and stop there.
+- **Make the differentiators visible.** The four things few other RAG projects
+  have are: template-guaranteed JSON-LD, ontology-aware retrieval, Mermaid
+  relationship diagrams, and citation-first grounding. Surface these as a
+  shareable one-click demo entry, not just something buried inside the chat
+  stream.
 
 ## v0.2.1 — Ontology-aware retrieval
 
@@ -142,7 +166,7 @@ Current state:
 
 Goal:
 
-- stop indexing overlapping ontology copies
+- stop indexing overlapping source copies (ontology **and** OpenAPI/spec docs)
 - measure retrieval (recall@5 / MRR / source family), not just “answer non-empty”
 - hybrid + metadata filters so implementation/API questions hit the right family
 - follow-up questions keep entities; citations match used chunks
@@ -150,11 +174,15 @@ Goal:
 Current state:
 
 - ontology-aware rerank is in the pipeline, but the index still contains
-  multiple versions of the same classes
-- `evaluate_rag.py` is a keyword smoke test
+  multiple versions of the same classes — and the duplication extends to OpenAPI
+  (3 versions) and spec docs (3 live versions); see AUD-02
+- `evaluate_rag.py` is a keyword smoke test **and currently crashes** because
+  the versioned eval set (`data/eval/questions.yaml`) is missing; see AUD-01
 - search is dense-only; conversation history is not used for retrieval
+- the reranker's entity boosts currently override vector similarity; see AUD-03
 
-Issues: `#27`–`#31`. Details: [project_plan.md](project_plan.md) §4.
+Issues: `#27`–`#31` plus audit items AUD-01…AUD-10.
+Details: [project_plan.md](project_plan.md) §4 and §4.7.
 
 ## v0.2.3 — Frontend upgrade
 

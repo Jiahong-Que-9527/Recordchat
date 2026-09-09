@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -6,8 +6,16 @@ export const metadata: Metadata = {
   description:
     "A domain-specific AI assistant for IATA ONE Record: data model, JSON-LD, API, and relationships.",
   icons: {
-    icon: "/recordchat-mark.svg",
+    icon: [
+      { url: "/recordchat-icon.png", sizes: "any", type: "image/png" },
+      { url: "/recordchat-icon.png", sizes: "1254x1254", type: "image/png" },
+    ],
+    apple: "/recordchat-icon.png",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f4f8fe",
 };
 
 export default function RootLayout({

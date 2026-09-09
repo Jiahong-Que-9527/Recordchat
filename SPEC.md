@@ -4,9 +4,11 @@
 > 本文档是给人和 coding agent 共同阅读的**单一事实来源（Single Source of Truth）**。
 > 任何实现都应以本文档的契约（API 契约、数据模型、目录结构、验收标准）为准。
 >
-> **状态说明（2026-08）**：本 SPEC 定义的是 `v0.1` 的交付边界与 API/模块契约。
+> **状态说明（2026-09）**：本 SPEC 定义的是 `v0.1` 的交付边界与 API/模块契约。
 > `v0.1` 已完成；v0.2.1–v0.2.3 也已落地。当前执行计划以
 > [docs/project_plan.md](docs/project_plan.md) 为准，不要用第 15 章的旧编号排期。
+> 2026-09 审计项（AUD-01…AUD-10）记录在 `docs/project_plan.md` §4.7，其中
+> AUD-01 修订了 Phase 9 的验收（评估集必须入库版本化）。
 
 ---
 
@@ -500,6 +502,10 @@ What is the role of JSON-LD in ONE Record?
 ### Phase 9 — 评估
 - **产出：** `data/eval/questions.yaml`（≥10 条，覆盖 concept/relationship/api/jsonld）、`scripts/evaluate_rag.py`。
 - **验收：** 脚本可运行，输出 retrieval hit rate / source coverage / answer 非空率 / JSON-LD 合法性 / 关键词命中率。
+- **版本化约束（2026-09 修订，AUD-01）：** 评估集是**本项目自产内容**，必须随
+  仓库提交（`.gitignore` 已对 `data/eval/` 开例外）。禁止以"数据目录不提交"为
+  由把评估集排除在版本控制之外；任何阶段都不允许 `evaluate_rag.py` 因找不到
+  `questions.yaml` 而崩溃——缺失时应给出明确报错提示而不是抛异常。
 
 ### Phase 10 — 文档 + 全链路冒烟
 - **产出：** `docs/architecture.md`、`roadmap.md`、`demo_script.md`、`scripts/{ingest_docs,reset_index}.py`、完善 README quickstart。

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Edit2, Menu } from "lucide-react";
+import { Canvas, CanvasToggleButton } from "@/components/Canvas";
+import { RecordChatIcon } from "@/components/RecordChatIcon";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import {
@@ -20,7 +22,6 @@ import { ModelPicker } from "@/components/ModelPicker";
 import { Sidebar } from "@/components/Sidebar";
 import { Message, canvasTitle } from "@/components/Message";
 import { TypingIndicator } from "@/components/TypingIndicator";
-import { Canvas } from "@/components/Canvas";
 import { cn } from "@/lib/utils";
 import { getMessageData, type ChatModel, type RecordChatMessage } from "@/lib/api";
 
@@ -29,6 +30,23 @@ type CanvasState = {
   title: string;
   data: Record<string, unknown>;
 };
+
+function findLatestStructuredOutput(
+  messages: RecordChatMessage[]
+): CanvasState | null {
+  for (const message of [...messages].reverse()) {
+    if (message.role !== "assistant") continue;
+    const output = getMessageData(message)?.structured_output;
+    if (output) {
+      return {
+        messageId: message.id,
+        title: canvasTitle(output),
+        data: output,
+      };
+    }
+  }
+  return null;
+}
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message.trim()) {
@@ -45,6 +63,7 @@ export default function Home() {
   selectedModelRef.current = selectedModel;
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [canvasOpen, setCanvasOpen] = useState(false);
   const [canvas, setCanvas] = useState<CanvasState | null>(null);
   const {
     messages,
@@ -107,12 +126,27 @@ export default function Home() {
   // it is already the one on screen.
   const handleToggleCanvas = useCallback(
     (messageId: string, title: string, data: Record<string, unknown>) => {
-      setCanvas((current) =>
-        current?.messageId === messageId ? null : { messageId, title, data }
-      );
+      if (canvasOpen && canvas?.messageId === messageId) {
+        setCanvasOpen(false);
+        return;
+      }
+      setCanvas({ messageId, title, data });
+      setCanvasOpen(true);
     },
-    []
+    [canvas, canvasOpen]
   );
+
+  const handleToggleCanvasPanel = useCallback(() => {
+    if (canvasOpen) {
+      setCanvasOpen(false);
+      return;
+    }
+    const latest = findLatestStructuredOutput(messagesRef.current);
+    if (latest) {
+      setCanvas(latest);
+    }
+    setCanvasOpen(true);
+  }, [canvasOpen]);
 
   // Auto-open the canvas when a finished answer carries structured output.
   // Tracked per message id so manually closing it doesn't re-trigger.
@@ -135,15 +169,16 @@ export default function Home() {
         title: canvasTitle(output),
         data: output,
       });
+      setCanvasOpen(true);
     }
   }, [messages, loading]);
 
   return (
-    <main className="h-dvh overflow-hidden bg-neutral-50">
+    <main className="h-dvh overflow-hidden bg-transparent">
       <div
         className={cn(
           "grid h-full w-full grid-cols-1",
-          canvas
+          canvasOpen
             ? sidebarCollapsed
               ? "xl:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)]"
               : "xl:grid-cols-[260px_minmax(0,1fr)_minmax(0,1fr)]"
@@ -164,32 +199,39 @@ export default function Home() {
           }}
         />
 
-        <section className="relative flex h-full flex-col overflow-hidden bg-neutral-50 px-4 pb-4 pt-3 sm:px-6">
+        <section className="relative flex h-full flex-col overflow-hidden bg-transparent px-4 pb-4 pt-3 sm:px-6">
           {/* Mobile/tablet top bar — opens the sidebar drawer. */}
           <header className="mb-2 flex items-center justify-between gap-2 xl:hidden">
             <button
               type="button"
               onClick={() => setMobileSidebarOpen(true)}
               aria-label="Open menu"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-600 transition hover:bg-neutral-100"
+              className="rc-glass inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 shadow-rc-sm transition hover:text-slate-900"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-4 w-4" />
             </button>
-            <span className="text-sm font-semibold leading-none">
-              <span className="text-blue-600">Record</span>
-              <span className="text-amber-500">Chat</span>
+            <span className="flex items-center gap-2 text-sm font-semibold leading-none tracking-tight">
+              <RecordChatIcon size="sm" alt="RecordChat" />
+              <span className="rc-gradient-text">RecordChat</span>
             </span>
-            <button
-              type="button"
-              onClick={() => {
-                setMessages([]);
-                setInput("");
-              }}
-              aria-label="New chat"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-600 transition hover:bg-neutral-100"
-            >
-              <Edit2 className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <CanvasToggleButton
+                open={canvasOpen}
+                onClick={handleToggleCanvasPanel}
+                className="h-9 w-9"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setMessages([]);
+                  setInput("");
+                }}
+                aria-label="New chat"
+                className="rc-glass inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 shadow-rc-sm transition hover:text-slate-900"
+              >
+                <Edit2 className="h-4 w-4" />
+              </button>
+            </div>
           </header>
 
           <Conversation className="min-h-0 flex-1">
@@ -212,7 +254,9 @@ export default function Home() {
                     onRegenerate={handleRegenerate}
                     onEdit={handleEditMessage}
                     onToggleCanvas={handleToggleCanvas}
-                    activeCanvasId={canvas?.messageId ?? null}
+                    activeCanvasId={
+                      canvasOpen ? (canvas?.messageId ?? null) : null
+                    }
                   />
                 ))}
                 {showConversationIndicator ? <TypingIndicator /> : null}
@@ -250,11 +294,17 @@ export default function Home() {
               onSubmitShortcut={() => ask(input)}
             />
             <PromptInputToolbar>
-              <ModelPicker
-                value={selectedModel}
-                onChange={setSelectedModel}
-                disabled={loading}
-              />
+              <div className="flex items-center gap-2">
+                <ModelPicker
+                  value={selectedModel}
+                  onChange={setSelectedModel}
+                  disabled={loading}
+                />
+                <CanvasToggleButton
+                  open={canvasOpen}
+                  onClick={handleToggleCanvasPanel}
+                />
+              </div>
               <PromptInputSubmit
                 isLoading={loading}
                 disabled={!input.trim()}
@@ -262,15 +312,32 @@ export default function Home() {
               />
             </PromptInputToolbar>
           </PromptInput>
+
+          {/* Comfort hints — keyboard shortcuts + grounding note. */}
+          <p className="mx-auto mt-2.5 flex max-w-[864px] items-center justify-center gap-3 text-center text-[11px] leading-none text-slate-400">
+            <span className="inline-flex items-center gap-1.5">
+              <kbd className="rc-kbd">Enter</kbd>
+              to send
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <kbd className="rc-kbd">Shift</kbd>
+              +
+              <kbd className="rc-kbd">Enter</kbd>
+              for newline
+            </span>
+            <span aria-hidden="true" className="h-1 w-1 rounded-full bg-slate-300" />
+            <span>Answers are grounded and cited</span>
+          </p>
         </section>
 
         {/* Canvas — desktop split column */}
-        {canvas ? (
+        {canvasOpen ? (
           <Canvas
-            title={canvas.title}
-            data={canvas.data}
-            onClose={() => setCanvas(null)}
-            className="hidden border-l border-neutral-200 xl:flex"
+            title={canvas?.title ?? "JSON-LD Output"}
+            data={canvas?.data ?? null}
+            onClose={() => setCanvasOpen(false)}
+            onAskExample={() => ask("Generate a JSON-LD example for a Piece.")}
+            className="hidden xl:flex"
           />
         ) : null}
       </div>
@@ -302,17 +369,21 @@ export default function Home() {
       ) : null}
 
       {/* Canvas — mobile/tablet slide-over drawer */}
-      {canvas ? (
+      {canvasOpen ? (
         <div className="fixed inset-0 z-50 xl:hidden">
           <div
             className="absolute inset-0 bg-slate-900/40"
-            onClick={() => setCanvas(null)}
+            onClick={() => setCanvasOpen(false)}
           />
           <div className="absolute right-0 top-0 h-full w-[min(640px,95vw)] shadow-rc-md">
             <Canvas
-              title={canvas.title}
-              data={canvas.data}
-              onClose={() => setCanvas(null)}
+              title={canvas?.title ?? "JSON-LD Output"}
+              data={canvas?.data ?? null}
+              onClose={() => setCanvasOpen(false)}
+              onAskExample={() => {
+                setCanvasOpen(false);
+                ask("Generate a JSON-LD example for a Piece.");
+              }}
               className="h-full"
             />
           </div>
