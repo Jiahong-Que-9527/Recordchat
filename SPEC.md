@@ -131,8 +131,8 @@ User query
 |---|---|---|
 | 后端 | Python 3.11+ / FastAPI | 用 `uv` 管理依赖，`pyproject.toml` |
 | 向量库 | Qdrant | docker-compose 启动，collection: `recordchat_one_record` |
-| LLM | 抽象接口 + 多实现 | 默认 provider 由 `LLM_PROVIDER` 环境变量决定，支持 `qwen`/`openai`/`claude` |
-| Embedding | 抽象接口 + 多实现 | `EMBEDDING_PROVIDER`，支持 `qwen`/`openai` |
+| LLM | 抽象接口 + 多实现 | 默认 `openai`（DeepSeek 兼容网关）；由 `LLM_PROVIDER` 切换，支持 `openai`/`qwen`/`claude` |
+| Embedding | 抽象接口 + 多实现 | 默认 `openai`；由 `EMBEDDING_PROVIDER` 切换，支持 `openai`/`qwen` |
 | 前端 | Next.js (App Router) + Tailwind + shadcn/ui | 单页聊天界面 |
 | 容器 | Docker Compose | 服务：backend、frontend、qdrant |
 | 测试 | pytest（后端） | RAG 关键路径 + domain 逻辑单测 |
@@ -348,17 +348,18 @@ general_question      : 兜底
 ## 8. 环境变量（`.env.example`）
 
 ```bash
-# LLM
-LLM_PROVIDER=qwen            # qwen | openai | claude
-LLM_MODEL=qwen-plus
+# LLM — runtime defaults match config.py / .env.example / docker-compose.yml
+LLM_PROVIDER=openai          # openai | qwen | claude
+LLM_MODEL=deepseek-v4-flash  # allowlist: deepseek-v4-flash | deepseek-v4-pro
 LLM_API_KEY=
-LLM_BASE_URL=                # 可选，自定义网关
+LLM_BASE_URL=                # 可选；DeepSeek 用 https://api.deepseek.com
 
 # Embedding
-EMBEDDING_PROVIDER=qwen      # qwen | openai
-EMBEDDING_MODEL=text-embedding-v4
+EMBEDDING_PROVIDER=openai    # openai | qwen
+EMBEDDING_MODEL=text-embedding-3-small
 EMBEDDING_API_KEY=
-EMBEDDING_DIM=1024           # 与所选模型一致；建 Qdrant collection 时用
+EMBEDDING_BASE_URL=
+EMBEDDING_DIM=1536           # 与所选模型一致；建 Qdrant collection 时用
 
 # Qdrant
 QDRANT_URL=http://qdrant:6333
@@ -372,6 +373,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 ```
 
 > Provider 抽象要求：`core/config.py` 读 `*_PROVIDER`，由 factory 返回对应实现。切换 provider **不需要改业务代码**。
+> 用户可选 chat 模型以 `GET /models`（以及 `app.core.llm.ChatModel`）为唯一允许列表；前端 picker 应从该接口派生，避免与后端漂移。
 
 ---
 

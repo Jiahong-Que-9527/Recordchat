@@ -91,48 +91,46 @@ uv run --project backend python scripts/evaluate_rag.py
 8. **Every phase must leave the project runnable and tested.** No credentials
    may be required to merely boot (graceful degradation instead).
 
-## 5. Current state (2026-09-08)
+## 5. Current state (2026-09-09)
 
 - Delivered: v0.1 baseline, Data Foundation (core pack), v0.2.1 ontology-aware
-  retrieval, v0.2.2 NE:ONE Q&A, v0.2.3 streaming frontend.
+  retrieval, v0.2.2 NE:ONE Q&A, v0.2.3 streaming frontend, audit P0
+  (AUD-01…AUD-04), `#27` canonical pin, `#28` gold eval metrics.
 - Partial: v0.2.4 workflow (Connector ABC + synthetic routing exist; `#32`
-  remains).
-- **Current slice: Retrieval Quality (`#27`–`#31`) + the 2026-09 audit fixes
-  (AUD-01…AUD-10).** Do not start RecordForge / ALH until retrieval is clean
-  and measurable.
-- Backend tests: 27 passing (`uv run pytest -q`).
+  remains). Retrieval Quality `#29`–`#31` still open.
+- **Current slice: finish Retrieval Quality (`#29`–`#31`).** Do not start
+  RecordForge / ALH until retrieval is clean and measurable.
+- Backend tests: 39 passing (`uv run pytest -q`).
 
 ## 6. Next work (in order)
 
-1. **P0 — Audit fixes** (see `docs/project_plan.md` §4.7):
-   - AUD-01 restore + version the eval set (`data/eval/questions.yaml`).
-   - AUD-02 canonical-version dedup across ontology / OpenAPI / spec docs.
-   - AUD-03 fix reranker weighting (entity boosts must not override vector rank).
-   - AUD-04 reconcile runtime defaults & frontend model list.
-2. **Retrieval Quality** `#27`–`#31` (ontology pin, gold-chunk eval, hybrid +
-   filters, follow-up rewrite, citation filter). AUD-01/AUD-02 land inside this.
-3. **v0.2.4 workflow** `#32` → **v0.2.5 RecordForge** `#13` `#14` →
+1. **Retrieval Quality remainder:** `#29` hybrid + filters → `#30` follow-up
+   rewrite (AUD-06) → `#31` citation filter (AUD-05). AUD-07 request logging
+   before expert interviews.
+2. **v0.2.4 workflow** `#32` → **v0.2.5 RecordForge** `#13` `#14` →
    **v0.2.6 ALH narrative** `#7`–`#10`.
-4. **v0.3 platform** (auth, sessions, source versioning, tracing, eval
+3. **v0.3 platform** (auth, sessions, source versioning, tracing, eval
    dashboard) — sketch only, not scheduled.
+4. Optional UI follow-up: wire ModelPicker to `GET /models` (AUD-04 remainder).
 
 ## 7. Definition of done for the current iteration
 
 Retrieval Quality + audit P0 are done when:
 
-- [ ] `data/eval/questions.yaml` exists (≥10 questions), is committed, and
+- [x] `data/eval/questions.yaml` exists (≥10 questions), is committed, and
       `evaluate_rag.py` runs without crashing.
-- [ ] A given class/property has **one** live canonical chunk (plus glossary),
+- [x] A given class/property has **one** live canonical chunk (plus glossary),
       not 4–6 near-duplicates — checkable via `verify_source_governance.py` or
       an ingest-time duplicate report.
-- [ ] Retrieval metrics reported by `evaluate_rag.py` can go red (recall@5 /
+- [x] Retrieval metrics reported by `evaluate_rag.py` can go red (recall@5 /
       MRR / source-family accuracy, not just "answer non-empty").
-- [ ] Non-entity queries keep vector-ranked order; entity boost never drags an
+- [x] Non-entity queries keep vector-ranked order; entity boost never drags an
       unrelated ontology chunk to position 1.
-- [ ] Config defaults are coherent with the docs and the frontend model list
-      never drifts from the backend allowlist.
-- [ ] `#27`–`#31` acceptance criteria from `docs/project_plan.md` §4 are met.
-- [ ] Backend tests green, frontend builds, `verify_source_governance.py` green.
+- [x] Config defaults are coherent with the docs; backend `GET /models` is the
+      allowlist source of truth (frontend wiring still optional).
+- [ ] `#27`–`#31` acceptance criteria from `docs/project_plan.md` §4 are met
+      (`#27`/`#28` done; `#29`–`#31` remain).
+- [x] Backend tests green, `verify_source_governance.py` green.
 
 ## 8. How to verify your work
 

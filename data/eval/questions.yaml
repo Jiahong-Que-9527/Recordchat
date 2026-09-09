@@ -1,0 +1,96 @@
+# RecordChat authored eval set (AUD-01 / SPEC Phase 9).
+# This file is project-owned content and MUST stay versioned under data/eval/.
+#
+# Fields consumed by scripts/evaluate_rag.py:
+#   id, question, expected_query_type, expected_keywords, expects_jsonld
+# Gold retrieval fields (#28):
+#   expected_entities          — entity names that should appear in top-k metadata
+#   expected_source_families   — substrings matched against source_name (any hit = family hit)
+#   expected_canonical_version — if set, at least one top-k hit should carry this version
+
+- id: concept_one_record
+  question: What is ONE Record?
+  expected_query_type: concept_explanation
+  expected_keywords: ["ONE Record", "IATA"]
+  expected_source_families: ["ONE Record"]
+
+- id: concept_logistics_object
+  question: What is a LogisticsObject in ONE Record?
+  expected_query_type: concept_explanation
+  expected_keywords: ["LogisticsObject"]
+  expected_entities: ["LogisticsObject"]
+  expected_source_families: ["Ontology", "ONE Record"]
+  expected_canonical_version: "2025-07"
+
+- id: concept_piece
+  question: What is a Piece in ONE Record?
+  expected_query_type: concept_explanation
+  expected_keywords: ["Piece"]
+  expected_entities: ["Piece"]
+  expected_source_families: ["Ontology", "ONE Record"]
+  expected_canonical_version: "2025-07"
+
+- id: concept_waybill
+  question: What is a Waybill in ONE Record?
+  expected_query_type: concept_explanation
+  expected_keywords: ["Waybill"]
+  expected_entities: ["Waybill"]
+  expected_source_families: ["Ontology", "ONE Record"]
+
+- id: relationship_shipment_piece
+  question: Explain the relationship between Shipment and Piece.
+  expected_query_type: relationship_question
+  expected_keywords: ["Shipment", "Piece"]
+  expected_entities: ["Shipment", "Piece"]
+  expected_source_families: ["Ontology", "ONE Record"]
+
+- id: ontology_shipment_piece_properties
+  question: What properties connect Shipment to Piece in the ONE Record ontology?
+  expected_query_type: ontology_question
+  expected_keywords: ["Shipment", "Piece"]
+  expected_entities: ["Shipment", "Piece"]
+  expected_source_families: ["Ontology"]
+  expected_canonical_version: "2025-07"
+
+- id: ontology_piece_zh
+  question: ONE Record 里的 Piece 是什么？
+  expected_query_type: concept_explanation
+  expected_keywords: ["Piece"]
+  expected_entities: ["Piece"]
+  expected_source_families: ["Ontology", "ONE Record"]
+
+- id: api_subscription
+  question: How does the ONE Record API handle subscriptions and notifications?
+  expected_query_type: api_question
+  expected_keywords: ["subscription"]
+  expected_source_families: ["OpenAPI", "API", "ONE Record"]
+
+- id: implementation_neone_docker
+  question: How do I start NE:ONE locally with docker compose?
+  expected_query_type: implementation_question
+  expected_keywords: ["docker", "compose"]
+  expected_source_families: ["NE:ONE", "NEONE", "ne-one", "ne_one"]
+
+- id: jsonld_piece
+  question: Generate a JSON-LD example for a Piece.
+  expected_query_type: jsonld_generation
+  expected_keywords: ["Piece", "@type"]
+  expects_jsonld: true
+  expected_entities: ["Piece"]
+  expected_source_families: ["Ontology", "example", "ONE Record"]
+
+- id: concept_shipment
+  question: What is a Shipment in ONE Record?
+  expected_query_type: concept_explanation
+  expected_keywords: ["Shipment"]
+  expected_entities: ["Shipment"]
+  expected_source_families: ["Ontology", "ONE Record"]
+  expected_canonical_version: "2025-07"
+
+- id: ontology_contained_pieces
+  question: What is the domain and range of containedPieces in the ONE Record ontology?
+  expected_query_type: ontology_question
+  expected_keywords: ["containedPieces"]
+  expected_entities: ["containedPieces", "Shipment", "Piece"]
+  expected_source_families: ["Ontology"]
+  expected_canonical_version: "2025-07"

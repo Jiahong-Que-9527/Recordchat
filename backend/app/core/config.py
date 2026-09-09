@@ -40,6 +40,13 @@ class Settings(BaseSettings):
     # RAG
     rag_top_k: int = 5
 
+    # Canonical source versions (AUD-02 / #27). Comma-separated allowlists.
+    # Non-canonical copies stay on disk but are skipped at ingest / OntologyGraph.
+    canonical_ontology_versions: str = "2025-07"
+    canonical_api_ontology_versions: str = "current"
+    canonical_openapi_versions: str = "2024-12"
+    canonical_spec_versions: str = "development,2025-07"
+
     # CORS (frontend origin)
     cors_origins: str = "http://localhost:3000"
 

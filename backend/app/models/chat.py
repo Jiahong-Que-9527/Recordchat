@@ -41,6 +41,18 @@ class HealthResponse(BaseModel):
     qdrant_collection: str
 
 
+# ---- /models ----
+class ModelsResponse(BaseModel):
+    """User-facing chat model allowlist (AUD-04).
+
+    Single source of truth lives in `app.core.llm.ChatModel`; the frontend
+    should derive its picker from this endpoint so the lists cannot drift.
+    """
+
+    models: list[str]
+    default: str
+
+
 # ---- /chat ----
 class ChatRequest(BaseModel):
     message: str

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from app.core.logging import get_logger
 from app.domain.ontology_parser import OntologyClass, OntologyProperty, parse_ontology
+from app.rag.canonical import is_canonical_source, load_sidecar
 
 logger = get_logger(__name__)
 
@@ -73,6 +74,10 @@ class OntologyGraph:
             if _should_skip_path(path):
                 continue
             if not path.is_file() or path.suffix not in _ONTOLOGY_EXTENSIONS:
+                continue
+            sidecar = load_sidecar(path)
+            if not is_canonical_source(path, sidecar, source_root=root):
+                logger.info("OntologyGraph skipping non-canonical %s", path)
                 continue
             try:
                 text = path.read_text(encoding="utf-8")

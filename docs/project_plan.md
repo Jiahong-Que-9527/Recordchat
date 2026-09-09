@@ -1,9 +1,8 @@
 # RecordChat Project Plan
 
-**Status date:** 2026-09-08
-**Current delivered line:** v0.2.3 (streaming, source-grounded ONE Record assistant)
-**Current next work:** 2026-09 audit fixes (AUD-01…AUD-04) folded into Retrieval
-Quality (`#27`–`#31`), then finish workflow.
+**Status date:** 2026-09-09
+**Current delivered line:** v0.2.3 + audit P0 (AUD-01…04) + `#27` / `#28` baseline
+**Current next work:** finish Retrieval Quality (`#29`–`#31`), then workflow `#32`.
 
 > **2026-09 addendum.** This plan is the single source of truth for where we are
 > and what is next. A code review on 2026-09-08 surfaced concrete findings
@@ -55,8 +54,8 @@ AviationLakehouse = analytical backend (Bronze / Silver / Gold, deferred)
 | v0.2.1 ontology-aware retrieval | **done** | milestone closed; `#1`–`#6` `#26` |
 | v0.2.2 NE:ONE implementation Q&A | **done** (baseline) | `#24` `#25` |
 | v0.2.3 streaming frontend | **done** | milestone closed; `#15`–`#20` |
-| **2026-09 audit P0** (AUD-01…04) | **next / in progress** | no issues yet; see §4.7 |
-| **Retrieval Quality** | **next / in progress** | `#27`–`#31` (+ AUD-01/02 inside) |
+| **2026-09 audit P0** (AUD-01…04) | **done** (frontend `/models` wiring deferred) | see §4.7 |
+| **Retrieval Quality** | **in progress** (`#27`/`#28` done; `#29`–`#31` next) | `#27`–`#31` |
 | v0.2.4 workflow orchestration | **partial** (`#11` `#12` done) | remainder `#32`; blocked on retrieval quality |
 | v0.2.5 RecordForge | **not started** | `#13` `#14` |
 | v0.2.6 AviationLakehouse narrative | **deferred** | `#7`–`#10` |
@@ -70,17 +69,14 @@ AviationLakehouse = analytical backend (Bronze / Silver / Gold, deferred)
 v0.1  ──► Data Foundation  ──► v0.2.1  ──► v0.2.2  ──► v0.2.3
                                                │
                                                ▼
-                              2026-09 audit P0 fixes   ◄── you are here
-                              (AUD-01 eval set versioned   )
-                              (AUD-02 canonical versions   )
-                              (AUD-03 reranker weighting   )
-                              (AUD-04 config/model         )
+                              2026-09 audit P0 fixes   ✅
+                              (AUD-01…AUD-04)
                                                │
                                                ▼
                                     Retrieval Quality
-                                    (#27 ontology pin
-                                     #28 gold eval
-                                     #29 hybrid + filters
+                                    (#27 ontology pin ✅
+                                     #28 gold eval ✅
+                                     #29 hybrid + filters  ◄── next
                                      #30 history / rewrite
                                      #31 citation filter)
                                                │
@@ -98,9 +94,8 @@ v0.1  ──► Data Foundation  ──► v0.2.1  ──► v0.2.2  ──► v
                                     source versioning, tracing)
 ```
 
-AUD-01 / AUD-02 land **inside** the Retrieval Quality slice (they are its
-prerequisite); AUD-03 / AUD-04 are independent one-shot fixes that can be done
-first. AUD-05…AUD-10 are P1/P2 and follow the same slice.
+AUD-01…AUD-04 and `#27`/`#28` are landed. Remaining in this slice: `#29`–`#31`
+plus P1 audit items AUD-05…AUD-07. AUD-08…AUD-10 stay P2.
 
 Do not start RecordForge or ALH while retrieval still fails open (duplicate
 ontology chunks, keyword-only eval, no hybrid, no follow-up context).
@@ -138,12 +133,12 @@ first steps of this goal.
 
 ### Acceptance
 
-- [ ] A given class/property has one live canonical chunk (plus glossary), not 4–6 near-duplicates
-- [ ] Eval can fail because the wrong source family or ontology version ranked first
+- [x] A given class/property has one live canonical chunk (plus glossary), not 4–6 near-duplicates
+- [x] Eval can fail because the wrong source family or ontology version ranked first
 - [ ] NE:ONE setup/config questions cite docs/config, not bulk example JSON
 - [ ] “What is a Piece?” → “how does it relate to Shipment?” still retrieves both entities
-- [ ] `data/eval/questions.yaml` exists, is committed, and `evaluate_rag.py` loads it (AUD-01)
-- [ ] `/chat` field names stay stable
+- [x] `data/eval/questions.yaml` exists, is committed, and `evaluate_rag.py` loads it (AUD-01)
+- [x] `/chat` field names stay stable
 
 Suggested order inside the slice: **AUD-01 → #27 (with AUD-02) → #28 → #29 →
 #30 / #31**, with AUD-03 / AUD-04 done as one-shot fixes before or alongside.
@@ -284,19 +279,22 @@ No GitHub issues yet. Do not pull these into v0.2.
 
 The current iteration (2026-09 audit P0 + Retrieval Quality) is done when:
 
-- [ ] **AUD-01** — `data/eval/questions.yaml` exists (≥10 questions), is
+- [x] **AUD-01** — `data/eval/questions.yaml` exists (≥10 questions), is
       committed (gitignored-exempt), and `evaluate_rag.py` runs without
       crashing.
-- [ ] **AUD-02** — one live canonical version per source family (ontology +
+- [x] **AUD-02** — one live canonical version per source family (ontology +
       OpenAPI + spec docs); `verify_source_governance.py` reports no live
       duplicates; a class/property yields one canonical chunk (+glossary).
-- [ ] **AUD-03** — reranker no longer lets entity boosts override vector rank;
+- [x] **AUD-03** — reranker no longer lets entity boosts override vector rank;
       non-entity queries keep vector order (covered by a regression test).
-- [ ] **AUD-04** — runtime defaults coherent with docs; frontend model list is
-      derived from the backend allowlist (no drift).
+- [x] **AUD-04** — runtime defaults coherent with docs; backend exposes
+      `GET /models` as the allowlist source of truth. Frontend picker still
+      hardcodes the same list (UI wiring deferred by choice).
 - [ ] `#27`–`#31` meet their issue acceptance criteria (§4), and
       `scripts/evaluate_rag.py` reports retrieval metrics (recall@5 / MRR /
       source-family accuracy) that can go red.
-- [ ] Backend tests green, frontend builds, `verify_source_governance.py` green.
+      (`#27`/`#28` done; `#29`–`#31` remain.)
+- [x] Backend tests green, `verify_source_governance.py` green.
+      (Frontend build not re-run this slice — UI unchanged.)
 
 After that, v0.2.4 (#32) is unblocked.

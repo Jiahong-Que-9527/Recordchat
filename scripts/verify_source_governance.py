@@ -5,13 +5,19 @@ from __future__ import annotations
 
 import json
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 import yaml
 
-
 REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT / "backend"))
+
+from app.core.config import Settings  # noqa: E402
+from app.rag.canonical import is_canonical_source, load_sidecar  # noqa: E402
+
 REGISTRY_PATH = REPO_ROOT / "docs" / "data_sources_registry.yaml"
+SOURCE_ROOT = REPO_ROOT / "data" / "raw"
 
 GOVERNED_ROOTS = [
     REPO_ROOT / "data" / "raw" / "one_record_docs" / "spec_development",
@@ -71,18 +77,94 @@ def iter_governed_files() -> list[Path]:
     return sorted(files)
 
 
+def _source_family(path: Path, meta: dict) -> str:
+    parts = path.parts
+    source_name = str(meta.get("source_name") or "").lower()
+    name = path.name.lower()
+    domain = str(meta.get("domain") or "")
+    doc_type = str(meta.get("document_type") or "")
+    if "api_specs" in parts and "official" in parts:
+        return "openapi"
+    if "one_record_docs" in parts and any(
+        part.startswith("spec_") or part == "spec_development" for part in parts
+    ):
+        return "spec_docs"
+    if domain in {"one_record_implementation", "ne_one"} or "ne_one" in parts:
+        return "ne_one"
+    if (
+        "api ontology" in source_name
+        or "api_ontology" in name
+        or "one_record_api_ontology" in name
+    ):
+        return "ontology_api"
+    if doc_type == "example":
+        return "example"
+    if doc_type == "ontology" or path.suffix in {".ttl", ".owl"}:
+        return "ontology_cargo"
+    return f"other:{doc_type or 'unknown'}"
+
+
+def report_live_duplicates(settings: Settings | None = None) -> list[str]:
+    """AUD-02: fail when more than one live version exists per exclusive family."""
+    settings = settings or Settings()
+    live: dict[str, set[str]] = defaultdict(set)
+    live_paths: dict[str, list[str]] = defaultdict(list)
+
+    for path in iter_governed_files():
+        meta = load_sidecar(path)
+        if not meta:
+            continue
+        if not is_canonical_source(path, meta, source_root=SOURCE_ROOT, settings=settings):
+            continue
+        family = _source_family(path, meta)
+        version = str(meta.get("version") or "unknown")
+        live[family].add(version)
+        live_paths[family].append(f"{path.relative_to(REPO_ROOT)}@{version}")
+
+    errors: list[str] = []
+    exclusive_families = ("ontology_cargo", "openapi", "ontology_api")
+    for family in exclusive_families:
+        versions = live.get(family, set())
+        if len(versions) > 1:
+            errors.append(
+                f"live duplicate versions for {family}: {sorted(versions)} "
+                f"({'; '.join(live_paths[family][:8])})"
+            )
+
+    allowed_spec = {
+        part.strip()
+        for part in settings.canonical_spec_versions.split(",")
+        if part.strip()
+    }
+    unexpected_spec = live.get("spec_docs", set()) - allowed_spec
+    if unexpected_spec:
+        errors.append(
+            f"live spec_docs versions outside canonical allowlist "
+            f"{sorted(allowed_spec)}: {sorted(unexpected_spec)}"
+        )
+    return errors
+
+
 def validate() -> list[str]:
     errors: list[str] = []
     registry = load_registry()
 
-    if "_staging" not in (REPO_ROOT / "backend" / "app" / "rag" / "loader.py").read_text(
+    loader_text = (REPO_ROOT / "backend" / "app" / "rag" / "loader.py").read_text(
         encoding="utf-8"
-    ):
-        errors.append("backend/app/rag/loader.py no longer explicitly skips _staging")
-    if "_staging" not in (
+    )
+    graph_text = (
         REPO_ROOT / "backend" / "app" / "domain" / "ontology_graph.py"
-    ).read_text(encoding="utf-8"):
+    ).read_text(encoding="utf-8")
+    if "_staging" not in loader_text:
+        errors.append("backend/app/rag/loader.py no longer explicitly skips _staging")
+    if "_staging" not in graph_text:
         errors.append("backend/app/domain/ontology_graph.py no longer explicitly skips _staging")
+    if "is_canonical_source" not in loader_text:
+        errors.append("backend/app/rag/loader.py does not apply canonical source policy")
+    if "is_canonical_source" not in graph_text:
+        errors.append(
+            "backend/app/domain/ontology_graph.py does not apply canonical source policy"
+        )
 
     for path in iter_governed_files():
         meta_path = path.with_suffix(path.suffix + ".meta.json")
@@ -120,6 +202,7 @@ def validate() -> list[str]:
                 f"not present under registry_id {registry_id}"
             )
 
+    errors.extend(report_live_duplicates())
     return errors
 
 

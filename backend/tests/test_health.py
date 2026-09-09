@@ -1,4 +1,5 @@
-from app.api.health import health
+from app.api.health import health, list_models
+from app.core.llm import ALLOWED_CHAT_MODELS
 
 
 def test_health():
@@ -11,3 +12,10 @@ def test_health():
     assert isinstance(body["embedding_api_key_configured"], bool)
     assert body["qdrant_mode"] in {"in_memory", "remote"}
     assert body["qdrant_collection"]
+
+
+def test_list_models_matches_backend_allowlist():
+    body = list_models().model_dump()
+    assert set(body["models"]) == ALLOWED_CHAT_MODELS
+    assert body["default"] in ALLOWED_CHAT_MODELS
+    assert body["models"] == sorted(body["models"])
