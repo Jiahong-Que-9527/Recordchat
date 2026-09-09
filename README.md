@@ -43,7 +43,7 @@ starter questions; the main area offers the same prompts as one-click tiles so
 you can begin without typing.
 
 <div align="center">
-  <img src="assets/screenshot-welcome.png" alt="RecordChat welcome screen with suggested ONE Record prompts" width="80%">
+  <img src="assets/welcome_pic.png" alt="RecordChat welcome screen with suggested ONE Record prompts" width="80%">
 </div>
 
 ### In the chat
