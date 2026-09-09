@@ -8,15 +8,16 @@ backend retrieves source-grounded context from Qdrant, assembles a prompt, calls
 a (provider-abstracted) LLM, and enriches the answer with domain tools
 (relationship map + JSON-LD templates).
 
-Current project priority:
+Current project priority (2026-09-09):
 
-- `v0.1` through `v0.2.3` are delivered
-- the next slice is **2026-09 audit P0 (AUD-01…AUD-04) folded into Retrieval
-  Quality**: version the eval set, pin canonical source versions, fix reranker
-  weighting, reconcile config/model defaults — then gold-chunk eval, hybrid
-  retrieval, follow-up rewrite, citation filtering
-- workflow / RecordForge / ALH follow that order — see
-  [project_plan.md](project_plan.md)
+- `v0.1` through `v0.2.4` are delivered, including Retrieval Quality and audit
+  P0/P1 (AUD-01…AUD-07)
+- retrieval is hybrid (dense + BM25-lite RRF) with canonical-version filtering,
+  follow-up rewrite, and citation filtering
+- synthetic intents return structured `workflow_result` via `structured_output`
+  without calling RAG
+- **next**: RecordForge live HTTP (`#13`) + frontend workflow rendering (`#14`)
+  — see [project_plan.md](project_plan.md)
 
 ```
 ┌──────────────────────────── Frontend (Next.js) ────────────────────────────┐
@@ -25,22 +26,23 @@ Current project priority:
                                     │ POST /chat  (lib/api.ts)
 ┌───────────────────────────────────▼─────────────────────────────────────────┐
 │                              Backend (FastAPI)                                │
-│  api/{health,chat,ingest}  ── thin handlers, no business logic                │
+│  api/{health,chat,ingest,models} ── thin handlers, no business logic          │
 │                                                                               │
 │  rag/pipeline.answer()  ── the only orchestrator                              │
 │    1. classify_query(q)            -> QueryType                               │
-│    2. retriever.search(q, top_k)   -> Chunk[]   (Qdrant)                       │
-│    3. rerank(q, chunks)            -> Chunk[]   (ontology boost in v0.2.1)     │
-│    4. prompt.build_user_prompt()   -> str                                     │
-│    5. llm.complete(system, user)   -> answer                                  │
-│    6. domain enrich:                                                          │
-│         jsonld_generator (if jsonld_generation)                               │
-│         one_record_schema (related_concepts)                                  │
-│    7. assemble ChatResponse                                                   │
+│    1b. synthetic? -> connectors.orchestration (skip RAG) -> workflow_result   │
+│    2. rewrite_query_for_retrieval(q, history)                                 │
+│    3. retriever.search(q, top_k, filter) -> Chunk[]  (dense + lexical RRF)    │
+│    4. rerank(q, chunks)            -> Chunk[]   (vector-dominant boosts)      │
+│    5. prompt.build_user_prompt()   -> str                                     │
+│    6. llm.complete(system, user)   -> answer                                  │
+│    7. filter_cited_chunks(answer, chunks) -> sources                          │
+│    8. domain enrich: jsonld_generator / related_concepts                      │
+│    9. request_log (AUD-07) + assemble ChatResponse                            │
 └───────┬───────────────────────────┬───────────────────────────┬──────────────┘
         │                           │                           │
    core/llm.py                core/embeddings.py          rag/retriever.py
-   (LLMProvider)              (EmbeddingProvider)          (Retriever -> Qdrant)
+   (LLMProvider)              (EmbeddingProvider)     (hybrid Retriever/Qdrant)
 ```
 
 ## Ingestion pipeline

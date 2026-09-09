@@ -6,6 +6,8 @@ curated map when the ontology graph is unavailable.
 
 from __future__ import annotations
 
+import re
+
 from app.domain.ontology_graph import get_ontology_graph
 
 ONE_RECORD_RELATIONSHIPS: dict[str, list[str]] = {
@@ -53,10 +55,18 @@ def _entity_vocabulary() -> list[str]:
 
 
 def detect_entities(text: str) -> list[str]:
-    """Return known ONE Record entities mentioned in the text (case-insensitive)."""
+    """Return known ONE Record entities mentioned in the text (case-insensitive).
+
+    Uses token-boundary matching so short names like ``Item`` do not match inside
+    unrelated words (e.g. ``shipment``) — #30.
+    """
     low = text.lower()
-    found = []
+    found: list[str] = []
     for ent in _entity_vocabulary():
-        if ent.lower() in low and ent not in found:
+        el = ent.lower()
+        # Allow optional separators inside multi-word labels; require edges so
+        # "item" does not match inside "shipment".
+        pattern = rf"(?<![a-z0-9]){re.escape(el)}(?![a-z0-9])"
+        if re.search(pattern, low) and ent not in found:
             found.append(ent)
     return found

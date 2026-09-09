@@ -12,8 +12,8 @@ backend → Qdrant. It retrieves from reviewed public sources and answers with
 citations; it does **not** fine-tune on third-party corpora and is **not** an
 official IATA product.
 
-Later ecosystem (deferred, do not build yet): RecordForge (synthetic data
-generator), ONE Record Server (data exchange), AviationLakehouse (analytics).
+Later ecosystem: RecordForge HTTP client is the **next** slice (`#13` `#14`);
+ONE Record Server and AviationLakehouse stay deferred after that.
 
 ## 2. Canonical documents (read order matters)
 
@@ -91,53 +91,77 @@ uv run --project backend python scripts/evaluate_rag.py
 8. **Every phase must leave the project runnable and tested.** No credentials
    may be required to merely boot (graceful degradation instead).
 
-## 5. Current state (2026-09-09)
+## 5. Current state (2026-09-09 EOD)
 
-- Delivered: v0.1 baseline, Data Foundation (core pack), v0.2.1 ontology-aware
-  retrieval, v0.2.2 NE:ONE Q&A, v0.2.3 streaming frontend, audit P0
-  (AUD-01…AUD-04), `#27` canonical pin, `#28` gold eval metrics.
-- Partial: v0.2.4 workflow (Connector ABC + synthetic routing exist; `#32`
-  remains). Retrieval Quality `#29`–`#31` still open.
-- **Current slice: finish Retrieval Quality (`#29`–`#31`).** Do not start
-  RecordForge / ALH until retrieval is clean and measurable.
-- Backend tests: 39 passing (`uv run pytest -q`).
+- Delivered: v0.1 baseline, Data Foundation (core pack), v0.2.1–v0.2.4,
+  audit P0/P1 (AUD-01…AUD-07), Retrieval Quality `#27`–`#31`.
+- Synthetic generation already returns a structured `workflow_result` via
+  `structured_output` (plan / blocked / artifacts). **Live HTTP to RecordForge
+  is not implemented yet** — that is `#13`.
+- **Current next:** v0.2.5 RecordForge HTTP client (`#13`) + frontend workflow
+  rendering (`#14`). Do **not** start ALH (`#7`–`#10`) or v0.3 platform work
+  until RecordForge is optionally callable and still degrades when unconfigured.
+- Backend tests: 56 passing (`uv run pytest -q`).
+
+### What landed in the 2026-09-09 slice (so agents do not redo it)
+
+| Area | Key modules |
+|---|---|
+| Canonical versions | `rag/canonical.py`, `loader.py`, `ontology_graph.py`, `verify_source_governance.py` |
+| Reranker | `rag/reranker.py` (vector-dominant boosts) |
+| Models API | `GET /models` in `api/health.py` |
+| Eval | `data/eval/questions.yaml`, `rag/eval_metrics.py`, `scripts/evaluate_rag.py` |
+| Hybrid retrieval | `rag/lexical.py`, `rag/retriever.py`, query-type filters in `pipeline.py` |
+| Follow-ups | `ChatRequest.history`, `rewrite_query_for_retrieval`, BFF `frontend/app/api/chat/route.ts` |
+| Citations | `filter_cited_chunks` in `pipeline.py` |
+| Workflow `#32` | `connectors/workflow.py`, `connectors/recordforge.py`, `connectors/orchestration.py` |
+| Request log | `core/request_log.py` (`RECORDCHAT_REQUEST_LOG`) |
 
 ## 6. Next work (in order)
 
-1. **Retrieval Quality remainder:** `#29` hybrid + filters → `#30` follow-up
-   rewrite (AUD-06) → `#31` citation filter (AUD-05). AUD-07 request logging
-   before expert interviews.
-2. **v0.2.4 workflow** `#32` → **v0.2.5 RecordForge** `#13` `#14` →
-   **v0.2.6 ALH narrative** `#7`–`#10`.
+1. **v0.2.5 RecordForge** — `#13` (HTTP client behind `RecordForgeConnector`,
+   graceful degrade when URL missing / remote fails) then `#14` (frontend
+   render of `workflow_result`, not only the JSON-LD canvas path).
+2. **v0.2.6 ALH narrative** `#7`–`#10` (docs / mapping only).
 3. **v0.3 platform** (auth, sessions, source versioning, tracing, eval
    dashboard) — sketch only, not scheduled.
-4. Optional UI follow-up: wire ModelPicker to `GET /models` (AUD-04 remainder).
+4. Optional / P2 (do not block RecordForge):
+   - wire ModelPicker to `GET /models` (AUD-04 remainder)
+   - AUD-08 shared `_is_ontology_query` helper
+   - AUD-09 pin Qdrant image
+   - AUD-10 CI-safe fake-embedding retrieval fixture
 
-## 7. Definition of done for the current iteration
+## 7. Definition of done — closed iteration
 
-Retrieval Quality + audit P0 are done when:
+Retrieval Quality + audit P0/P1 + workflow `#32` (2026-09-09) are **done**:
 
-- [x] `data/eval/questions.yaml` exists (≥10 questions), is committed, and
-      `evaluate_rag.py` runs without crashing.
-- [x] A given class/property has **one** live canonical chunk (plus glossary),
-      not 4–6 near-duplicates — checkable via `verify_source_governance.py` or
-      an ingest-time duplicate report.
-- [x] Retrieval metrics reported by `evaluate_rag.py` can go red (recall@5 /
-      MRR / source-family accuracy, not just "answer non-empty").
-- [x] Non-entity queries keep vector-ranked order; entity boost never drags an
-      unrelated ontology chunk to position 1.
-- [x] Config defaults are coherent with the docs; backend `GET /models` is the
-      allowlist source of truth (frontend wiring still optional).
-- [ ] `#27`–`#31` acceptance criteria from `docs/project_plan.md` §4 are met
-      (`#27`/`#28` done; `#29`–`#31` remain).
-- [x] Backend tests green, `verify_source_governance.py` green.
+- [x] Versioned eval set + gold metrics that can go red
+- [x] One live canonical version per source family
+- [x] Vector-dominant reranker + hybrid retrieval + query-type filters
+- [x] Follow-up entity carry-over + citation filter
+- [x] Structured `workflow_result` for synthetic intents (no live HTTP yet)
+- [x] Lightweight JSONL request diagnostics (AUD-07)
+- [x] Backend tests green, `verify_source_governance.py` green
 
-## 8. How to verify your work
+## 8. Definition of done — next iteration (RecordForge `#13` `#14`)
+
+- [ ] `RecordForgeConnector.execute_synthetic_generation` performs a real HTTP
+      call when `RECORDFORGE_URL` is set
+- [ ] Remote failure → `availability=unavailable` + structured workflow result
+      (never crash boot or `/chat`)
+- [ ] Unconfigured deployments keep today's blocked `workflow_result` behavior
+- [ ] Frontend can present workflow status / steps / artifacts without treating
+      them as JSON-LD
+- [ ] Backend tests cover ready / unconfigured / unavailable; frontend build green
+
+## 9. How to verify your work
 
 - Backend logic: `uv run pytest -q` from `backend/`.
 - Frontend: `npm run build` from `frontend/` (CI does the same).
 - Data governance: `uv run --project backend python scripts/verify_source_governance.py`.
-- Retrieval: `python scripts/evaluate_rag.py` (needs API keys; local eval can be
-  gated on `data/eval/questions.yaml` existing).
-- Full stack: `make up && make ingest`, then ask 2–3 questions from
-  `docs/demo_cheat_sheet.md` or `docs/demo_script.md` and confirm cited sources.
+- Retrieval: `uv run --project backend python scripts/evaluate_rag.py` (needs API keys).
+- Request log: set `RECORDCHAT_REQUEST_LOG=data/logs/requests.jsonl` (under
+  gitignored `data/`) or leave default `stdout`.
+- Full stack: `make up && make ingest`, then prompts from
+  `docs/demo_cheat_sheet.md` / `docs/demo_script.md` (include the synthetic
+  generation workflow prompt).

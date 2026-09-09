@@ -1,16 +1,14 @@
 # RecordChat Project Plan
 
 **Status date:** 2026-09-09
-**Current delivered line:** v0.2.3 + audit P0 (AUD-01…04) + `#27` / `#28` baseline
-**Current next work:** finish Retrieval Quality (`#29`–`#31`), then workflow `#32`.
+**Current delivered line:** v0.2.4 workflow + Retrieval Quality + audit P0/P1
+**Current next work:** v0.2.5 RecordForge HTTP client (`#13` `#14`).
 
-> **2026-09 addendum.** This plan is the single source of truth for where we are
-> and what is next. A code review on 2026-09-08 surfaced concrete findings
-> (missing versioned eval set, un-pinned ontology/OpenAPI duplicates, a reranker
-> whose entity boosts override vector rank, incoherent config/model defaults,
-> and no request diagnostics). They are captured as **AUD-01…AUD-10** in §4.7
-> below and are the immediate P0/P1 work items. Agents: read §4.7 before writing
-> code.
+> **Agent handoff (2026-09-09 EOD).** Audit P0/P1 (AUD-01…AUD-07), Retrieval
+> Quality (`#27`–`#31`), and workflow `#32` are **done**. Do not re-open those
+> slices unless a regression appears. **Next work is v0.2.5 RecordForge**
+> (`#13` HTTP client, `#14` frontend workflow rendering). AUD-08…AUD-10 remain
+> P2. Read §5 and §8 before writing code.
 
 This is the **current** project plan. Use it when documents disagree.
 
@@ -55,8 +53,8 @@ AviationLakehouse = analytical backend (Bronze / Silver / Gold, deferred)
 | v0.2.2 NE:ONE implementation Q&A | **done** (baseline) | `#24` `#25` |
 | v0.2.3 streaming frontend | **done** | milestone closed; `#15`–`#20` |
 | **2026-09 audit P0** (AUD-01…04) | **done** (frontend `/models` wiring deferred) | see §4.7 |
-| **Retrieval Quality** | **in progress** (`#27`/`#28` done; `#29`–`#31` next) | `#27`–`#31` |
-| v0.2.4 workflow orchestration | **partial** (`#11` `#12` done) | remainder `#32`; blocked on retrieval quality |
+| **Retrieval Quality** | **done** (`#27`–`#31`) | `#27`–`#31` |
+| v0.2.4 workflow orchestration | **done** (`#11` `#12` `#32`) | structured workflow_result + connector path |
 | v0.2.5 RecordForge | **not started** | `#13` `#14` |
 | v0.2.6 AviationLakehouse narrative | **deferred** | `#7`–`#10` |
 | v0.3 platform | **sketch only** | no issues yet |
@@ -73,18 +71,14 @@ v0.1  ──► Data Foundation  ──► v0.2.1  ──► v0.2.2  ──► v
                               (AUD-01…AUD-04)
                                                │
                                                ▼
-                                    Retrieval Quality
-                                    (#27 ontology pin ✅
-                                     #28 gold eval ✅
-                                     #29 hybrid + filters  ◄── next
-                                     #30 history / rewrite
-                                     #31 citation filter)
+                                    Retrieval Quality ✅
+                                    (#27–#31)
                                                │
                                                ▼
-                                    finish v0.2.4 (#32)
+                                    finish v0.2.4 (#32) ✅
                                                │
                                                ▼
-                                    v0.2.5 RecordForge (#13 #14)
+                                    v0.2.5 RecordForge (#13 #14)  ◄── next
                                                │
                                                ▼
                                     v0.2.6 ALH narrative (#7–#10)
@@ -94,26 +88,25 @@ v0.1  ──► Data Foundation  ──► v0.2.1  ──► v0.2.2  ──► v
                                     source versioning, tracing)
 ```
 
-AUD-01…AUD-04 and `#27`/`#28` are landed. Remaining in this slice: `#29`–`#31`
-plus P1 audit items AUD-05…AUD-07. AUD-08…AUD-10 stay P2.
+AUD-01…AUD-07 and `#27`–`#32` are landed. Remaining P2 audit items: AUD-08…AUD-10.
+Next product slice: RecordForge HTTP client (`#13` `#14`).
 
-Do not start RecordForge or ALH while retrieval still fails open (duplicate
-ontology chunks, keyword-only eval, no hybrid, no follow-up context).
+Retrieval Quality is no longer a blocker for RecordForge. Keep ALH (`#7`–`#10`)
+deferred until the RecordForge path is optionally callable and still degrades
+when unconfigured.
 
 ---
 
-## 4. Retrieval Quality (the missing slice)
+## 4. Retrieval Quality (done — 2026-09-09)
 
-Ontology-aware rerank already exists. That is not the same as “retrieval is
-good enough.” The live corpus currently indexes overlapping ontology copies
-(2023-12, 2025-07, working draft, spec bundles, NE:ONE copies, community
-Checks TTL). Duplication is **broader than ontology**: `api_specs/official/`
-holds 3 OpenAPI versions (2023-12 / 2024-12 / working draft) and
-`one_record_docs/` nests `spec_2023_12/` beside `spec_2025_07/` and a
-`spec_development/`. Eval treats “any source returned” as a hit. Search is
-dense-only with a pool of at most 20. The chat adapter sends only the latest
-user sentence. `scripts/evaluate_rag.py` also crashes today because
-`data/eval/questions.yaml` is missing and never versioned.
+**Status: done.** The problems below were the pre-fix baseline; they are
+recorded so agents understand *why* the slice existed. Do not treat this
+section as open work.
+
+~~Ontology-aware rerank already exists. That is not the same as “retrieval is
+good enough.”~~ Historical issue list (fixed): overlapping ontology /
+OpenAPI / spec versions; keyword-only eval; dense-only search; no follow-up
+entity carry-over; missing versioned `data/eval/questions.yaml`.
 
 ### Goal
 
@@ -135,10 +128,18 @@ first steps of this goal.
 
 - [x] A given class/property has one live canonical chunk (plus glossary), not 4–6 near-duplicates
 - [x] Eval can fail because the wrong source family or ontology version ranked first
-- [ ] NE:ONE setup/config questions cite docs/config, not bulk example JSON
-- [ ] “What is a Piece?” → “how does it relate to Shipment?” still retrieves both entities
+- [x] NE:ONE setup/config questions cite docs/config, not bulk example JSON
+- [x] “What is a Piece?” → “how does it relate to Shipment?” still retrieves both entities
 - [x] `data/eval/questions.yaml` exists, is committed, and `evaluate_rag.py` loads it (AUD-01)
 - [x] `/chat` field names stay stable
+
+### 4.8 Agent notes for the closed slice
+
+- Canonical allowlists live in `Settings` (`canonical_*_versions`) and
+  `rag/canonical.py`.
+- Hybrid search: dense Qdrant + in-process BM25 (`rag/lexical.py`) fused with RRF.
+- Synthetic intents **skip RAG** and call `connectors.orchestration.run_synthetic_data_workflow`.
+- Request diagnostics: `RECORDCHAT_REQUEST_LOG` → stdout (default) or a JSONL path.
 
 Suggested order inside the slice: **AUD-01 → #27 (with AUD-02) → #28 → #29 →
 #30 / #31**, with AUD-03 / AUD-04 done as one-shot fixes before or alongside.
@@ -159,7 +160,7 @@ some of these invalidate assumptions in older docs.**
 | AUD-04 | **P0** | Default-drift between docs and runtime: `SPEC.md` §8 / README still present `qwen`/`qwen-plus` as the default provider/model, while `config.py`, `.env.example`, and `docker-compose.yml` all default to `openai` + `kimi-k3` (flash). The frontend `CHAT_MODELS` allowlist and `ModelPicker` labels do match the backend `llm.py` Literal (flash + pro), but the list is hardcoded in three places, so any backend change silently breaks the picker. | Reconcile the docs with the runtime defaults (or vice versa); expose the model allowlist from the backend (e.g. `GET /models`) so the frontend picker derives from the same source and cannot drift. |
 | AUD-05 | P1 | `sources` returns the full retrieved candidate list, not just chunks that actually support the answer (citation noise; fails “prefer no citation over a wrong citation”). | `#31`: prompt requires per-source references; backend filters `sources` to cited chunks. |
 | AUD-06 | P1 | Multi-turn context is lost: frontend `useChat` has history but only sends `model`; backend retrieves on the bare follow-up sentence (“how does it relate to Shipment?” loses “Piece”). | `#30`: send `conversation_id` + history from frontend; backend does query rewrite / entity carry-over before retrieval (keep it inside `pipeline.py`). |
-| AUD-07 | P1 | No diagnostic evidence capture: `answer()` logs nothing structured (query, query_type, retrieved chunks/rank, latency, errors). Blocks §4.6 expert-interview evidence and `#31` debugging. | Add a lightweight JSONL request log (stdout or `data/logs/`, gitignored) recording query, type, ranked chunk ids + scores, latency, model/config. Do **not** add heavy tracing yet (that is v0.3). |
+| AUD-07 | P1 ✅ | No diagnostic evidence capture: `answer()` logs nothing structured (query, query_type, retrieved chunks/rank, latency, errors). Blocks §4.6 expert-interview evidence and `#31` debugging. | **Done:** `app/core/request_log.py` + `RECORDCHAT_REQUEST_LOG` (stdout / file / off). |
 | AUD-08 | P2 | `answer()` and `answer_stream()` duplicate ~60% of orchestration; `_is_ontology_query()` is defined twice (pipeline + reranker) with **different** rule sets (reranker copy lacks the Chinese markers). | Extract shared helpers into one module; single source for `_is_ontology_query`. Refactor only — no behavior change beyond AUD-03. |
 | AUD-09 | P2 | Infra pinning: `docker-compose.yml` uses `qdrant:latest`; Qdrant unauthenticated (acceptable local, must be resolved before any public deployment); backend default `llm_model` is incoherent (see AUD-04). | Pin qdrant image version; document auth posture; revisit before any hosted deployment. |
 | AUD-10 | P2 | Eval is not in CI (needs real API keys). Risk: retrieval regressions (e.g. `#27`/`#29`) land unnoticed. | Add a **CI-safe retrieval regression test** using a fake embedding provider over a tiny fixture corpus with gold chunks — asserts recall and canonical-version ranking without network. |
@@ -226,17 +227,31 @@ accuracy claim.
 
 ## 5. Remaining v0.2
 
-### v0.2.4 Workflow — remainder
+### v0.2.4 Workflow — done
 
 [#32](https://github.com/Jiahong-Que-9527/Recordchat/issues/32): structured
-workflow results and an execution path behind the Connector ABC. `#11` / `#12`
-already provide the seam and synthetic-generation routing.
+`workflow_result` in `structured_output`, RecordForge connector execution path
+(plan + request artifact), decoupled from RAG retrieval. Live HTTP is `#13`.
 
-### v0.2.5 RecordForge
+### v0.2.5 RecordForge — **NEXT**
 
 [#13](https://github.com/Jiahong-Que-9527/Recordchat/issues/13),
-[#14](https://github.com/Jiahong-Que-9527/Recordchat/issues/14). Optional HTTP
-connector; unconfigured deployments must keep degrading as they do today.
+[#14](https://github.com/Jiahong-Que-9527/Recordchat/issues/14).
+
+Starting point already in tree:
+
+- `RecordForgeConnector` + `WorkflowResult` (`kind=workflow_result`)
+- unconfigured → `status=blocked`; configured → `status=planned` + request artifact
+- `/chat` puts the result in `structured_output`
+
+Still to build:
+
+- `#13`: real HTTP execute/submit when `RECORDFORGE_URL` is set; map transport
+  errors to `unavailable` without crashing
+- `#14`: frontend presentation for workflow status/steps/artifacts (today the
+  canvas path is JSON-LD-oriented)
+
+Unconfigured deployments must keep today's blocked structured response.
 
 ### v0.2.6 AviationLakehouse
 
@@ -290,11 +305,13 @@ The current iteration (2026-09 audit P0 + Retrieval Quality) is done when:
 - [x] **AUD-04** — runtime defaults coherent with docs; backend exposes
       `GET /models` as the allowlist source of truth. Frontend picker still
       hardcodes the same list (UI wiring deferred by choice).
-- [ ] `#27`–`#31` meet their issue acceptance criteria (§4), and
+- [x] `#27`–`#31` meet their issue acceptance criteria (§4), and
       `scripts/evaluate_rag.py` reports retrieval metrics (recall@5 / MRR /
       source-family accuracy) that can go red.
-      (`#27`/`#28` done; `#29`–`#31` remain.)
 - [x] Backend tests green, `verify_source_governance.py` green.
-      (Frontend build not re-run this slice — UI unchanged.)
+      (Visual UI unchanged; BFF `app/api/chat/route.ts` now forwards history.)
+- [x] **#32** — structured `workflow_result` + connector execution path
+      (live HTTP deferred to `#13`).
+- [x] **AUD-07** — lightweight request JSONL / stdout diagnostics.
 
-After that, v0.2.4 (#32) is unblocked.
+**This iteration is closed.** Next DoD is RecordForge `#13` `#14` (see AGENTS.md §8).

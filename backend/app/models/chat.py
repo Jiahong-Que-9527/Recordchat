@@ -7,7 +7,7 @@ Do not rename fields without updating the SPEC and the frontend.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -54,10 +54,19 @@ class ModelsResponse(BaseModel):
 
 
 # ---- /chat ----
+class ChatHistoryMessage(BaseModel):
+    """Prior turn for follow-up rewrite (#30 / AUD-06). Additive; optional."""
+
+    role: Literal["user", "assistant"]
+    content: str
+
+
 class ChatRequest(BaseModel):
     message: str
     conversation_id: str | None = None
     model: ChatModel | None = None
+    # Optional recent turns (excluding the current message). Backward compatible.
+    history: list[ChatHistoryMessage] | None = None
 
 
 class Source(BaseModel):

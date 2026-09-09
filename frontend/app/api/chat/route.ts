@@ -29,6 +29,14 @@ function getBackendBase(request: NextRequest): string {
   return `${protocol}://${host}:8000`;
 }
 
+function messageText(message: IncomingMessage): string {
+  return (message.parts ?? [])
+    .filter((part) => part.type === "text" && typeof part.text === "string")
+    .map((part) => part.text?.trim() ?? "")
+    .filter(Boolean)
+    .join("\n");
+}
+
 function extractLatestUserMessage(messages: IncomingMessage[]): string {
   for (let index = messages.length - 1; index >= 0; index -= 1) {
     const message = messages[index];
@@ -36,18 +44,45 @@ function extractLatestUserMessage(messages: IncomingMessage[]): string {
       continue;
     }
 
-    const text = (message.parts ?? [])
-      .filter((part) => part.type === "text" && typeof part.text === "string")
-      .map((part) => part.text?.trim() ?? "")
-      .filter(Boolean)
-      .join("\n");
-
+    const text = messageText(message);
     if (text) {
       return text;
     }
   }
 
   return "";
+}
+
+/** Prior turns for follow-up rewrite (#30). Excludes the current user message. */
+function extractHistory(
+  messages: IncomingMessage[],
+  currentMessage: string,
+  limit = 6
+): Array<{ role: "user" | "assistant"; content: string }> {
+  const history: Array<{ role: "user" | "assistant"; content: string }> = [];
+  let skippedCurrent = false;
+
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+    const role = message?.role;
+    if (role !== "user" && role !== "assistant") {
+      continue;
+    }
+    const text = messageText(message);
+    if (!text) {
+      continue;
+    }
+    if (!skippedCurrent && role === "user" && text === currentMessage) {
+      skippedCurrent = true;
+      continue;
+    }
+    history.push({ role, content: text });
+    if (history.length >= limit) {
+      break;
+    }
+  }
+
+  return history.reverse();
 }
 
 function parseSseEvent(raw: string): {
@@ -81,9 +116,11 @@ function sseChunk(payload: Record<string, unknown> | "[DONE]"): string {
 
 export async function POST(request: NextRequest): Promise<Response> {
   const payload = await request.json();
-  const message = extractLatestUserMessage(
-    Array.isArray(payload?.messages) ? payload.messages : []
-  );
+  const incomingMessages = Array.isArray(payload?.messages)
+    ? (payload.messages as IncomingMessage[])
+    : [];
+  const message = extractLatestUserMessage(incomingMessages);
+  const history = extractHistory(incomingMessages, message);
   const model =
     typeof payload?.model === "string" && ALLOWED_MODELS.has(payload.model)
       ? payload.model
@@ -103,7 +140,11 @@ export async function POST(request: NextRequest): Promise<Response> {
   const upstream = await fetch(`${backendBase}/chat/stream`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ message, model }),
+    body: JSON.stringify({
+      message,
+      model,
+      ...(history.length > 0 ? { history } : {}),
+    }),
     cache: "no-store",
   });
 

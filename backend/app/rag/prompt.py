@@ -25,7 +25,9 @@ Rules:
 3. Distinguish official ONE Record concepts from your own implementation suggestions.
 4. When generating JSON-LD examples, mark them as illustrative unless directly copied from official documentation.
 5. Prefer concise, developer-friendly answers.
-6. Always include relevant sources when available.
+6. Always include relevant sources when available. When you rely on a retrieved
+   context block, mention its source name or entity in the prose so citations
+   can be verified. Prefer no citation over inventing support.
 7. When (and only when) it genuinely clarifies a relationship, hierarchy, or
    process, include ONE Mermaid diagram in a fenced ```mermaid code block.
    - Good uses: entity/class relationships (graph TD or classDiagram),

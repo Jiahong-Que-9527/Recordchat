@@ -24,11 +24,11 @@ class EmptyLLMProvider(LLMProvider):
 
 class FakeStreamingLLMProvider(LLMProvider):
     def complete(self, *, system: str, user: str) -> str:
-        return "Streamed answer"
+        return "Streamed answer about Piece in ONE Record."
 
     def complete_stream(self, *, system: str, user: str):
         yield "Streamed "
-        yield "answer"
+        yield "answer about Piece in ONE Record."
 
 
 def test_classify_query():
@@ -88,8 +88,10 @@ def test_answer_stream_emits_tokens_then_metadata(ingested_retriever):
     )
     assert [event["event"] for event in events[:-1]] == ["token", "token"]
     assert events[-1]["event"] == "metadata"
-    assert events[-1]["data"]["answer"] == "Streamed answer"
-    assert events[-1]["data"]["sources"]
+    assert events[-1]["data"]["answer"] == "Streamed answer about Piece in ONE Record."
+    # Citation filter (#31) may drop weak stub overlaps; sources are optional
+    # when the answer does not clearly lean on retrieved chunks.
+    assert "sources" in events[-1]["data"]
 
 
 def test_synthetic_generation_query_degrades_gracefully(ingested_retriever):
@@ -99,4 +101,10 @@ def test_synthetic_generation_query_degrades_gracefully(ingested_retriever):
         llm=FakeLLMProvider(),
     )
     assert resp.query_type == QueryType.synthetic_data_generation
-    assert "RecordForge connector is not configured" in resp.answer
+    assert resp.structured_output is not None
+    assert resp.structured_output["kind"] == "workflow_result"
+    assert resp.structured_output["status"] == "blocked"
+    assert resp.structured_output["connector"]["availability"] == "unconfigured"
+    assert "unconfigured" in resp.answer.lower() or "not configured" in resp.answer.lower()
+    # Workflow path must not depend on retrieved sources.
+    assert resp.sources == []

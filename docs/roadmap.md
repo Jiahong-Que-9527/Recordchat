@@ -3,32 +3,32 @@
 The **current** plan (status, next slice, issue map) lives in
 [project_plan.md](project_plan.md). This file is the milestone narrative.
 
-## Status
+## Status (2026-09-09)
 
 - **v0.1**: complete and demoable
 - **Data Foundation**: core official + NE:ONE pack is in final folders;
   `_staging` is excluded from ingest. Leftover: `#23` (manual overview/PDF pack)
-- **v0.2.1 ontology-aware retrieval**: done (GitHub milestone closed)
+- **v0.2.1 ontology-aware retrieval**: done
 - **v0.2.2 NE:ONE implementation knowledge**: done at a useful baseline
-- **v0.2.3 streaming frontend**: done (GitHub milestone closed)
-- **2026-09 audit**: the P0 findings (AUD-01 eval set, AUD-02 canonical
-  versions, AUD-03 reranker weighting, AUD-04 config/model) are now the first
-  work items — details in [project_plan.md §4.7](project_plan.md#47-2026-09-audit-findings-aud-01aud-10)
-- **next priority**: **Retrieval Quality** (`#27`–`#31`), starting with the
-  audit P0 fixes — pin one version per source family, gold-chunk eval, hybrid +
-  filters, follow-up rewrite, citation filter
-- **after that**: finish v0.2.4 workflow (`#32`), then RecordForge (`#13` `#14`)
+- **v0.2.3 streaming frontend**: done
+- **2026-09 audit P0/P1** (AUD-01…AUD-07): done — see
+  [project_plan.md §4.7](project_plan.md#47-2026-09-audit-findings-aud-01aud-10)
+- **Retrieval Quality** (`#27`–`#31`): done
+- **v0.2.4 workflow** (`#11` `#12` `#32`): done (structured `workflow_result`;
+  live RecordForge HTTP still open)
+- **next priority**: **v0.2.5 RecordForge** (`#13` HTTP client, `#14` frontend
+  workflow rendering)
+- **after that**: ALH narrative (`#7`–`#10`), then v0.3 platform sketch
 
 Source acquisition and import plan:
 [docs/data_source_plan.md](data_source_plan.md)
 
 GitHub tracking:
 
-- Retrieval Quality (current): `#27`–`#31`
-- workflow remainder: `#32`
-- RecordForge: `#13` `#14`
+- RecordForge (current): `#13` `#14`
 - ALH (deferred): `#7`–`#10`
 - data leftover: `#23`
+- closed retrieval / workflow / audit foundations: `#27`–`#32` (+ AUD-01…07)
 - closed foundation / ontology / frontend: `#1`–`#6`, `#11` `#12`, `#15`–`#22`, `#24`–`#26`
 
 ## v0.1 — ONE Record RAG assistant (completed baseline)
@@ -65,9 +65,9 @@ Execution details:
 
 Current remaining work:
 
-- `#23` manual overview / PDF / community captures (not a Retrieval Quality blocker)
-- do **not** ingest additional community HTML/PDF until ontology de-duplication
-  (`#27`) and gold-chunk eval (`#28`) exist — more files would amplify duplicates
+- `#23` manual overview / PDF / community captures (optional; not a RecordForge blocker)
+- additional community HTML/PDF ingest still needs the canonical-version policy
+  (`rag/canonical.py`) — do not bypass it
 
 Canonical data-foundation conventions:
 

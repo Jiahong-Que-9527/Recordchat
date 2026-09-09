@@ -9,22 +9,64 @@ from __future__ import annotations
 import re
 from collections.abc import Iterator
 
+from app.connectors.orchestration import run_synthetic_data_workflow
 from app.core.config import get_settings
 from app.core.llm import LLMProvider, get_llm_provider
 from app.core.logging import get_logger
-from app.connectors.base import ConnectorAvailability
+from app.core.request_log import RequestTimer, log_chat_request
 from app.domain import jsonld_generator, one_record_schema
-from app.models.chat import ChatResponse, QueryType, Source
+from app.models.chat import ChatHistoryMessage, ChatResponse, QueryType, Source
+from app.models.source import Chunk
 from app.rag import prompt as prompt_mod
+from app.rag.lexical import tokenize
 from app.rag.reranker import rerank
-from app.rag.retriever import Retriever, get_retriever
+from app.rag.retriever import Retriever, SearchFilter, get_retriever
 
 logger = get_logger(__name__)
 
-# Fetch extra candidates for ontology-aware reranking (ADR 0002).
-_CANDIDATE_POOL_MULTIPLIER = 3
-_MAX_CANDIDATE_POOL = 20
+# Fetch extra candidates for ontology-aware / hybrid reranking (ADR 0002, #29).
+_CANDIDATE_POOL_MULTIPLIER = 8
+_MAX_CANDIDATE_POOL = 60
 _ONTOLOGY_CANDIDATE_LIMIT = 12
+
+_EXAMPLE_REQUEST_MARKERS = (
+    "example",
+    "sample",
+    "json-ld",
+    "jsonld",
+    "payload",
+    "示例",
+    "样例",
+    "例子",
+)
+
+
+def _wants_examples(query: str) -> bool:
+    q = query.lower()
+    return any(marker in q or marker in query for marker in _EXAMPLE_REQUEST_MARKERS)
+
+
+def search_filter_for_query(query: str, query_type: QueryType) -> SearchFilter | None:
+    """Query-type metadata filters for hybrid retrieval (#29)."""
+    if query_type == QueryType.ontology_question:
+        return SearchFilter(chunk_types=("class_definition", "property_definition", "concept"))
+    if query_type == QueryType.api_question:
+        return SearchFilter(chunk_types=("api", "concept", "general"))
+    if query_type == QueryType.implementation_question:
+        # Prefer docs/config; exclude bulk example JSON unless explicitly requested.
+        if _wants_examples(query):
+            return None
+        return SearchFilter(exclude_chunk_types=("example",))
+    if query_type == QueryType.jsonld_generation:
+        return None
+    if not _wants_examples(query) and query_type in {
+        QueryType.concept_explanation,
+        QueryType.relationship_question,
+        QueryType.general_question,
+    }:
+        # Soft preference: keep examples out of the default concept pool.
+        return SearchFilter(exclude_chunk_types=("example",))
+    return None
 
 
 def _is_ontology_query(query: str) -> bool:
@@ -258,51 +300,136 @@ def _fallback_answer_from_chunks(query: str, chunks) -> str:
     )
 
 
-def _prepare_answer_context(query: str, retriever: Retriever) -> tuple[QueryType, list, str]:
+def rewrite_query_for_retrieval(
+    query: str,
+    history: list[ChatHistoryMessage] | None = None,
+) -> str:
+    """Carry entities from prior user turns into follow-up retrieval (#30 / AUD-06)."""
+    if not history:
+        return query
+
+    prior_entities: list[str] = []
+    for turn in reversed(history):
+        if turn.role != "user" or not turn.content.strip():
+            continue
+        for entity in one_record_schema.detect_entities(turn.content):
+            if entity not in prior_entities:
+                prior_entities.append(entity)
+        if len(prior_entities) >= 5:
+            break
+
+    if not prior_entities:
+        return query
+
+    current = set(one_record_schema.detect_entities(query))
+    missing = [entity for entity in prior_entities if entity not in current]
+    if not missing:
+        return query
+    return f"{query} (entities from earlier turns: {', '.join(missing)})"
+
+
+def filter_cited_chunks(answer_text: str, chunks: list[Chunk]) -> list[Chunk]:
+    """Keep only chunks that appear to support the answer (#31 / AUD-05).
+
+    Prefer no citation over a wrong one. Overlap is scored from entity /
+    source / section mentions plus lexical token overlap with the answer.
+    """
+    if not chunks:
+        return []
+    if not answer_text.strip():
+        return []
+
+    answer_low = answer_text.lower()
+    answer_tokens = set(tokenize(answer_text))
+    scored: list[tuple[int, Chunk]] = []
+
+    for chunk in chunks:
+        score = 0
+        entity = chunk.metadata.entity
+        if entity and entity.lower() in answer_low:
+            score += 3
+        source = chunk.metadata.source_name or ""
+        if source and source.lower() in answer_low:
+            score += 2
+        section = chunk.metadata.section_title or ""
+        if section and section.lower() in answer_low:
+            score += 2
+
+        content_tokens = set(tokenize(chunk.content))
+        if content_tokens and answer_tokens:
+            overlap = len(content_tokens & answer_tokens)
+            ratio = overlap / max(len(content_tokens), 1)
+            # Require absolute overlap so a shared stopword like "is" cannot
+            # promote an unrelated short payload via ratio alone.
+            if overlap >= 8 or (overlap >= 4 and ratio >= 0.12):
+                score += 3
+            elif overlap >= 4 or (overlap >= 3 and ratio >= 0.08):
+                score += 2
+            elif overlap >= 3:
+                score += 1
+
+        # Distinctive multi-word fragment from the chunk appears in the answer.
+        snippet = " ".join(chunk.content.split())[:80].lower()
+        if len(snippet) >= 24 and snippet in answer_low:
+            score += 4
+
+        if score > 0:
+            scored.append((score, chunk))
+
+    if not scored:
+        return []
+
+    scored.sort(key=lambda item: item[0], reverse=True)
+    best = scored[0][0]
+    threshold = max(2, best // 2)
+    return [chunk for score, chunk in scored if score >= threshold]
+
+
+def _prepare_answer_context(
+    query: str,
+    retriever: Retriever,
+    *,
+    history: list[ChatHistoryMessage] | None = None,
+) -> tuple[QueryType, list, str]:
     settings = get_settings()
     query_type = classify_query(query)
+    retrieval_query = rewrite_query_for_retrieval(query, history)
     pool_size = min(
         settings.rag_top_k * _CANDIDATE_POOL_MULTIPLIER,
         _MAX_CANDIDATE_POOL,
     )
-    chunks = retriever.search(query, top_k=max(pool_size, settings.rag_top_k))
-    if query_type == QueryType.ontology_question:
+    search_filter = search_filter_for_query(retrieval_query, query_type)
+    chunks = retriever.search(
+        retrieval_query,
+        top_k=max(pool_size, settings.rag_top_k),
+        search_filter=search_filter,
+    )
+    if query_type in {QueryType.ontology_question, QueryType.relationship_question, QueryType.concept_explanation}:
         ontology_chunks = retriever.search_ontology_candidates(
-            one_record_schema.detect_entities(query),
+            one_record_schema.detect_entities(retrieval_query),
             top_k=_ONTOLOGY_CANDIDATE_LIMIT,
         )
         by_chunk_id = {chunk.chunk_id: chunk for chunk in chunks}
         for chunk in ontology_chunks:
             by_chunk_id.setdefault(chunk.chunk_id, chunk)
         chunks = list(by_chunk_id.values())
-    chunks = rerank(query, chunks)[: settings.rag_top_k]
+    chunks = rerank(retrieval_query, chunks)[: settings.rag_top_k]
     user_prompt = prompt_mod.build_user_prompt(query, chunks, query_type)
     return query_type, chunks, user_prompt
 
 
-def _synthetic_generation_answer(query: str) -> str:
-    settings = get_settings()
-    if not settings.recordforge_url:
-        availability = ConnectorAvailability.unconfigured.value
-        return (
-            "This request is classified as synthetic ONE Record data generation, "
-            "but the RecordForge connector is not configured yet.\n\n"
-            "Implementation note:\n"
-            f"Connector status: {availability}. Set RECORDFORGE_URL (and optionally "
-            "RECORDFORGE_API_KEY) to enable generation workflows such as synthetic "
-            "shipments with pieces. Until then, RecordChat can explain the expected "
-            "object model and payload structure, but it cannot execute the generation "
-            f"request: {query}"
-        )
-
-    return (
-        "This request is classified as synthetic ONE Record data generation. "
-        "The RecordForge connector is configured, but execution planning is not "
-        "implemented in this milestone yet.\n\n"
-        "Implementation note:\n"
-        "The next orchestration slice will turn this intent into a structured "
-        "workflow request against RecordForge."
-    )
+def _chunk_log_entries(chunks: list[Chunk]) -> list[dict]:
+    return [
+        {
+            "rank": index + 1,
+            "chunk_id": chunk.chunk_id,
+            "source_name": chunk.metadata.source_name,
+            "chunk_type": chunk.metadata.chunk_type,
+            "entity": chunk.metadata.entity,
+            "version": chunk.metadata.version,
+        }
+        for index, chunk in enumerate(chunks)
+    ]
 
 
 def _sources_from_chunks(chunks) -> list[Source]:
@@ -317,40 +444,103 @@ def _sources_from_chunks(chunks) -> list[Source]:
     ]
 
 
+def _answer_synthetic(query: str, *, model: str | None = None) -> ChatResponse:
+    """Workflow path — no RAG retrieval (#32)."""
+    timer = RequestTimer()
+    settings = get_settings()
+    workflow = run_synthetic_data_workflow(query, settings=settings)
+    response = ChatResponse(
+        answer=workflow.to_answer_text(),
+        query_type=QueryType.synthetic_data_generation,
+        sources=[],
+        related_concepts=one_record_schema.detect_entities(query)[:8],
+        structured_output=workflow.model_dump(mode="json"),
+    )
+    log_chat_request(
+        {
+            "event": "chat",
+            "query": query,
+            "query_type": response.query_type.value,
+            "model": model or settings.llm_model,
+            "llm_provider": settings.llm_provider,
+            "latency_ms": timer.latency_ms(),
+            "chunks": [],
+            "source_count": 0,
+            "workflow_status": workflow.status,
+            "connector": workflow.connector.availability.value,
+        }
+    )
+    return response
+
+
 def answer(
     query: str,
     retriever: Retriever | None = None,
     llm: LLMProvider | None = None,
     model: str | None = None,
+    history: list[ChatHistoryMessage] | None = None,
 ) -> ChatResponse:
-    retriever = retriever or get_retriever()
-    llm = llm or get_llm_provider(model=model)
+    timer = RequestTimer()
+    settings = get_settings()
+    error: str | None = None
 
-    query_type, chunks, user_prompt = _prepare_answer_context(query, retriever)
-    if query_type == QueryType.synthetic_data_generation:
-        return ChatResponse(
-            answer=_synthetic_generation_answer(query),
-            query_type=query_type,
-            sources=_sources_from_chunks(chunks),
-            related_concepts=_related_concepts(query, chunks),
-            structured_output=None,
+    try:
+        if classify_query(query) == QueryType.synthetic_data_generation:
+            return _answer_synthetic(query, model=model)
+
+        retriever = retriever or get_retriever()
+        llm = llm or get_llm_provider(model=model)
+
+        query_type, chunks, user_prompt = _prepare_answer_context(
+            query, retriever, history=history
         )
-    answer_text = llm.complete(system=prompt_mod.SYSTEM_PROMPT, user=user_prompt)
-    if not answer_text.strip():
-        logger.warning("LLM returned an empty answer; using grounded fallback text.")
-        answer_text = _fallback_answer_from_chunks(query, chunks)
+        answer_text = llm.complete(system=prompt_mod.SYSTEM_PROMPT, user=user_prompt)
+        if not answer_text.strip():
+            logger.warning("LLM returned an empty answer; using grounded fallback text.")
+            answer_text = _fallback_answer_from_chunks(query, chunks)
+            cited = chunks[:2]
+        else:
+            cited = filter_cited_chunks(answer_text, chunks)
 
-    structured_output = None
-    if query_type == QueryType.jsonld_generation:
-        structured_output = jsonld_generator.generate_for_entity(_jsonld_entity(query))
+        structured_output = None
+        if query_type == QueryType.jsonld_generation:
+            structured_output = jsonld_generator.generate_for_entity(_jsonld_entity(query))
 
-    return ChatResponse(
-        answer=answer_text,
-        query_type=query_type,
-        sources=_sources_from_chunks(chunks),
-        related_concepts=_related_concepts(query, chunks),
-        structured_output=structured_output,
-    )
+        response = ChatResponse(
+            answer=answer_text,
+            query_type=query_type,
+            sources=_sources_from_chunks(cited),
+            related_concepts=_related_concepts(query, chunks),
+            structured_output=structured_output,
+        )
+        log_chat_request(
+            {
+                "event": "chat",
+                "query": query,
+                "query_type": query_type.value,
+                "model": model or settings.llm_model,
+                "llm_provider": settings.llm_provider,
+                "latency_ms": timer.latency_ms(),
+                "chunks": _chunk_log_entries(chunks),
+                "cited_chunk_ids": [c.chunk_id for c in cited],
+                "source_count": len(response.sources),
+                "history_turns": len(history or []),
+            }
+        )
+        return response
+    except Exception as exc:
+        error = str(exc)
+        log_chat_request(
+            {
+                "event": "chat_error",
+                "query": query,
+                "model": model or settings.llm_model,
+                "llm_provider": settings.llm_provider,
+                "latency_ms": timer.latency_ms(),
+                "error": error,
+            }
+        )
+        raise
 
 
 def answer_stream(
@@ -358,23 +548,23 @@ def answer_stream(
     retriever: Retriever | None = None,
     llm: LLMProvider | None = None,
     model: str | None = None,
+    history: list[ChatHistoryMessage] | None = None,
 ) -> Iterator[dict]:
+    timer = RequestTimer()
+    settings = get_settings()
+
+    if classify_query(query) == QueryType.synthetic_data_generation:
+        response = _answer_synthetic(query, model=model)
+        yield {"event": "token", "data": {"text": response.answer}}
+        yield {"event": "metadata", "data": response.model_dump(mode="json")}
+        return
+
     retriever = retriever or get_retriever()
     llm = llm or get_llm_provider(model=model)
 
-    query_type, chunks, user_prompt = _prepare_answer_context(query, retriever)
-    if query_type == QueryType.synthetic_data_generation:
-        answer_text = _synthetic_generation_answer(query)
-        yield {"event": "token", "data": {"text": answer_text}}
-        response = ChatResponse(
-            answer=answer_text,
-            query_type=query_type,
-            sources=_sources_from_chunks(chunks),
-            related_concepts=_related_concepts(query, chunks),
-            structured_output=None,
-        )
-        yield {"event": "metadata", "data": response.model_dump(mode="json")}
-        return
+    query_type, chunks, user_prompt = _prepare_answer_context(
+        query, retriever, history=history
+    )
     parts: list[str] = []
     for token in llm.complete_stream(system=prompt_mod.SYSTEM_PROMPT, user=user_prompt):
         if token:
@@ -386,6 +576,9 @@ def answer_stream(
         logger.warning("LLM stream returned no content; using grounded fallback text.")
         answer_text = _fallback_answer_from_chunks(query, chunks)
         yield {"event": "token", "data": {"text": answer_text}}
+        cited = chunks[:2]
+    else:
+        cited = filter_cited_chunks(answer_text, chunks)
 
     structured_output = None
     if query_type == QueryType.jsonld_generation:
@@ -394,8 +587,22 @@ def answer_stream(
     response = ChatResponse(
         answer=answer_text,
         query_type=query_type,
-        sources=_sources_from_chunks(chunks),
+        sources=_sources_from_chunks(cited),
         related_concepts=_related_concepts(query, chunks),
         structured_output=structured_output,
+    )
+    log_chat_request(
+        {
+            "event": "chat_stream",
+            "query": query,
+            "query_type": query_type.value,
+            "model": model or settings.llm_model,
+            "llm_provider": settings.llm_provider,
+            "latency_ms": timer.latency_ms(),
+            "chunks": _chunk_log_entries(chunks),
+            "cited_chunk_ids": [c.chunk_id for c in cited],
+            "source_count": len(response.sources),
+            "history_turns": len(history or []),
+        }
     )
     yield {"event": "metadata", "data": response.model_dump(mode="json")}

@@ -169,6 +169,19 @@ Highlight:
 - `@context`, `@type`, and `@id` are present
 - answer text and structured output arrive together in the chat surface
 
+### Prompt 5b (optional): show workflow orchestration
+
+Ask:
+
+`Generate 5 synthetic shipments with pieces.`
+
+Highlight:
+
+- query type is `synthetic_data_generation`
+- `structured_output.kind` is `workflow_result` (status/steps/artifacts)
+- unconfigured deployments return a blocked plan instead of crashing
+- with `RECORDFORGE_URL` set, the plan is `planned` and includes a request artifact
+
 ### Prompt 5: show developer usefulness
 
 Ask:

@@ -69,7 +69,14 @@
   question: How do I start NE:ONE locally with docker compose?
   expected_query_type: implementation_question
   expected_keywords: ["docker", "compose"]
-  expected_source_families: ["NE:ONE", "NEONE", "ne-one", "ne_one"]
+  # Prefer docs/config over bulk example JSON (#29).
+  expected_source_families: ["NE:ONE", "NEONE", "ne-one", "documentation", "docs", "config", "docker"]
+
+- id: api_subscriptions_lexical
+  question: Which OpenAPI path creates a subscription?
+  expected_query_type: api_question
+  expected_keywords: ["subscription"]
+  expected_source_families: ["OpenAPI", "API", "ONE Record"]
 
 - id: jsonld_piece
   question: Generate a JSON-LD example for a Piece.
