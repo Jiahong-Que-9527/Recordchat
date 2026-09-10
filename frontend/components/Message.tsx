@@ -10,28 +10,51 @@ import {
   RefreshCw,
   ThumbsDown,
   ThumbsUp,
+  Workflow,
   X,
 } from "lucide-react";
-import { getMessageData, getMessageText, type RecordChatMessage } from "@/lib/api";
+import {
+  getMessageData,
+  getMessageText,
+  isWorkflowResult,
+  structuredOutputTitle,
+  type RecordChatMessage,
+} from "@/lib/api";
 import { cn, copyText } from "@/lib/utils";
 import { RecordChatIcon } from "./RecordChatIcon";
 import { MarkdownAnswer } from "./MarkdownAnswer";
 import { Sources } from "./Sources";
 import { TypingIndicator } from "./TypingIndicator";
 
-// Title shown on the structured-output artifact card / canvas header. Prefer the
-// JSON-LD @type when present, otherwise fall back to a generic label.
+// Title shown on the structured-output artifact card / canvas header.
 export function canvasTitle(data: Record<string, unknown>): string {
-  const type = data["@type"];
-  if (typeof type === "string" && type.trim()) {
-    return type.split(/[#/]/).pop() || type;
-  }
-  return "Structured output";
+  return structuredOutputTitle(data);
 }
 
-// A short, one-glance peek at the structured output for the artifact card —
-// the first few non-empty lines of pretty-printed JSON.
+function canvasSubtitle(data: Record<string, unknown>, canvasOpen: boolean): string {
+  const action = canvasOpen ? "Click to close" : "Click to open";
+  if (isWorkflowResult(data)) {
+    return `Workflow · ${data.status} · ${action}`;
+  }
+  return `Structured output (JSON-LD) · ${action}`;
+}
+
+// A short, one-glance peek at the structured output for the artifact card.
 function canvasPreview(data: Record<string, unknown>): string {
+  if (isWorkflowResult(data)) {
+    const stepSummary = data.steps
+      .slice(0, 2)
+      .map((step) => `[${step.status}] ${step.title}`)
+      .join(" · ");
+    const artifactCount = data.artifacts.length;
+    return [
+      `status: ${data.status}`,
+      `connector: ${data.connector.name} (${data.connector.availability})`,
+      stepSummary || `${artifactCount} artifact(s)`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
   return JSON.stringify(data, null, 2)
     .split("\n")
     .slice(0, 3)
@@ -222,6 +245,7 @@ function MessageComponent({
           (() => {
             const output = data.structured_output;
             const canvasOpen = activeCanvasId === message.id;
+            const workflow = isWorkflowResult(output);
             return (
               <button
                 type="button"
@@ -237,15 +261,18 @@ function MessageComponent({
                 )}
               >
                 <span className="rc-gradient-bg inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white shadow-rc-sm">
-                  <Braces className="h-4 w-4" />
+                  {workflow ? (
+                    <Workflow className="h-4 w-4" />
+                  ) : (
+                    <Braces className="h-4 w-4" />
+                  )}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold text-slate-900">
                     {canvasTitle(output)}
                   </span>
                   <span className="block text-xs text-slate-500">
-                    Structured output (JSON-LD) ·{" "}
-                    {canvasOpen ? "Click to close" : "Click to open"}
+                    {canvasSubtitle(output, canvasOpen)}
                   </span>
                   <pre className="mt-1.5 max-h-12 overflow-hidden whitespace-pre-wrap break-all font-mono text-[10px] leading-4 text-slate-400">
                     {canvasPreview(output)}

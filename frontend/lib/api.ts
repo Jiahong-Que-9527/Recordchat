@@ -10,6 +10,9 @@ export type QueryType =
   | "jsonld_generation"
   | "general_question";
 
+export const SYNTHETIC_MODES = ["local", "recordforge"] as const;
+export type SyntheticMode = (typeof SYNTHETIC_MODES)[number];
+
 export interface Source {
   source_name: string;
   section_title: string | null;
@@ -22,7 +25,84 @@ export interface ChatResponse {
   query_type: QueryType;
   sources: Source[];
   related_concepts: string[];
-structured_output: Record<string, unknown> | null;
+  structured_output: Record<string, unknown> | null;
+}
+
+export type WorkflowStatus = "planned" | "blocked" | "failed" | "completed";
+export type WorkflowStepStatus =
+  | "pending"
+  | "ready"
+  | "skipped"
+  | "failed"
+  | "completed";
+export type ConnectorAvailability = "ready" | "unconfigured" | "unavailable";
+
+export interface WorkflowStep {
+  id: string;
+  title: string;
+  status: WorkflowStepStatus;
+  detail?: string | null;
+}
+
+export interface WorkflowArtifact {
+  kind: string;
+  name: string;
+  content?: Record<string, unknown> | unknown[] | string | null;
+}
+
+export interface WorkflowConnectorInfo {
+  name: string;
+  availability: ConnectorAvailability;
+  base_url?: string | null;
+  detail?: string | null;
+}
+
+export interface WorkflowResult {
+  kind: "workflow_result";
+  workflow: string;
+  status: WorkflowStatus;
+  connector: WorkflowConnectorInfo;
+  steps: WorkflowStep[];
+  artifacts: WorkflowArtifact[];
+  detail?: string | null;
+}
+
+export function isWorkflowResult(
+  data: Record<string, unknown> | null | undefined
+): data is WorkflowResult & Record<string, unknown> {
+  return (
+    !!data &&
+    data.kind === "workflow_result" &&
+    typeof data.workflow === "string" &&
+    typeof data.status === "string" &&
+    typeof data.connector === "object" &&
+    data.connector !== null
+  );
+}
+
+export function structuredOutputTitle(data: Record<string, unknown>): string {
+  if (isWorkflowResult(data)) {
+    const label = data.workflow.replace(/_/g, " ");
+    return `Workflow · ${label}`;
+  }
+  const graph = data["@graph"];
+  if (Array.isArray(graph) && graph.length > 0) {
+    const firstType =
+      graph.find(
+        (item): item is Record<string, unknown> =>
+          !!item && typeof item === "object" && typeof item["@type"] === "string"
+      )?.["@type"] ?? null;
+    const typeLabel =
+      typeof firstType === "string"
+        ? firstType.split(/[#/]/).pop() || firstType
+        : "JSON-LD";
+    return `${typeLabel} · ${graph.length} objects`;
+  }
+  const type = data["@type"];
+  if (typeof type === "string" && type.trim()) {
+    return type.split(/[#/]/).pop() || type;
+  }
+  return "Structured output";
 }
 
 // Mirrors the backend allowlist (`backend/app/core/llm.py` → ChatModel).

@@ -8,16 +8,19 @@ backend retrieves source-grounded context from Qdrant, assembles a prompt, calls
 a (provider-abstracted) LLM, and enriches the answer with domain tools
 (relationship map + JSON-LD templates).
 
-Current project priority (2026-09-09):
+Current project priority (2026-09-10):
 
-- `v0.1` through `v0.2.4` are delivered, including Retrieval Quality and audit
-  P0/P1 (AUD-01…AUD-07)
+- `v0.1` through `v0.2.5` are delivered, including Retrieval Quality, audit
+  P0/P1 (AUD-01…AUD-07), RecordForge HTTP, and Local/RecordForge UI toggle
 - retrieval is hybrid (dense + BM25-lite RRF) with canonical-version filtering,
   follow-up rewrite, and citation filtering
-- synthetic intents return structured `workflow_result` via `structured_output`
-  without calling RAG
-- **next**: RecordForge live HTTP (`#13`) + frontend workflow rendering (`#14`)
-  — see [project_plan.md](project_plan.md)
+- synthetic intents skip RAG. `synthetic_mode=local` uses JSON-LD templates
+  (JSON-LD / `@graph` panel). `synthetic_mode=recordforge` (API default) uses
+  the Connector: HTTP when `RECORDFORGE_URL` is set, else `blocked`; remote
+  failure → `unavailable`. **No auto-persist to a ONE Record Server.**
+- frontend: `WorkflowViewer` for `kind=workflow_result`; JSON-LD canvas
+  otherwise
+- **next**: ALH narrative (`docs/alh_execution_brief.md`)
 
 ```
 ┌──────────────────────────── Frontend (Next.js) ────────────────────────────┐
@@ -30,7 +33,8 @@ Current project priority (2026-09-09):
 │                                                                               │
 │  rag/pipeline.answer()  ── the only orchestrator                              │
 │    1. classify_query(q)            -> QueryType                               │
-│    1b. synthetic? -> connectors.orchestration (skip RAG) -> workflow_result   │
+│    1b. synthetic + local -> jsonld_generator batch -> JSON-LD / @graph        │
+│    1c. synthetic + recordforge -> connectors.orchestration -> workflow_result │
 │    2. rewrite_query_for_retrieval(q, history)                                 │
 │    3. retriever.search(q, top_k, filter) -> Chunk[]  (dense + lexical RRF)    │
 │    4. rerank(q, chunks)            -> Chunk[]   (vector-dominant boosts)      │
@@ -105,20 +109,20 @@ pipeline           ->  vector pool (top_k * 3)  ->  reranker entity boost  ->  t
 one_record_schema  ->  ontology neighbors first, manual map fallback
 ```
 
-## Future integration points (v0.2 / v0.3)
+## Future integration points
 
-Recommended order:
+Recommended order (current):
 
-1. Retrieval Quality (de-dupe ontology, gold-chunk eval, hybrid, history, citations)
-2. finish workflow orchestration (structured results / execution)
-3. integrate RecordForge
-4. add ALH narrative last, after the core ONE Record path is strong
+1. **v0.2.6 ALH narrative** — docs + `alh_mapping` + classifier; no live lake
+   ([alh_execution_brief.md](alh_execution_brief.md))
+2. **v0.3** — sketch only ([v03_sketch.md](v03_sketch.md))
 
-- **RecordForge**: a synthetic-data tool callable from the pipeline to fulfil
-  "generate N shipments" requests, returning JSON-LD.
-- **AviationLakehouse**: explain/route ONE Record objects into Bronze/Silver/Gold.
-- **ONE Record Server**: live retrieval of real logistics objects.
+- **RecordForge** (done, optional): HTTP `/v1/generate` or local templates.
+  Output is displayed; not written to a Server.
+- **AviationLakehouse** (next, narrative): explain Bronze / Silver / Gold.
+- **ONE Record Server** (later, optional connector): live objects / persist
+  only if product un-freezes auto-write (v0.3 §3.6).
 
 The `Retriever` abstraction remains the seam for remote/live object lookup.
-The `Connector` abstraction is the new seam for optional workflow integrations
-such as RecordForge and future execution-oriented ecosystem tools.
+The `Connector` abstraction is the seam for optional workflow integrations
+(RecordForge today; Server persist only if explicitly scheduled).

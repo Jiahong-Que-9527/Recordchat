@@ -25,6 +25,17 @@ class QueryType(str, Enum):
     general_question = "general_question"
 
 
+class SyntheticMode(str, Enum):
+    """How synthetic-generation intents are fulfilled.
+
+    ``local`` — RecordChat templates → JSON-LD panel (no RecordForge).
+    ``recordforge`` — connector workflow (HTTP when configured, else blocked).
+    """
+
+    local = "local"
+    recordforge = "recordforge"
+
+
 # ---- /health ----
 class HealthResponse(BaseModel):
     status: str = "ok"
@@ -67,6 +78,8 @@ class ChatRequest(BaseModel):
     model: ChatModel | None = None
     # Optional recent turns (excluding the current message). Backward compatible.
     history: list[ChatHistoryMessage] | None = None
+    # Additive; omitted → recordforge (preserves prior /chat behavior).
+    synthetic_mode: SyntheticMode | None = None
 
 
 class Source(BaseModel):

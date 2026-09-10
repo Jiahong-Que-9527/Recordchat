@@ -169,7 +169,7 @@ Highlight:
 - `@context`, `@type`, and `@id` are present
 - answer text and structured output arrive together in the chat surface
 
-### Prompt 5b (optional): show workflow orchestration
+### Prompt 5b (optional): show synthetic generation modes
 
 Ask:
 
@@ -177,10 +177,12 @@ Ask:
 
 Highlight:
 
-- query type is `synthetic_data_generation`
-- `structured_output.kind` is `workflow_result` (status/steps/artifacts)
-- unconfigured deployments return a blocked plan instead of crashing
-- with `RECORDFORGE_URL` set, the plan is `planned` and includes a request artifact
+- the toolbar toggle chooses **Local JSON-LD** vs **RecordForge**
+- **Local JSON-LD** (default): template payloads open in the JSON-LD panel
+  (`@graph` when count > 1); no RecordForge required
+- **RecordForge**: `structured_output.kind` is `workflow_result`
+  (status/steps/artifacts); unconfigured → blocked plan; with
+  `RECORDFORGE_URL` set → live HTTP (`completed` / `unavailable`)
 
 ### Prompt 5: show developer usefulness
 

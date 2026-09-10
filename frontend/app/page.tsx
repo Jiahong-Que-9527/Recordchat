@@ -18,12 +18,18 @@ import {
   PromptInputToolbar,
 } from "@/components/ai-elements/prompt-input";
 import { SuggestionList } from "@/components/ai-elements/suggestion-list";
+import { GenerationModePicker } from "@/components/GenerationModePicker";
 import { ModelPicker } from "@/components/ModelPicker";
 import { Sidebar } from "@/components/Sidebar";
 import { Message, canvasTitle } from "@/components/Message";
 import { TypingIndicator } from "@/components/TypingIndicator";
 import { cn } from "@/lib/utils";
-import { getMessageData, type ChatModel, type RecordChatMessage } from "@/lib/api";
+import {
+  getMessageData,
+  type ChatModel,
+  type RecordChatMessage,
+  type SyntheticMode,
+} from "@/lib/api";
 
 type CanvasState = {
   messageId: string;
@@ -61,6 +67,11 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState<ChatModel>("deepseek-v4-flash");
   const selectedModelRef = useRef<ChatModel>(selectedModel);
   selectedModelRef.current = selectedModel;
+  // Default to local templates so synthetic prompts open the JSON-LD panel
+  // without requiring RecordForge. Switch to RecordForge for the workflow path.
+  const [syntheticMode, setSyntheticMode] = useState<SyntheticMode>("local");
+  const syntheticModeRef = useRef<SyntheticMode>(syntheticMode);
+  syntheticModeRef.current = syntheticMode;
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [canvasOpen, setCanvasOpen] = useState(false);
@@ -76,7 +87,10 @@ export default function Home() {
   } = useChat<RecordChatMessage>({
     transport: new DefaultChatTransport<RecordChatMessage>({
       api: "/api/chat",
-      body: () => ({ model: selectedModelRef.current }),
+      body: () => ({
+        model: selectedModelRef.current,
+        synthetic_mode: syntheticModeRef.current,
+      }),
     }),
   });
   const loading = status === "submitted" || status === "streaming";
@@ -294,10 +308,15 @@ export default function Home() {
               onSubmitShortcut={() => ask(input)}
             />
             <PromptInputToolbar>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <ModelPicker
                   value={selectedModel}
                   onChange={setSelectedModel}
+                  disabled={loading}
+                />
+                <GenerationModePicker
+                  value={syntheticMode}
+                  onChange={setSyntheticMode}
                   disabled={loading}
                 />
                 <CanvasToggleButton
@@ -333,7 +352,7 @@ export default function Home() {
         {/* Canvas — desktop split column */}
         {canvasOpen ? (
           <Canvas
-            title={canvas?.title ?? "JSON-LD Output"}
+            title={canvas?.title ?? "Structured Output"}
             data={canvas?.data ?? null}
             onClose={() => setCanvasOpen(false)}
             onAskExample={() => ask("Generate a JSON-LD example for a Piece.")}
@@ -377,7 +396,7 @@ export default function Home() {
           />
           <div className="absolute right-0 top-0 h-full w-[min(640px,95vw)] shadow-rc-md">
             <Canvas
-              title={canvas?.title ?? "JSON-LD Output"}
+              title={canvas?.title ?? "Structured Output"}
               data={canvas?.data ?? null}
               onClose={() => setCanvasOpen(false)}
               onAskExample={() => {

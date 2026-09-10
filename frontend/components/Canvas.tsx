@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Braces, X } from "lucide-react";
+import { Braces, Workflow, X } from "lucide-react";
 import { JsonLdViewer, JsonLdViewerToolbar } from "./JsonLdViewer";
+import { WorkflowViewer } from "./WorkflowViewer";
+import { isWorkflowResult } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export function CanvasToggleButton({
@@ -18,9 +20,9 @@ export function CanvasToggleButton({
     <button
       type="button"
       onClick={onClick}
-      aria-label={open ? "Close JSON-LD panel" : "Open JSON-LD panel"}
+      aria-label={open ? "Close structured output panel" : "Open structured output panel"}
       aria-pressed={open}
-      title={open ? "Close JSON-LD panel" : "Open JSON-LD panel"}
+      title={open ? "Close structured output panel" : "Open structured output panel"}
       className={cn(
         "inline-flex h-8 w-8 items-center justify-center rounded-xl border text-slate-500 shadow-rc-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-ring focus-visible:ring-offset-2",
         open
@@ -40,10 +42,10 @@ function CanvasEmptyState({ onAskExample }: { onAskExample?: () => void }) {
       <span className="rc-gradient-bg inline-flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-rc-sm">
         <Braces className="h-5 w-5" />
       </span>
-      <p className="mt-4 text-sm font-medium text-slate-700">No JSON-LD output yet</p>
+      <p className="mt-4 text-sm font-medium text-slate-700">No structured output yet</p>
       <p className="mt-2 max-w-[240px] text-xs leading-5 text-slate-500">
-        Structured JSON-LD from assistant answers will appear here. You can keep
-        this panel open while you chat.
+        JSON-LD examples and workflow results from assistant answers will appear
+        here. You can keep this panel open while you chat.
       </p>
       {onAskExample ? (
         <button
@@ -74,6 +76,7 @@ export function Canvas({
   const [mode, setMode] = useState<"structured" | "raw">("structured");
   const entries = data ? Object.entries(data) : [];
   const hasData = data !== null && entries.length > 0;
+  const workflowData = hasData && data && isWorkflowResult(data) ? data : null;
 
   return (
     <aside
@@ -86,14 +89,20 @@ export function Canvas({
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
             <span className="rc-gradient-bg inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white shadow-rc-sm">
-              <Braces className="h-4 w-4" />
+              {workflowData ? (
+                <Workflow className="h-4 w-4" />
+              ) : (
+                <Braces className="h-4 w-4" />
+              )}
             </span>
             <div className="min-w-0 pt-0.5">
               <h3 className="truncate text-base font-semibold text-slate-900">
-                {hasData ? title : "JSON-LD Output"}
+                {hasData ? title : "Structured Output"}
               </h3>
               <p className="mt-0.5 text-xs text-slate-500">
-                Structured output · JSON-LD
+                {workflowData
+                  ? "Workflow status · steps · artifacts"
+                  : "Structured output · JSON-LD"}
               </p>
             </div>
           </div>
@@ -108,7 +117,7 @@ export function Canvas({
           </button>
         </div>
 
-        {hasData ? (
+        {hasData && data && !workflowData ? (
           <div className="mt-4">
             <JsonLdViewerToolbar
               fieldCount={entries.length}
@@ -121,7 +130,9 @@ export function Canvas({
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-        {hasData && data ? (
+        {workflowData ? (
+          <WorkflowViewer data={workflowData} />
+        ) : hasData && data ? (
           <JsonLdViewer data={data} mode={mode} />
         ) : (
           <CanvasEmptyState onAskExample={onAskExample} />

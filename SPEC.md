@@ -5,10 +5,12 @@
 > 任何实现都应以本文档的契约（API 契约、数据模型、目录结构、验收标准）为准。
 >
 > **状态说明（2026-09）**：本 SPEC 定义的是 `v0.1` 的交付边界与 API/模块契约。
-> `v0.1` 已完成；v0.2.1–v0.2.3 也已落地。当前执行计划以
+> `v0.1` 已完成；v0.2.1–v0.2.5 也已落地。当前执行计划以
 > [docs/project_plan.md](docs/project_plan.md) 为准，不要用第 15 章的旧编号排期。
-> 2026-09 审计项（AUD-01…AUD-10）记录在 `docs/project_plan.md` §4.7，其中
-> AUD-01 修订了 Phase 9 的验收（评估集必须入库版本化）。
+> 下一步切片的逐步说明见 [docs/alh_execution_brief.md](docs/alh_execution_brief.md)。
+> 允许 **新增** `query_type` 枚举值（v0.2.6 计划加 `architecture_question`）；
+> **禁止改名**已有字段。2026-09 审计项（AUD-01…AUD-10）记录在
+> `docs/project_plan.md` §4.7。
 
 ---
 

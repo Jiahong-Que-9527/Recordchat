@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { CHAT_MODELS } from "@/lib/api";
+import { CHAT_MODELS, SYNTHETIC_MODES } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -10,6 +10,7 @@ type IncomingMessage = {
 };
 
 const ALLOWED_MODELS = new Set<string>(CHAT_MODELS);
+const ALLOWED_SYNTHETIC_MODES = new Set<string>(SYNTHETIC_MODES);
 
 function getBackendBase(request: NextRequest): string {
   const internal = process.env.INTERNAL_API_BASE_URL?.trim();
@@ -125,6 +126,11 @@ export async function POST(request: NextRequest): Promise<Response> {
     typeof payload?.model === "string" && ALLOWED_MODELS.has(payload.model)
       ? payload.model
       : undefined;
+  const syntheticMode =
+    typeof payload?.synthetic_mode === "string" &&
+    ALLOWED_SYNTHETIC_MODES.has(payload.synthetic_mode)
+      ? payload.synthetic_mode
+      : undefined;
 
   if (!message) {
     return new Response(
@@ -144,6 +150,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       message,
       model,
       ...(history.length > 0 ? { history } : {}),
+      ...(syntheticMode ? { synthetic_mode: syntheticMode } : {}),
     }),
     cache: "no-store",
   });

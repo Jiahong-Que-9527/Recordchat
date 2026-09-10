@@ -77,10 +77,13 @@ class WorkflowResult(BaseModel):
                 "the remote call. The structured workflow result captures the "
                 "failure without crashing the assistant."
             )
+        elif self.status == "completed":
+            lines.append(
+                "Remote generation finished successfully. Inspect the workflow "
+                "artifacts for the RecordForge response and any generated objects."
+            )
         else:
             lines.append(
-                "A structured generation plan is ready. Live HTTP execution against "
-                "RecordForge lands in the next connector slice (#13); this response "
-                "exposes the execution path and request artifact."
+                "A structured generation plan is ready for RecordForge execution."
             )
         return "\n".join(lines)

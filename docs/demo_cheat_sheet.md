@@ -59,7 +59,7 @@ Check:
 - `Shipment 和 Piece 在 ontology 里通过什么属性关联？`
 - `Explain the relationship between Shipment and Piece.`
 - `What is a Waybill in ONE Record?`
-- `Generate 5 synthetic shipments with pieces.` (workflow — structured `workflow_result`)
+- `Generate 5 synthetic shipments with pieces.` (Local JSON-LD panel, or switch toolbar to RecordForge for workflow)
 
 ## If Someone Asks About Limitations
 

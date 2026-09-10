@@ -12,19 +12,29 @@ backend → Qdrant. It retrieves from reviewed public sources and answers with
 citations; it does **not** fine-tune on third-party corpora and is **not** an
 official IATA product.
 
-Later ecosystem: RecordForge HTTP client is the **next** slice (`#13` `#14`);
-ONE Record Server and AviationLakehouse stay deferred after that.
+Later ecosystem (do not collapse into this repo’s current slice):
+
+```text
+RecordChat        = AI interface (this project)
+RecordForge       = optional synthetic generator (HTTP when configured)
+ONE Record Server = data exchange (not in v0.2.6; no auto-persist)
+AviationLakehouse = Bronze/Silver/Gold narrative (v0.2.6, docs/mapping only)
+```
 
 ## 2. Canonical documents (read order matters)
 
 | Precedence | Document | What it is for |
 |---|---|---|
-| 1 | `docs/project_plan.md` | **Current status + next work.** The single source of truth when docs disagree. Contains the 2026-09 audit items (AUD-01…AUD-10) and the execution order. |
-| 2 | `docs/architecture.md` | System architecture and key design decisions. |
-| 3 | `SPEC.md` | v0.1 API / data / module contracts. Still **binding** (field names, module boundaries, forbidden patterns). |
-| 4 | `docs/roadmap.md` | Milestone narrative and positioning. |
-| 5 | `docs/data_source_plan.md` | Data acquisition, governance, **canonical source version policy** (§10). |
-| 6 | `docs/adr/*.md` | Recorded decisions (provider abstraction, ontology-aware retrieval, connectors). |
+| 1 | `docs/project_plan.md` | **Current status + next work.** Wins when docs disagree. |
+| 2 | `docs/agent_execution_playbook.md` | How to execute any slice (read after the plan). |
+| 3 | slice brief, currently `docs/alh_execution_brief.md` | Step-by-step for the **current** next work. |
+| 4 | `docs/architecture.md` | System architecture and design decisions. |
+| 5 | `SPEC.md` | v0.1 API / data / module contracts. Still **binding** (field names, module boundaries, forbidden patterns). Additive enum values are allowed; renaming is not. |
+| 6 | `docs/v0.2_development_plan.md` | Historical v0.2 task map. |
+| 7 | `docs/data_source_plan.md` | Ingest / governance / canonical versions. |
+| 8 | `docs/adr/*.md` | Recorded decisions. |
+| 9 | `docs/roadmap.md` | Milestone narrative (may lag; plan + briefs win). |
+| 10 | `docs/v03_sketch.md` | Unscheduled platform sketch. Do not start until ALH is done. |
 
 Repo directories:
 
@@ -91,17 +101,24 @@ uv run --project backend python scripts/evaluate_rag.py
 8. **Every phase must leave the project runnable and tested.** No credentials
    may be required to merely boot (graceful degradation instead).
 
-## 5. Current state (2026-09-09 EOD)
+## 5. Current state (2026-09-10)
 
-- Delivered: v0.1 baseline, Data Foundation (core pack), v0.2.1–v0.2.4,
-  audit P0/P1 (AUD-01…AUD-07), Retrieval Quality `#27`–`#31`.
-- Synthetic generation already returns a structured `workflow_result` via
-  `structured_output` (plan / blocked / artifacts). **Live HTTP to RecordForge
-  is not implemented yet** — that is `#13`.
-- **Current next:** v0.2.5 RecordForge HTTP client (`#13`) + frontend workflow
-  rendering (`#14`). Do **not** start ALH (`#7`–`#10`) or v0.3 platform work
-  until RecordForge is optionally callable and still degrades when unconfigured.
-- Backend tests: 56 passing (`uv run pytest -q`).
+- Delivered: v0.1 baseline, Data Foundation (core pack), v0.2.1–v0.2.5,
+  audit P0/P1 (AUD-01…AUD-07), Retrieval Quality `#27`–`#31`, RecordForge
+  `#13` `#14`, plus Local / RecordForge generation toggle.
+- Synthetic generation:
+  - `synthetic_mode=local` (UI default) → template JSON-LD panel (`@graph` when
+    multiple objects). No RecordForge, no Server write.
+  - `synthetic_mode=recordforge` (or omitted on `/chat`) → `workflow_result`.
+    Configured URL POSTs `/v1/generate`; missing URL → `blocked`; remote
+    failure → `unavailable`. Never auto-persists to a ONE Record Server.
+- Frontend: `WorkflowViewer` for workflows; JSON-LD canvas for templates /
+  `@graph`.
+- **Current next:** v0.2.6 ALH narrative. Execute
+  `docs/alh_execution_brief.md` (`#7`→`#8`→`#9`→`#10`).
+- Optional P2 (do not block ALH): AUD-08…AUD-10, AUD-04 ModelPicker wiring,
+  leftover `#23`.
+- Backend tests: 61 passing (`uv run pytest -q`).
 
 ### What landed in the 2026-09-09 slice (so agents do not redo it)
 
@@ -117,42 +134,57 @@ uv run --project backend python scripts/evaluate_rag.py
 | Workflow `#32` | `connectors/workflow.py`, `connectors/recordforge.py`, `connectors/orchestration.py` |
 | Request log | `core/request_log.py` (`RECORDCHAT_REQUEST_LOG`) |
 
+### What landed in the 2026-09-10 RecordForge slice
+
+| Area | Key modules |
+|---|---|
+| RecordForge HTTP `#13` | `connectors/recordforge.py` (POST `/v1/generate`, mockable `http_client`) |
+| Frontend workflow `#14` | `components/WorkflowViewer.tsx`, `Canvas.tsx`, `Message.tsx`, `lib/api.ts` |
+| Generation toggle | `ChatRequest.synthetic_mode`, `GenerationModePicker`, local `jsonld_generator` batch |
+
 ## 6. Next work (in order)
 
-1. **v0.2.5 RecordForge** — `#13` (HTTP client behind `RecordForgeConnector`,
-   graceful degrade when URL missing / remote fails) then `#14` (frontend
-   render of `workflow_result`, not only the JSON-LD canvas path).
-2. **v0.2.6 ALH narrative** `#7`–`#10` (docs / mapping only).
-3. **v0.3 platform** (auth, sessions, source versioning, tracing, eval
-   dashboard) — sketch only, not scheduled.
-4. Optional / P2 (do not block RecordForge):
-   - wire ModelPicker to `GET /models` (AUD-04 remainder)
-   - AUD-08 shared `_is_ontology_query` helper
-   - AUD-09 pin Qdrant image
-   - AUD-10 CI-safe fake-embedding retrieval fixture
+1. **v0.2.6 ALH narrative** — follow `docs/alh_execution_brief.md` exactly
+   (`#7` knowledge doc → `#8` `alh_mapping` → `#9` classifier/prompt →
+   `#10` eval/demo). Docs/mapping only; no live lakehouse.
+2. **v0.3 platform** — `docs/v03_sketch.md` only. Do not open unless ALH is
+   done and the user asks.
+3. Optional / P2 (playbook §6): AUD-04 ModelPicker → `GET /models`, AUD-08
+   shared ontology helper, AUD-09 pin Qdrant image, AUD-10 CI fake-embedding
+   fixture, leftover `#23`.
 
-## 7. Definition of done — closed iteration
+## 7. Definition of done — closed iterations
 
-Retrieval Quality + audit P0/P1 + workflow `#32` (2026-09-09) are **done**:
+Retrieval Quality + audit P0/P1 + workflow `#32` (2026-09-09) and RecordForge
+`#13` `#14` (2026-09-10) are **done**:
 
 - [x] Versioned eval set + gold metrics that can go red
 - [x] One live canonical version per source family
 - [x] Vector-dominant reranker + hybrid retrieval + query-type filters
 - [x] Follow-up entity carry-over + citation filter
-- [x] Structured `workflow_result` for synthetic intents (no live HTTP yet)
+- [x] Structured `workflow_result` for synthetic intents
 - [x] Lightweight JSONL request diagnostics (AUD-07)
 - [x] Backend tests green, `verify_source_governance.py` green
-
-## 8. Definition of done — next iteration (RecordForge `#13` `#14`)
-
-- [ ] `RecordForgeConnector.execute_synthetic_generation` performs a real HTTP
+- [x] `RecordForgeConnector.execute_synthetic_generation` performs a real HTTP
       call when `RECORDFORGE_URL` is set
-- [ ] Remote failure → `availability=unavailable` + structured workflow result
+- [x] Remote failure → `availability=unavailable` + structured workflow result
       (never crash boot or `/chat`)
-- [ ] Unconfigured deployments keep today's blocked `workflow_result` behavior
-- [ ] Frontend can present workflow status / steps / artifacts without treating
+- [x] Unconfigured deployments keep blocked `workflow_result` behavior
+- [x] Frontend presents workflow status / steps / artifacts without treating
       them as JSON-LD
-- [ ] Backend tests cover ready / unconfigured / unavailable; frontend build green
+- [x] Backend tests cover ready / unconfigured / unavailable; frontend build green
+
+## 8. Definition of done — next iteration (ALH `#7`–`#10`)
+
+Copy the checklist in `docs/alh_execution_brief.md` §7. Short form:
+
+- [ ] Ingestible ALH markdown + sidecar; governance script green
+- [ ] `domain/alh_mapping.py` with bronze/silver/gold for core entities
+- [ ] Additive `QueryType.architecture_question` + classifier/prompt/glossary
+- [ ] Three eval questions + demo prompt; `/chat` mentions Bronze/Silver/Gold
+      with citations
+- [ ] No live lakehouse or ONE Record Server write path
+- [ ] pytest green; frontend build green if `QueryType` union changed
 
 ## 9. How to verify your work
 

@@ -10,12 +10,19 @@ import re
 from collections.abc import Iterator
 
 from app.connectors.orchestration import run_synthetic_data_workflow
+from app.connectors.recordforge import RecordForgeConnector
 from app.core.config import get_settings
 from app.core.llm import LLMProvider, get_llm_provider
 from app.core.logging import get_logger
 from app.core.request_log import RequestTimer, log_chat_request
 from app.domain import jsonld_generator, one_record_schema
-from app.models.chat import ChatHistoryMessage, ChatResponse, QueryType, Source
+from app.models.chat import (
+    ChatHistoryMessage,
+    ChatResponse,
+    QueryType,
+    Source,
+    SyntheticMode,
+)
 from app.models.source import Chunk
 from app.rag import prompt as prompt_mod
 from app.rag.lexical import tokenize
@@ -444,8 +451,63 @@ def _sources_from_chunks(chunks) -> list[Source]:
     ]
 
 
-def _answer_synthetic(query: str, *, model: str | None = None) -> ChatResponse:
-    """Workflow path — no RAG retrieval (#32)."""
+def _answer_synthetic_local(query: str, *, model: str | None = None) -> ChatResponse:
+    """Local template path — JSON-LD canvas, no RecordForge / no RAG."""
+    timer = RequestTimer()
+    settings = get_settings()
+    intent = RecordForgeConnector(settings).parse_generation_intent(query)
+    payload = jsonld_generator.generate_synthetic_batch(
+        str(intent["object_type"]),
+        int(intent["count"]),
+        with_pieces=bool(intent.get("options", {}).get("with_pieces")),
+    )
+    graph = payload.get("@graph") if isinstance(payload, dict) else None
+    object_count = len(graph) if isinstance(graph, list) else 1
+    answer_text = (
+        f"Generated {intent['count']} × {intent['object_type']} locally with "
+        "RecordChat JSON-LD templates (RecordForge not used).\n\n"
+        "Open the structured output panel to inspect the payload. These examples "
+        "are illustrative, not official IATA samples."
+    )
+    if intent.get("options", {}).get("with_pieces"):
+        answer_text += f"\n\nIncluded linked Piece objects in the graph ({object_count} total JSON-LD nodes)."
+
+    response = ChatResponse(
+        answer=answer_text,
+        query_type=QueryType.synthetic_data_generation,
+        sources=[],
+        related_concepts=one_record_schema.detect_entities(query)[:8],
+        structured_output=payload,
+    )
+    log_chat_request(
+        {
+            "event": "chat",
+            "query": query,
+            "query_type": response.query_type.value,
+            "model": model or settings.llm_model,
+            "llm_provider": settings.llm_provider,
+            "latency_ms": timer.latency_ms(),
+            "chunks": [],
+            "source_count": 0,
+            "synthetic_mode": SyntheticMode.local.value,
+            "object_type": intent["object_type"],
+            "count": intent["count"],
+        }
+    )
+    return response
+
+
+def _answer_synthetic(
+    query: str,
+    *,
+    model: str | None = None,
+    synthetic_mode: SyntheticMode | None = None,
+) -> ChatResponse:
+    """Synthetic path — local templates or RecordForge workflow (no RAG)."""
+    mode = synthetic_mode or SyntheticMode.recordforge
+    if mode == SyntheticMode.local:
+        return _answer_synthetic_local(query, model=model)
+
     timer = RequestTimer()
     settings = get_settings()
     workflow = run_synthetic_data_workflow(query, settings=settings)
@@ -466,6 +528,7 @@ def _answer_synthetic(query: str, *, model: str | None = None) -> ChatResponse:
             "latency_ms": timer.latency_ms(),
             "chunks": [],
             "source_count": 0,
+            "synthetic_mode": SyntheticMode.recordforge.value,
             "workflow_status": workflow.status,
             "connector": workflow.connector.availability.value,
         }
@@ -479,6 +542,7 @@ def answer(
     llm: LLMProvider | None = None,
     model: str | None = None,
     history: list[ChatHistoryMessage] | None = None,
+    synthetic_mode: SyntheticMode | None = None,
 ) -> ChatResponse:
     timer = RequestTimer()
     settings = get_settings()
@@ -486,7 +550,9 @@ def answer(
 
     try:
         if classify_query(query) == QueryType.synthetic_data_generation:
-            return _answer_synthetic(query, model=model)
+            return _answer_synthetic(
+                query, model=model, synthetic_mode=synthetic_mode
+            )
 
         retriever = retriever or get_retriever()
         llm = llm or get_llm_provider(model=model)
@@ -549,12 +615,15 @@ def answer_stream(
     llm: LLMProvider | None = None,
     model: str | None = None,
     history: list[ChatHistoryMessage] | None = None,
+    synthetic_mode: SyntheticMode | None = None,
 ) -> Iterator[dict]:
     timer = RequestTimer()
     settings = get_settings()
 
     if classify_query(query) == QueryType.synthetic_data_generation:
-        response = _answer_synthetic(query, model=model)
+        response = _answer_synthetic(
+            query, model=model, synthetic_mode=synthetic_mode
+        )
         yield {"event": "token", "data": {"text": response.answer}}
         yield {"event": "metadata", "data": response.model_dump(mode="json")}
         return

@@ -1,25 +1,30 @@
 # RecordChat Project Plan
 
-**Status date:** 2026-09-09
-**Current delivered line:** v0.2.4 workflow + Retrieval Quality + audit P0/P1
-**Current next work:** v0.2.5 RecordForge HTTP client (`#13` `#14`).
+**Status date:** 2026-09-10
+**Current delivered line:** v0.2.5 RecordForge + Retrieval Quality + audit P0/P1
+**Current next work:** v0.2.6 ALH narrative (`#7`–`#10`).
 
-> **Agent handoff (2026-09-09 EOD).** Audit P0/P1 (AUD-01…AUD-07), Retrieval
-> Quality (`#27`–`#31`), and workflow `#32` are **done**. Do not re-open those
-> slices unless a regression appears. **Next work is v0.2.5 RecordForge**
-> (`#13` HTTP client, `#14` frontend workflow rendering). AUD-08…AUD-10 remain
-> P2. Read §5 and §8 before writing code.
+> **Agent handoff (2026-09-10).** Audit P0/P1 (AUD-01…AUD-07), Retrieval
+> Quality (`#27`–`#31`), workflow `#32`, and RecordForge `#13` `#14` are
+> **done**. Do not re-open those slices unless a regression appears.
+> **Next work is v0.2.6 ALH narrative.** Execute
+> [alh_execution_brief.md](alh_execution_brief.md) (`#7`→`#8`→`#9`→`#10`).
+> How to work: [agent_execution_playbook.md](agent_execution_playbook.md).
+> AUD-08…AUD-10 remain P2. Do not start v0.3 or Server persist.
 
 This is the **current** project plan. Use it when documents disagree.
 
 | Question | Canonical doc |
 |---|---|
 | Where are we, and what is next? | this file |
+| How to execute a slice | [agent_execution_playbook.md](agent_execution_playbook.md) |
+| How to execute **this** next slice | [alh_execution_brief.md](alh_execution_brief.md) |
 | Milestone narrative | [roadmap.md](roadmap.md) |
 | v0.2 task breakdown | [v0.2_development_plan.md](v0.2_development_plan.md) |
 | v0.1 API / module contract | [../SPEC.md](../SPEC.md) |
 | Knowledge-base import | [data_source_plan.md](data_source_plan.md) |
 | Architecture | [architecture.md](architecture.md) |
+| Unscheduled platform | [v03_sketch.md](v03_sketch.md) |
 
 `SPEC.md` remains the contract for `/chat`, `/ingest`, and module boundaries.
 It is **not** the execution-order source after v0.1.
@@ -41,6 +46,13 @@ ONE Record Server = standardized data exchange layer
 AviationLakehouse = analytical backend (Bronze / Silver / Gold, deferred)
 ```
 
+Frozen product choices (do not reverse in v0.2.6):
+
+- Synthetic generation **displays** JSON-LD or a workflow result. It does not
+  auto-write objects into a ONE Record Server.
+- Chat toolbar: **Local JSON-LD** (templates, default) vs **RecordForge**
+  (connector workflow).
+
 ---
 
 ## 2. Milestone board
@@ -55,8 +67,8 @@ AviationLakehouse = analytical backend (Bronze / Silver / Gold, deferred)
 | **2026-09 audit P0** (AUD-01…04) | **done** (frontend `/models` wiring deferred) | see §4.7 |
 | **Retrieval Quality** | **done** (`#27`–`#31`) | `#27`–`#31` |
 | v0.2.4 workflow orchestration | **done** (`#11` `#12` `#32`) | structured workflow_result + connector path |
-| v0.2.5 RecordForge | **not started** | `#13` `#14` |
-| v0.2.6 AviationLakehouse narrative | **deferred** | `#7`–`#10` |
+| v0.2.5 RecordForge | **done** | `#13` `#14` |
+| v0.2.6 AviationLakehouse narrative | **next** | `#7`–`#10`; see [alh_execution_brief.md](alh_execution_brief.md) |
 | v0.3 platform | **sketch only** | no issues yet |
 
 ---
@@ -78,22 +90,18 @@ v0.1  ──► Data Foundation  ──► v0.2.1  ──► v0.2.2  ──► v
                                     finish v0.2.4 (#32) ✅
                                                │
                                                ▼
-                                    v0.2.5 RecordForge (#13 #14)  ◄── next
+                                    v0.2.5 RecordForge (#13 #14) ✅
                                                │
                                                ▼
-                                    v0.2.6 ALH narrative (#7–#10)
+                                    v0.2.6 ALH narrative (#7–#10)  ◄── next
                                                │
                                                ▼
                                     v0.3 platform (auth, memory,
                                     source versioning, tracing)
 ```
 
-AUD-01…AUD-07 and `#27`–`#32` are landed. Remaining P2 audit items: AUD-08…AUD-10.
-Next product slice: RecordForge HTTP client (`#13` `#14`).
-
-Retrieval Quality is no longer a blocker for RecordForge. Keep ALH (`#7`–`#10`)
-deferred until the RecordForge path is optionally callable and still degrades
-when unconfigured.
+AUD-01…AUD-07, `#27`–`#32`, and RecordForge `#13` `#14` are landed. Remaining
+P2 audit items: AUD-08…AUD-10. Next product slice: ALH narrative (`#7`–`#10`).
 
 ---
 
@@ -231,32 +239,35 @@ accuracy claim.
 
 [#32](https://github.com/Jiahong-Que-9527/Recordchat/issues/32): structured
 `workflow_result` in `structured_output`, RecordForge connector execution path
-(plan + request artifact), decoupled from RAG retrieval. Live HTTP is `#13`.
+(plan + request artifact), decoupled from RAG retrieval. Live HTTP landed in `#13`.
 
-### v0.2.5 RecordForge — **NEXT**
+### v0.2.5 RecordForge — **done**
 
 [#13](https://github.com/Jiahong-Que-9527/Recordchat/issues/13),
 [#14](https://github.com/Jiahong-Que-9527/Recordchat/issues/14).
 
-Starting point already in tree:
+Landed:
 
-- `RecordForgeConnector` + `WorkflowResult` (`kind=workflow_result`)
-- unconfigured → `status=blocked`; configured → `status=planned` + request artifact
-- `/chat` puts the result in `structured_output`
+- `#13`: `RecordForgeConnector` POSTs to `{RECORDFORGE_URL}/v1/generate` when
+  configured; transport / HTTP errors → `unavailable` + `failed` workflow
+- unconfigured → `status=blocked` (unchanged)
+- `#14`: frontend `WorkflowViewer` renders status / steps / artifacts; Canvas
+  no longer treats workflow results as JSON-LD
+- UI toggle `synthetic_mode`: **Local JSON-LD** (default, templates) vs
+  **RecordForge** (workflow). Generation **displays** in the panel; it does
+  not write to a ONE Record Server.
 
-Still to build:
+Backend tests cover ready / unconfigured / unavailable / local templates.
 
-- `#13`: real HTTP execute/submit when `RECORDFORGE_URL` is set; map transport
-  errors to `unavailable` without crashing
-- `#14`: frontend presentation for workflow status/steps/artifacts (today the
-  canvas path is JSON-LD-oriented)
-
-Unconfigured deployments must keep today's blocked structured response.
-
-### v0.2.6 AviationLakehouse
+### v0.2.6 AviationLakehouse — **NEXT**
 
 [#7](https://github.com/Jiahong-Que-9527/Recordchat/issues/7)–[#10](https://github.com/Jiahong-Que-9527/Recordchat/issues/10).
-Narrative + domain mapping only after the ONE Record assistant path is strong.
+
+**Execute [alh_execution_brief.md](alh_execution_brief.md).** That brief is
+the step-by-step source (issue bodies still mention an old “v0.2.3” section).
+
+Order: `#7` knowledge doc → `#8` `alh_mapping.py` → `#9` classifier/prompt →
+`#10` eval/demo. Narrative only: no live lakehouse, no Server persist.
 
 ### Data Foundation leftover
 
@@ -268,13 +279,12 @@ ingest more community HTML/PDF until #27 and #28 are done.
 
 ## 6. v0.3 sketch (not scheduled)
 
-- authentication and persisted sessions
-- conversation memory beyond request-scoped rewrite
-- source versioning and ingest admin
-- OpenTelemetry and an evaluation dashboard
-- live connectors: ONE Record Server, RecordForge, AviationLakehouse
+See [v03_sketch.md](v03_sketch.md) for the ordered sketch (auth, memory,
+source admin, tracing, eval dashboard, optional live Server/ALH connectors).
 
-No GitHub issues yet. Do not pull these into v0.2.
+No GitHub issues yet. Do not pull these into v0.2. Product freeze: synthetic
+objects are shown in the UI; auto-persist to a ONE Record Server is **not**
+current work.
 
 ---
 
@@ -314,4 +324,6 @@ The current iteration (2026-09 audit P0 + Retrieval Quality) is done when:
       (live HTTP deferred to `#13`).
 - [x] **AUD-07** — lightweight request JSONL / stdout diagnostics.
 
-**This iteration is closed.** Next DoD is RecordForge `#13` `#14` (see AGENTS.md §8).
+**This iteration is closed.** RecordForge `#13` `#14` is also closed (see
+AGENTS.md §7). Next DoD is ALH `#7`–`#10` —
+[alh_execution_brief.md](alh_execution_brief.md) §7.

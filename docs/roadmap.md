@@ -3,7 +3,7 @@
 The **current** plan (status, next slice, issue map) lives in
 [project_plan.md](project_plan.md). This file is the milestone narrative.
 
-## Status (2026-09-09)
+## Status (2026-09-10)
 
 - **v0.1**: complete and demoable
 - **Data Foundation**: core official + NE:ONE pack is in final folders;
@@ -14,19 +14,18 @@ The **current** plan (status, next slice, issue map) lives in
 - **2026-09 audit P0/P1** (AUD-01…AUD-07): done — see
   [project_plan.md §4.7](project_plan.md#47-2026-09-audit-findings-aud-01aud-10)
 - **Retrieval Quality** (`#27`–`#31`): done
-- **v0.2.4 workflow** (`#11` `#12` `#32`): done (structured `workflow_result`;
-  live RecordForge HTTP still open)
-- **next priority**: **v0.2.5 RecordForge** (`#13` HTTP client, `#14` frontend
-  workflow rendering)
-- **after that**: ALH narrative (`#7`–`#10`), then v0.3 platform sketch
+- **v0.2.4 workflow** (`#11` `#12` `#32`): done
+- **v0.2.5 RecordForge** (`#13` `#14`): done (live HTTP + workflow UI)
+- **next priority**: **v0.2.6 ALH narrative** (`#7`–`#10`)
+- **after that**: v0.3 platform sketch
 
 Source acquisition and import plan:
 [docs/data_source_plan.md](data_source_plan.md)
 
 GitHub tracking:
 
-- RecordForge (current): `#13` `#14`
-- ALH (deferred): `#7`–`#10`
+- ALH (current): `#7`–`#10`
+- RecordForge (done): `#13` `#14`
 - data leftover: `#23`
 - closed retrieval / workflow / audit foundations: `#27`–`#32` (+ AUD-01…07)
 - closed foundation / ontology / frontend: `#1`–`#6`, `#11` `#12`, `#15`–`#22`, `#24`–`#26`
@@ -100,22 +99,12 @@ Primary GitHub issues:
 
 ## Recommended Next Order
 
-0. **2026-09 audit P0 fixes** (AUD-01–04; §4.7 of `project_plan.md`) — restore
-   and version the eval set, de-duplicate canonical sources, fix the reranker
-   weighting, reconcile config/model defaults.
-1. **Retrieval Quality** (current after the audit P0)
-   Pin one canonical version per source family, replace smoke eval with
-   gold-chunk metrics, add hybrid retrieval and query-type filters, then
-   follow-up rewrite and citation filtering. Issues `#27`–`#31`.
-2. **Finish v0.2.4 workflow orchestration**
-   Structured workflow results and an execution path on the existing Connector
-   ABC (`#32`). `#11` / `#12` already landed the seam.
-3. **v0.2.5 RecordForge integration**
-   Synthetic data generation behind the connector (`#13` `#14`).
-4. **v0.2.6 AviationLakehouse narrative**
-   Bronze / Silver / Gold story last (`#7`–`#10`).
-5. **Data Foundation leftover (`#23`)**
-   Optional community / PDF pack; do not let it jump the retrieval-quality queue.
+0–3. **Done:** audit P0/P1, Retrieval Quality `#27`–`#31`, workflow `#32`,
+   RecordForge `#13` `#14` (plus Local JSON-LD toggle).
+4. **v0.2.6 AviationLakehouse narrative (current next)**
+   Follow [alh_execution_brief.md](alh_execution_brief.md). Issues `#7`–`#10`.
+5. **v0.3 platform** — sketch only ([v03_sketch.md](v03_sketch.md)).
+6. **Data Foundation leftover (`#23`)** — optional; do not jump ALH.
 
 ## Strategic guidance (product-level)
 
@@ -171,15 +160,9 @@ Goal:
 - hybrid + metadata filters so implementation/API questions hit the right family
 - follow-up questions keep entities; citations match used chunks
 
-Current state:
-
-- ontology-aware rerank is in the pipeline, but the index still contains
-  multiple versions of the same classes — and the duplication extends to OpenAPI
-  (3 versions) and spec docs (3 live versions); see AUD-02
-- `evaluate_rag.py` is a keyword smoke test **and currently crashes** because
-  the versioned eval set (`data/eval/questions.yaml`) is missing; see AUD-01
-- search is dense-only; conversation history is not used for retrieval
-- the reranker's entity boosts currently override vector similarity; see AUD-03
+Current state: **done** (2026-09-09). Canonical-version ingest, gold-chunk
+eval, hybrid dense+BM25 RRF, query-type filters, follow-up rewrite, citation
+filter, vector-dominant reranker. Remaining P2 only: AUD-08…AUD-10.
 
 Issues: `#27`–`#31` plus audit items AUD-01…AUD-10.
 Details: [project_plan.md](project_plan.md) §4 and §4.7.
@@ -200,8 +183,8 @@ Goal:
 - support real business workflow questions and multi-step execution flows around
   ONE Record operations, not just static Q&A
 
-Status: **partial**. Connector ABC and synthetic-generation routing exist;
-structured results and execution are `#32`. Blocked on Retrieval Quality.
+Status: **done**. Connector ABC, synthetic routing, structured
+`workflow_result`, RecordForge HTTP (`#13`) and frontend workflow view (`#14`).
 
 Scope:
 
@@ -211,38 +194,23 @@ Scope:
 
 ## v0.2.5 — RecordForge integration
 
-Goal:
-
-- support synthetic data generation requests such as:
-  `"Generate 5 synthetic shipments with pieces and transport events"`
-
-Needs:
-
-- build on the workflow orchestration layer rather than bypass it
-- query type for synthetic data generation
-- RecordForge stub or HTTP client
-- frontend support for multi-object JSON-LD results
+Status: **done**. HTTP client when `RECORDFORGE_URL` is set; unconfigured
+blocked workflow; Local JSON-LD templates via `synthetic_mode`. Generation
+is displayed only — no ONE Record Server persist.
 
 ## v0.2.6 — AviationLakehouse narrative
+
+Status: **next**. Execute [alh_execution_brief.md](alh_execution_brief.md).
 
 Goal:
 
 - answer how ONE Record objects map into Bronze / Silver / Gold layers
-- support architecture and platform narrative questions with grounded sources
-
-Needs:
-
-- ALH knowledge document
-- `alh_mapping` domain module
-- eval/demo/glossary updates
+- support architecture questions with grounded sources
+- no live lakehouse
 
 ## v0.3 — Real platform
 
-- authentication and user sessions
-- conversation memory and persisted chat history
-- source versioning and ingestion management
-- OpenTelemetry tracing and evaluation dashboard
-- live connectors: ONE Record Server, RecordForge, AviationLakehouse
+Sketch only: [v03_sketch.md](v03_sketch.md). Not scheduled.
 
 ## Positioning
 

@@ -82,3 +82,38 @@ def generate_for_entity(entity: str | None) -> dict[str, Any] | None:
     if entity and entity in GENERATORS:
         return GENERATORS[entity]()
     return generate_piece_example()
+
+
+def generate_synthetic_batch(
+    object_type: str,
+    count: int,
+    *,
+    with_pieces: bool = False,
+) -> dict[str, Any]:
+    """Build one or more template JSON-LD objects for local synthetic mode.
+
+    A single object is returned as a plain JSON-LD document. Multiple objects
+    (or shipment+piece pairs) are wrapped in ``@graph`` so the existing
+    JSON-LD canvas can render them without treating the payload as a workflow.
+    """
+    kind = object_type if object_type in GENERATORS else "Piece"
+    n = max(1, min(int(count), 50))
+    objects: list[dict[str, Any]] = []
+
+    for _ in range(n):
+        if kind == "Shipment" and with_pieces:
+            piece = generate_piece_example()
+            shipment = generate_shipment_example()
+            shipment["containedPieces"] = [{"@id": piece["@id"]}]
+            shipment["totalPieceCount"] = 1
+            objects.append(shipment)
+            objects.append(piece)
+        else:
+            objects.append(GENERATORS[kind]())
+
+    if len(objects) == 1:
+        return objects[0]
+    return {
+        "@context": ONE_RECORD_CONTEXT,
+        "@graph": objects,
+    }
