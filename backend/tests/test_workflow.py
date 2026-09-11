@@ -218,3 +218,11 @@ def test_request_log_writes_jsonl(tmp_path, monkeypatch):
     assert payload["query"] == "What is a Piece?"
     assert payload["chunks"][0]["chunk_id"] == "piece::1"
     assert "ts" in payload
+
+
+def test_request_log_relative_path_resolves_to_logs_dir():
+    from app.core.request_log import _resolve_log_path
+
+    path = _resolve_log_path("data/logs/requests.jsonl")
+    assert path.name == "requests.jsonl"
+    assert path.parts[-2] == "logs"

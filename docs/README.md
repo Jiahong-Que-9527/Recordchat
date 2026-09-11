@@ -16,6 +16,7 @@ Start here only to find the right file. Execution order lives in
 | [v03_sketch.md](v03_sketch.md) | Unscheduled platform sketch |
 | [data_source_plan.md](data_source_plan.md) | Corpus + canonical versions |
 | [adr/](adr/) | Decision records |
+| [expert_session_script.md](expert_session_script.md) | External tester script + request-log freeze |
 
 Current next work: **nothing scheduled.** Optional P2 or user-requested v0.3.
 Do not start ONE Record Server persist unless the user overrides the plan.

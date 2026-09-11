@@ -28,6 +28,22 @@ def _destination() -> str:
     return (os.environ.get("RECORDCHAT_REQUEST_LOG") or _DEFAULT).strip() or _DEFAULT
 
 
+def _resolve_log_path(dest: str) -> Path:
+    """Resolve a log path for local repo runs and the Docker image.
+
+    Relative paths are rooted at the repo (local) or ``/app`` (container),
+    not at ``backend/app/core/``.
+    """
+    path = Path(dest).expanduser()
+    if path.is_absolute():
+        return path
+    docker_root = Path("/app")
+    if (docker_root / "app" / "core" / "request_log.py").is_file():
+        return docker_root / path
+    repo_root = Path(__file__).resolve().parents[3]
+    return repo_root / path
+
+
 def log_chat_request(event: dict[str, Any]) -> None:
     """Append one diagnostic event. Never raises into the request path."""
     try:
@@ -42,11 +58,7 @@ def log_chat_request(event: dict[str, Any]) -> None:
         if dest in {"stdout", "stderr", "log"}:
             logger.info("request_diag %s", line)
             return
-        path = Path(dest)
-        if not path.is_absolute():
-            # Resolve relative to repo root (parent of backend/).
-            repo_root = Path(__file__).resolve().parents[3]
-            path = repo_root / path
+        path = _resolve_log_path(dest)
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as handle:
             handle.write(line + "\n")

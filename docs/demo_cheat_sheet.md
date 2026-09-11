@@ -3,6 +3,9 @@
 Use this during a live demo. It is the short companion to
 `docs/demo_script.md`.
 
+External expert sessions: use [expert_session_script.md](expert_session_script.md)
+(scope script, fallbacks, score sheet). Request JSONL: `make request-log`.
+
 ## Positioning
 
 Use this line:

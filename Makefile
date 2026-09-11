@@ -6,7 +6,7 @@ BACKEND_URL ?= http://127.0.0.1:8000
 
 .DEFAULT_GOAL := help
 .PHONY: help env up down restart rebuild build ps logs backend-logs \
-        frontend-logs sh-backend ingest test clean
+        frontend-logs sh-backend ingest session-env request-log test clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -50,6 +50,17 @@ sh-backend: ## Open a shell in the backend container
 ingest: ## Trigger ingestion / rebuild the Qdrant collection (waits for backend)
 	curl -fsS --retry 10 --retry-delay 3 --retry-connrefused -X POST $(BACKEND_URL)/ingest
 	@echo "\nIngest complete."
+
+session-env: ## Print freeze values for an expert session (revision, /health)
+	@echo "revision=$$(git rev-parse --short HEAD)"
+	@echo "branch=$$(git branch --show-current)"
+	@echo "date_utc=$$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+	@curl -s $(BACKEND_URL)/health || echo "backend health: unavailable"
+
+request-log: ## Tail request JSONL (create the file if needed)
+	@mkdir -p data/logs
+	@touch data/logs/requests.jsonl
+	tail -f data/logs/requests.jsonl
 
 test: ## Run the backend test suite
 	cd backend && uv run pytest -q

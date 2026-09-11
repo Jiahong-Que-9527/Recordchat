@@ -194,31 +194,27 @@ and whether the expert could act on it.
 
 **TODO**
 
-- [ ] **Before interviews — freeze the test environment:** pin the app revision,
-  selected model, prompt configuration, corpus, and canonical ontology version;
-  run a fresh ingest and record those values in the session log.
-- [ ] **Before interviews — run an internal smoke pass:** test 10–15 questions
-  spanning concepts, relationships, ontology, API/NE:ONE implementation, and
-  JSON-LD; resolve empty answers, broken source links, clearly irrelevant
-  citations, and structured-output rendering failures before external sessions.
-- [ ] **Before interviews — make evidence inspectable:** ensure each response
-  visibly identifies its source name, section, and working link; prefer no
-  citation over a citation that does not support the conclusion.
-- [ ] **Before interviews — capture diagnostic evidence:** save the question,
-  answer, returned source chunks and ranking, model/configuration, corpus
-  version, latency, and any error for every tested turn. Depends on AUD-07
-  (request logging), which must land before the interviews start.
-- [ ] **Before interviews — add uncertainty guardrails:** where evidence is
-  missing, ambiguous, or version-sensitive, have answers state their limits
-  rather than presenting an unsupported conclusion as certain.
-- [ ] **Before interviews — give lightweight onboarding:** provide a one-screen
-  scope prompt (concepts, ontology, JSON-LD, API, and NE:ONE troubleshooting)
-  so experts can start with relevant questions without constraining their
-  real-world queries.
+- [x] **Before interviews — freeze the test environment:** `make session-env`
+      records revision + `/health`; script in
+      [expert_session_script.md](expert_session_script.md).
+- [x] **Before interviews — run an internal smoke pass:** 15 live `/chat`
+      prompts (2026-09-11); no empty answers; related-concepts test fixtures
+      filtered (`3afab60`).
+- [ ] **Before interviews — make evidence inspectable:** source name/section
+      show in the UI; some sidecar URLs remain weak (note in the session
+      intro: prefer source name over a 404 link).
+- [x] **Before interviews — capture diagnostic evidence:** Docker writes
+      JSONL to `data/logs/requests.jsonl` (`RECORDCHAT_REQUEST_LOG`);
+      `make request-log` tails it.
+- [ ] **Before interviews — add uncertainty guardrails:** prompt already asks
+      to say when context is missing; no extra mid-round prompt change.
+- [x] **Before interviews — give lightweight onboarding:** one-screen scope
+      in [expert_session_script.md](expert_session_script.md).
 - [ ] Recruit 3–5 participants spanning ONE Record standard/ontology, business
   implementation, and API/NE:ONE integration perspectives.
-- [ ] Prepare a lightweight interview script, consent/recording note if
-  applicable, and two standard fallback questions.
+- [x] Prepare a lightweight interview script, consent/recording note if
+      applicable, and two standard fallback questions
+      ([expert_session_script.md](expert_session_script.md)).
 - [ ] Capture an expert verdict for each response: correct / partly correct /
   incorrect / cannot assess; also record citation trust and actionability.
 - [ ] Tag findings by severity (trust-breaking, core-task blocker, improvement)

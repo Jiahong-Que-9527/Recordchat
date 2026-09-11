@@ -30,8 +30,11 @@ services:
       EMBEDDING_DIM: ${EMBEDDING_DIM:-1536}
       QDRANT_UPSERT_BATCH_SIZE: ${QDRANT_UPSERT_BATCH_SIZE:-128}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      # File destination must be under the writable logs mount below.
+      RECORDCHAT_REQUEST_LOG: ${RECORDCHAT_REQUEST_LOG:-/app/data/logs/requests.jsonl}
     volumes:
       - ./data:/app/data:ro
+      - ./data/logs:/app/data/logs
     depends_on:
       qdrant:
         condition: service_healthy

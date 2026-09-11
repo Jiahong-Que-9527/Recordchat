@@ -194,8 +194,9 @@ No coding slice is scheduled. If opening v0.3, write
 - Frontend: `npm run build` from `frontend/` (CI does the same).
 - Data governance: `uv run --project backend python scripts/verify_source_governance.py`.
 - Retrieval: `uv run --project backend python scripts/evaluate_rag.py` (needs API keys).
-- Request log: set `RECORDCHAT_REQUEST_LOG=data/logs/requests.jsonl` (under
-  gitignored `data/`) or leave default `stdout`.
+- Request log: Docker writes `data/logs/requests.jsonl` (writable overlay).
+  Tail with `make request-log`. Freeze a session with `make session-env`.
+  Script: `docs/expert_session_script.md`.
 - Full stack: `make up && make ingest`, then prompts from
   `docs/demo_cheat_sheet.md` / `docs/demo_script.md` (include the synthetic
   generation workflow prompt).
