@@ -77,6 +77,26 @@ def test_jsonld_generation_produces_valid_jsonld(ingested_retriever):
 def test_relationship_question_enriches_related_concepts(ingested_retriever):
     resp = answer("Explain the relationship between Shipment and Piece", retriever=ingested_retriever, llm=FakeLLMProvider())
     assert "Piece" in resp.related_concepts or "Shipment" in resp.related_concepts
+    assert not any("ForTest" in name for name in resp.related_concepts)
+
+
+def test_related_concepts_hide_ontology_test_fixtures():
+    from app.models.source import Chunk, ChunkMetadata
+    from app.rag.pipeline import _related_concepts
+
+    chunk = Chunk(
+        chunk_id="piece::1",
+        content="Piece definition",
+        metadata=ChunkMetadata(
+            source_name="ontology",
+            entity="Piece",
+            related_entities=["Shipment", "ExtendedPieceForTest", "PieceDg"],
+        ),
+    )
+    related = _related_concepts("What is a Piece?", [chunk], QueryType.concept_explanation)
+    assert "Piece" in related
+    assert "ExtendedPieceForTest" not in related
+    assert "PieceDg" in related or "Shipment" in related
 
 
 def test_empty_llm_answer_falls_back_to_grounded_text(ingested_retriever):

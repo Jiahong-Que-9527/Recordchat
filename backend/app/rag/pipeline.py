@@ -329,6 +329,17 @@ def classify_query(query: str) -> QueryType:
     return QueryType.general_question
 
 
+_RELATED_NOISE_MARKERS = ("fortest", "fordemo", "mock", "fake")
+
+
+def _is_display_related_concept(name: str) -> bool:
+    """Hide ontology test/demo fixtures from the related-concepts chip list."""
+    if not name or not str(name).strip():
+        return False
+    lowered = name.lower()
+    return not any(marker in lowered for marker in _RELATED_NOISE_MARKERS)
+
+
 def _related_concepts(query: str, chunks, query_type: QueryType | None = None) -> list[str]:
     """Union of entities detected in the query, chunk metadata, and the
     curated relationship map."""
@@ -336,7 +347,7 @@ def _related_concepts(query: str, chunks, query_type: QueryType | None = None) -
 
     def _add(items):
         for it in items:
-            if it and it not in related:
+            if it and it not in related and _is_display_related_concept(str(it)):
                 related.append(it)
 
     for ent in one_record_schema.detect_entities(query):
