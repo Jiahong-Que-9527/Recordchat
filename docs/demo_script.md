@@ -196,6 +196,19 @@ Highlight:
 - NE:ONE-specific citations
 - this is where RecordChat stops being only a glossary assistant
 
+### Prompt 6: show AviationLakehouse narrative
+
+Ask:
+
+`How could ONE Record data be connected to an AviationLakehouse?`
+
+Highlight:
+
+- query type is `architecture_question`
+- answer mentions Bronze, Silver, and Gold
+- citations point at the RecordChat ALH narrative and/or glossary
+- this is a mapping story only — no live lakehouse is running
+
 ## 7. Good Backup Prompts
 
 - `ONE Record 里的 Piece 是什么？`
@@ -208,9 +221,10 @@ Highlight:
 
 Use this:
 
-> "The current milestone is strong on ONE Record concepts, ontology questions,
-> JSON-LD, and NE:ONE implementation support. The next major step is workflow
-> orchestration, not more ALH narrative yet."
+> "The current milestone is strong on ONE Record concepts, ontology, JSON-LD,
+> NE:ONE support, optional RecordForge generation, and an AviationLakehouse
+> Bronze/Silver/Gold narrative. Live lakehouse connectors and ONE Record Server
+> auto-persist are not in this release."
 
 If someone asks about model hosting:
 

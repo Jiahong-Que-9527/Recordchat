@@ -1,16 +1,15 @@
 # RecordChat Project Plan
 
-**Status date:** 2026-09-10
-**Current delivered line:** v0.2.5 RecordForge + Retrieval Quality + audit P0/P1
-**Current next work:** v0.2.6 ALH narrative (`#7`–`#10`).
+**Status date:** 2026-09-11
+**Current delivered line:** v0.2.6 ALH narrative + RecordForge + Retrieval Quality
+**Current next work:** v0.3 sketch only (not scheduled) — see [v03_sketch.md](v03_sketch.md).
 
-> **Agent handoff (2026-09-10).** Audit P0/P1 (AUD-01…AUD-07), Retrieval
-> Quality (`#27`–`#31`), workflow `#32`, and RecordForge `#13` `#14` are
-> **done**. Do not re-open those slices unless a regression appears.
-> **Next work is v0.2.6 ALH narrative.** Execute
-> [alh_execution_brief.md](alh_execution_brief.md) (`#7`→`#8`→`#9`→`#10`).
-> How to work: [agent_execution_playbook.md](agent_execution_playbook.md).
-> AUD-08…AUD-10 remain P2. Do not start v0.3 or Server persist.
+> **Agent handoff (2026-09-11).** v0.2.6 ALH (`#7`–`#10`) is **done** on
+> `feat/v0.2.6-alh-narrative` (merge when ready). Do not re-open closed
+> slices unless a regression appears. **Next scheduled coding is not
+> opened** — read [v03_sketch.md](v03_sketch.md) only if the user asks for
+> platform work. AUD-08…AUD-10 remain optional P2. Do not start Server
+> persist. How to work: [agent_execution_playbook.md](agent_execution_playbook.md).
 
 This is the **current** project plan. Use it when documents disagree.
 
@@ -18,7 +17,7 @@ This is the **current** project plan. Use it when documents disagree.
 |---|---|
 | Where are we, and what is next? | this file |
 | How to execute a slice | [agent_execution_playbook.md](agent_execution_playbook.md) |
-| How to execute **this** next slice | [alh_execution_brief.md](alh_execution_brief.md) |
+| ALH slice brief (done — reference) | [alh_execution_brief.md](alh_execution_brief.md) |
 | Milestone narrative | [roadmap.md](roadmap.md) |
 | v0.2 task breakdown | [v0.2_development_plan.md](v0.2_development_plan.md) |
 | v0.1 API / module contract | [../SPEC.md](../SPEC.md) |
@@ -46,7 +45,7 @@ ONE Record Server = standardized data exchange layer
 AviationLakehouse = analytical backend (Bronze / Silver / Gold, deferred)
 ```
 
-Frozen product choices (do not reverse in v0.2.6):
+Frozen product choices (do not reverse without an explicit product decision):
 
 - Synthetic generation **displays** JSON-LD or a workflow result. It does not
   auto-write objects into a ONE Record Server.
@@ -68,7 +67,7 @@ Frozen product choices (do not reverse in v0.2.6):
 | **Retrieval Quality** | **done** (`#27`–`#31`) | `#27`–`#31` |
 | v0.2.4 workflow orchestration | **done** (`#11` `#12` `#32`) | structured workflow_result + connector path |
 | v0.2.5 RecordForge | **done** | `#13` `#14` |
-| v0.2.6 AviationLakehouse narrative | **next** | `#7`–`#10`; see [alh_execution_brief.md](alh_execution_brief.md) |
+| v0.2.6 AviationLakehouse narrative | **done** | `#7`–`#10`; see [alh_execution_brief.md](alh_execution_brief.md) |
 | v0.3 platform | **sketch only** | no issues yet |
 
 ---
@@ -93,15 +92,17 @@ v0.1  ──► Data Foundation  ──► v0.2.1  ──► v0.2.2  ──► v
                                     v0.2.5 RecordForge (#13 #14) ✅
                                                │
                                                ▼
-                                    v0.2.6 ALH narrative (#7–#10)  ◄── next
+                                    v0.2.6 ALH narrative (#7–#10) ✅
                                                │
                                                ▼
                                     v0.3 platform (auth, memory,
                                     source versioning, tracing)
+                                    ◄── sketch only; not scheduled
 ```
 
-AUD-01…AUD-07, `#27`–`#32`, and RecordForge `#13` `#14` are landed. Remaining
-P2 audit items: AUD-08…AUD-10. Next product slice: ALH narrative (`#7`–`#10`).
+AUD-01…AUD-07, `#27`–`#32`, RecordForge `#13` `#14`, and ALH `#7`–`#10` are
+landed. Remaining P2 audit items: AUD-08…AUD-10. No coding slice is scheduled
+after ALH until the user opens v0.3.
 
 ---
 
@@ -259,15 +260,18 @@ Landed:
 
 Backend tests cover ready / unconfigured / unavailable / local templates.
 
-### v0.2.6 AviationLakehouse — **NEXT**
+### v0.2.6 AviationLakehouse — **done**
 
 [#7](https://github.com/Jiahong-Que-9527/Recordchat/issues/7)–[#10](https://github.com/Jiahong-Que-9527/Recordchat/issues/10).
 
-**Execute [alh_execution_brief.md](alh_execution_brief.md).** That brief is
-the step-by-step source (issue bodies still mention an old “v0.2.3” section).
+Landed (see [alh_execution_brief.md](alh_execution_brief.md)):
 
-Order: `#7` knowledge doc → `#8` `alh_mapping.py` → `#9` classifier/prompt →
-`#10` eval/demo. Narrative only: no live lakehouse, no Server persist.
+- `#7` `data/raw/one_record_docs/aviation_lakehouse.md` + sidecar
+- `#8` `domain/alh_mapping.py` (Bronze/Silver/Gold helpers)
+- `#9` additive `QueryType.architecture_question` + prompt/glossary hooks
+- `#10` three eval questions + demo prompts
+
+Narrative only: no live lakehouse, no Server persist.
 
 ### Data Foundation leftover
 

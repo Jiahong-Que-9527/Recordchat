@@ -60,13 +60,15 @@ Check:
 - `Explain the relationship between Shipment and Piece.`
 - `What is a Waybill in ONE Record?`
 - `Generate 5 synthetic shipments with pieces.` (Local JSON-LD panel, or switch toolbar to RecordForge for workflow)
+- `How could ONE Record data be connected to an AviationLakehouse?` (Bronze / Silver / Gold narrative)
 
 ## If Someone Asks About Limitations
 
 Use this:
 
-> "This release is strongest on ONE Record core knowledge and developer support.
-> The next milestone is workflow orchestration, not a bigger platform narrative."
+> "This release is strongest on ONE Record core knowledge, developer support,
+> optional synthetic generation, and an ALH Bronze/Silver/Gold narrative.
+> There is no live lakehouse or auto-persist to a ONE Record Server yet."
 
 ## 3-Minute Version
 

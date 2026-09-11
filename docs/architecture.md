@@ -8,10 +8,11 @@ backend retrieves source-grounded context from Qdrant, assembles a prompt, calls
 a (provider-abstracted) LLM, and enriches the answer with domain tools
 (relationship map + JSON-LD templates).
 
-Current project priority (2026-09-10):
+Current project priority (2026-09-11):
 
-- `v0.1` through `v0.2.5` are delivered, including Retrieval Quality, audit
-  P0/P1 (AUD-01…AUD-07), RecordForge HTTP, and Local/RecordForge UI toggle
+- `v0.1` through `v0.2.6` are delivered, including Retrieval Quality, audit
+  P0/P1 (AUD-01…AUD-07), RecordForge HTTP, Local/RecordForge UI toggle, and
+  ALH narrative (`architecture_question`)
 - retrieval is hybrid (dense + BM25-lite RRF) with canonical-version filtering,
   follow-up rewrite, and citation filtering
 - synthetic intents skip RAG. `synthetic_mode=local` uses JSON-LD templates
@@ -20,7 +21,7 @@ Current project priority (2026-09-10):
   failure → `unavailable`. **No auto-persist to a ONE Record Server.**
 - frontend: `WorkflowViewer` for `kind=workflow_result`; JSON-LD canvas
   otherwise
-- **next**: ALH narrative (`docs/alh_execution_brief.md`)
+- **next**: nothing scheduled (optional P2 or user-requested v0.3 sketch)
 
 ```
 ┌──────────────────────────── Frontend (Next.js) ────────────────────────────┐
@@ -113,13 +114,14 @@ one_record_schema  ->  ontology neighbors first, manual map fallback
 
 Recommended order (current):
 
-1. **v0.2.6 ALH narrative** — docs + `alh_mapping` + classifier; no live lake
-   ([alh_execution_brief.md](alh_execution_brief.md))
-2. **v0.3** — sketch only ([v03_sketch.md](v03_sketch.md))
+1. **v0.2.6 ALH narrative** — **done** ([alh_execution_brief.md](alh_execution_brief.md))
+2. **v0.3** — sketch only ([v03_sketch.md](v03_sketch.md)); not scheduled
 
 - **RecordForge** (done, optional): HTTP `/v1/generate` or local templates.
   Output is displayed; not written to a Server.
-- **AviationLakehouse** (next, narrative): explain Bronze / Silver / Gold.
+- **AviationLakehouse** (done, narrative-only): `architecture_question` +
+  `domain/alh_mapping.py` + `data/raw/one_record_docs/aviation_lakehouse.md`.
+  No live lakehouse cluster.
 - **ONE Record Server** (later, optional connector): live objects / persist
   only if product un-freezes auto-write (v0.3 §3.6).
 

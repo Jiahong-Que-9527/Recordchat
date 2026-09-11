@@ -24,11 +24,18 @@ npm-debug.log*
 *.tsbuildinfo
 
 # Data (local only — not versioned)
-# Exception: data/eval/ holds OUR OWN authored eval questions (no third-party
-# content) and MUST stay versioned — see AGENTS.md hard rule 7 and SPEC Phase 9.
+# Exceptions (project-authored, no third-party redistribution):
+# - data/eval/ — eval questions (AGENTS.md hard rule 7 / SPEC Phase 9)
+# - AviationLakehouse narrative markdown + sidecar (v0.2.6)
 data/*
 !data/eval/
 !data/eval/**
+!data/raw/
+data/raw/**
+!data/raw/one_record_docs/
+data/raw/one_record_docs/**
+!data/raw/one_record_docs/aviation_lakehouse.md
+!data/raw/one_record_docs/aviation_lakehouse.md.meta.json
 
 # OS
 .DS_Store
