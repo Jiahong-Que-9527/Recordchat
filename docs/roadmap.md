@@ -3,7 +3,7 @@
 The **current** plan (status, next slice, issue map) lives in
 [project_plan.md](project_plan.md). This file is the milestone narrative.
 
-## Status (2026-09-10)
+## Status (2026-09-11)
 
 - **v0.1**: complete and demoable
 - **Data Foundation**: core official + NE:ONE pack is in final folders;
@@ -16,15 +16,15 @@ The **current** plan (status, next slice, issue map) lives in
 - **Retrieval Quality** (`#27`–`#31`): done
 - **v0.2.4 workflow** (`#11` `#12` `#32`): done
 - **v0.2.5 RecordForge** (`#13` `#14`): done (live HTTP + workflow UI)
-- **next priority**: **v0.2.6 ALH narrative** (`#7`–`#10`)
-- **after that**: v0.3 platform sketch
+- **v0.2.6 ALH narrative** (`#7`–`#10`): done
+- **next priority**: nothing scheduled (optional P2 or user-requested v0.3)
 
 Source acquisition and import plan:
 [docs/data_source_plan.md](data_source_plan.md)
 
 GitHub tracking:
 
-- ALH (current): `#7`–`#10`
+- ALH (done): `#7`–`#10`
 - RecordForge (done): `#13` `#14`
 - data leftover: `#23`
 - closed retrieval / workflow / audit foundations: `#27`–`#32` (+ AUD-01…07)
@@ -101,10 +101,10 @@ Primary GitHub issues:
 
 0–3. **Done:** audit P0/P1, Retrieval Quality `#27`–`#31`, workflow `#32`,
    RecordForge `#13` `#14` (plus Local JSON-LD toggle).
-4. **v0.2.6 AviationLakehouse narrative (current next)**
-   Follow [alh_execution_brief.md](alh_execution_brief.md). Issues `#7`–`#10`.
+4. **v0.2.6 AviationLakehouse narrative** — **done**
+   ([alh_execution_brief.md](alh_execution_brief.md)).
 5. **v0.3 platform** — sketch only ([v03_sketch.md](v03_sketch.md)).
-6. **Data Foundation leftover (`#23`)** — optional; do not jump ALH.
+6. **Data Foundation leftover (`#23`)** — optional P2.
 
 ## Strategic guidance (product-level)
 
@@ -200,12 +200,12 @@ is displayed only — no ONE Record Server persist.
 
 ## v0.2.6 — AviationLakehouse narrative
 
-Status: **next**. Execute [alh_execution_brief.md](alh_execution_brief.md).
+Status: **done**. See [alh_execution_brief.md](alh_execution_brief.md).
 
-Goal:
+Goal met:
 
 - answer how ONE Record objects map into Bronze / Silver / Gold layers
-- support architecture questions with grounded sources
+- `architecture_question` routing with grounded ALH doc + glossary
 - no live lakehouse
 
 ## v0.3 — Real platform

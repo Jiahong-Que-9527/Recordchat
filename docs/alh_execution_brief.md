@@ -1,6 +1,6 @@
 # v0.2.6 ALH narrative — execution brief
 
-**Status:** next slice (not started)  
+**Status:** done (2026-09-11) on branch `feat/v0.2.6-alh-narrative`  
 **Issues:** `#7` → `#8` → `#9` → `#10` (this order is mandatory)  
 **Owner docs:** this file wins over the older GitHub issue bodies when they
 disagree (those issues still point at a pre-v0.2.5 “v0.2.3” section).
@@ -235,15 +235,15 @@ needs API keys; still add a unit test that `classify_query` matches
 
 ## 7. Definition of done
 
-- [ ] `#7` ALH markdown + sidecar ingested; governance script still green
-- [ ] `#8` `alh_mapping.py` + tests
-- [ ] `#9` `architecture_question` end-to-end (backend + frontend type union)
-- [ ] `#10` three eval questions + demo prompt
-- [ ] Answers to the gold questions mention Bronze, Silver, and Gold and
-      cite the ALH doc or glossary (spot-check `/chat` after ingest)
-- [ ] No live lakehouse / Server write code
-- [ ] `uv run pytest -q` green; `npm run build` if frontend QueryType changed
-- [ ] `project_plan.md` / `AGENTS.md` marked v0.2.6 done; next = v0.3 sketch only
+- [x] `#7` ALH markdown + sidecar; governance script green
+- [x] `#8` `alh_mapping.py` + tests
+- [x] `#9` `architecture_question` end-to-end (backend + frontend type union)
+- [x] `#10` three eval questions + demo prompt
+- [x] Answers to the gold questions mention Bronze, Silver, and Gold and
+      cite the ALH doc or glossary (spot-checked `/chat` after ingest)
+- [x] No live lakehouse / Server write code
+- [x] `uv run pytest -q` green; `npm run build` green
+- [x] `project_plan.md` / `AGENTS.md` marked v0.2.6 done; next = v0.3 sketch only
 
 ## 8. Suggested `/chat` spot checks
 

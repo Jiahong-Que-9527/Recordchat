@@ -52,16 +52,15 @@ AviationLakehouse = analytical Bronze/Silver/Gold narrative (v0.2.6, docs only)
 
 ## 3. Current line (keep this in sync with project_plan)
 
-- **Delivered:** v0.1 → Data Foundation core pack → v0.2.1–v0.2.5,
+- **Delivered:** v0.1 → Data Foundation core pack → v0.2.1–v0.2.6,
   Retrieval Quality `#27`–`#31`, audit AUD-01…AUD-07, workflow `#32`,
-  RecordForge `#13` `#14` plus Local / RecordForge UI toggle.
-- **Next slice:** v0.2.6 ALH narrative — `docs/alh_execution_brief.md`,
-  issues `#7`–`#10`.
-- **After that (not scheduled):** v0.3 sketch — `docs/v03_sketch.md`.
-- **Optional P2 (do not block ALH):** AUD-08, AUD-09, AUD-10, AUD-04
-  frontend `/models` wiring, leftover `#23`.
+  RecordForge `#13` `#14`, Local / RecordForge UI toggle, ALH `#7`–`#10`.
+- **Next slice:** none scheduled.
+- **Unscheduled:** v0.3 sketch — `docs/v03_sketch.md` (only if the user asks).
+- **Optional P2:** AUD-08, AUD-09, AUD-10, AUD-04 frontend `/models` wiring,
+  leftover `#23`.
 
-Do **not** start:
+Do **not** start without an explicit ask:
 
 - live ONE Record Server writes
 - live AviationLakehouse

@@ -48,6 +48,14 @@ def test_classify_query():
     assert classify_query("What should I check when an NE:ONE API request fails") == QueryType.implementation_question
     assert classify_query("What is a LogisticsObject") == QueryType.concept_explanation
     assert classify_query("ONE Record 里的 Piece 是什么？") == QueryType.concept_explanation
+    assert (
+        classify_query("How could ONE Record data be connected to an AviationLakehouse?")
+        == QueryType.architecture_question
+    )
+    assert (
+        classify_query("How would a Piece land in Bronze, Silver, and Gold?")
+        == QueryType.architecture_question
+    )
 
 
 def test_chat_returns_grounded_answer_with_sources(ingested_retriever):

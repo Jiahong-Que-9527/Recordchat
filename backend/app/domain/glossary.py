@@ -162,6 +162,40 @@ GLOSSARY: dict[str, dict] = {
         ),
         "related": ["LogisticsObject", "ONE Record"],
     },
+    "AviationLakehouse": {
+        "definition": (
+            "AviationLakehouse (ALH) is RecordChat's project narrative for an "
+            "analytical landing zone where copies of ONE Record logistics "
+            "objects could be organized in Bronze, Silver, and Gold layers. "
+            "It is not an IATA product and is not a live cluster in this "
+            "repository."
+        ),
+        "related": ["Bronze", "Silver", "Gold", "ONE Record", "LogisticsObject"],
+    },
+    "Bronze": {
+        "definition": (
+            "In the RecordChat AviationLakehouse narrative, Bronze is the "
+            "raw / near-raw landing layer for ONE Record JSON-LD "
+            "LogisticsObjects, preserving @id, @type, and source metadata."
+        ),
+        "related": ["Silver", "Gold", "AviationLakehouse", "LogisticsObject"],
+    },
+    "Silver": {
+        "definition": (
+            "In the RecordChat AviationLakehouse narrative, Silver holds typed, "
+            "validated, and linked logistics entities (such as Piece and "
+            "Shipment) at object grain for analytical joins."
+        ),
+        "related": ["Bronze", "Gold", "AviationLakehouse", "Shipment", "Piece"],
+    },
+    "Gold": {
+        "definition": (
+            "In the RecordChat AviationLakehouse narrative, Gold holds "
+            "business-ready analytical facts (cycle time, dwell, event "
+            "timelines). It is not the operational system of record."
+        ),
+        "related": ["Bronze", "Silver", "AviationLakehouse"],
+    },
 }
 
 

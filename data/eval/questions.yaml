@@ -101,3 +101,22 @@
   expected_entities: ["containedPieces", "Shipment", "Piece"]
   expected_source_families: ["Ontology"]
   expected_canonical_version: "2025-07"
+
+- id: alh_layers_overview
+  question: How could ONE Record data be connected to an AviationLakehouse?
+  expected_query_type: architecture_question
+  expected_keywords: ["Bronze", "Silver", "Gold"]
+  expected_source_families: ["AviationLakehouse", "lakehouse", "glossary"]
+
+- id: alh_piece_landing
+  question: How would a Piece land in Bronze, Silver, and Gold?
+  expected_query_type: architecture_question
+  expected_keywords: ["Piece", "Bronze", "Silver", "Gold"]
+  expected_entities: ["Piece"]
+  expected_source_families: ["AviationLakehouse", "lakehouse", "glossary"]
+
+- id: alh_vs_system_of_record
+  question: Why is an AviationLakehouse not a replacement for a ONE Record Server?
+  expected_query_type: architecture_question
+  expected_keywords: ["ONE Record Server", "Gold"]
+  expected_source_families: ["AviationLakehouse", "lakehouse", "glossary"]

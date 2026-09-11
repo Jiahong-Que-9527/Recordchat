@@ -15,7 +15,7 @@ from app.core.config import get_settings
 from app.core.llm import LLMProvider, get_llm_provider
 from app.core.logging import get_logger
 from app.core.request_log import RequestTimer, log_chat_request
-from app.domain import jsonld_generator, one_record_schema
+from app.domain import alh_mapping, jsonld_generator, one_record_schema
 from app.models.chat import (
     ChatHistoryMessage,
     ChatResponse,
@@ -59,6 +59,12 @@ def search_filter_for_query(query: str, query_type: QueryType) -> SearchFilter |
         return SearchFilter(chunk_types=("class_definition", "property_definition", "concept"))
     if query_type == QueryType.api_question:
         return SearchFilter(chunk_types=("api", "concept", "general"))
+    if query_type == QueryType.architecture_question:
+        # Prefer narrative/docs/glossary; keep bulk example JSON out.
+        return SearchFilter(
+            chunk_types=("concept", "general"),
+            exclude_chunk_types=("example",),
+        )
     if query_type == QueryType.implementation_question:
         # Prefer docs/config; exclude bulk example JSON unless explicitly requested.
         if _wants_examples(query):
@@ -74,6 +80,61 @@ def search_filter_for_query(query: str, query_type: QueryType) -> SearchFilter |
         # Soft preference: keep examples out of the default concept pool.
         return SearchFilter(exclude_chunk_types=("example",))
     return None
+
+
+def _is_architecture_query(query: str) -> bool:
+    """Detect AviationLakehouse / medallion narrative questions (#9).
+
+    Requires an ALH-specific signal so phrases like "gold standard" ontology
+    wording do not steal classification from concept/ontology paths.
+    """
+    q = query.lower()
+    strong_markers = (
+        "aviationlakehouse",
+        "aviation lakehouse",
+        "lakehouse",
+        "medallion",
+        "analytical layer",
+        "bronze/silver/gold",
+        "bronze / silver / gold",
+        "bronze, silver, and gold",
+        "bronze, silver and gold",
+        "湖仓",
+        "数据湖",
+        "分析层",
+    )
+    if any(marker in q or marker in query for marker in strong_markers):
+        return True
+
+    layer_hits = sum(
+        1
+        for token in ("bronze", "silver", "gold", "青铜", "白银", "黄金")
+        if token in q or token in query
+    )
+    if layer_hits >= 2:
+        return True
+
+    analytics_context = any(
+        marker in q or marker in query
+        for marker in (
+            "landing",
+            "layer",
+            "layers",
+            "analytical",
+            "analytics",
+            "warehouse",
+            "ingest",
+            "medallion",
+            "层",
+            "落",
+            "分析",
+        )
+    )
+    single_layer = any(
+        token in q or token in query
+        for token in ("bronze", "silver", "gold", "青铜", "白银", "黄金")
+    )
+    return bool(single_layer and analytics_context)
 
 
 def _is_ontology_query(query: str) -> bool:
@@ -249,6 +310,9 @@ def classify_query(query: str) -> QueryType:
         return QueryType.jsonld_generation
     if _is_synthetic_generation_query(query):
         return QueryType.synthetic_data_generation
+    # Before implementation/api: ALH questions often mention "server".
+    if _is_architecture_query(query):
+        return QueryType.architecture_question
     if _is_ontology_query(query):
         return QueryType.ontology_question
     if any(k in q for k in implementation_markers) or (
@@ -265,7 +329,7 @@ def classify_query(query: str) -> QueryType:
     return QueryType.general_question
 
 
-def _related_concepts(query: str, chunks) -> list[str]:
+def _related_concepts(query: str, chunks, query_type: QueryType | None = None) -> list[str]:
     """Union of entities detected in the query, chunk metadata, and the
     curated relationship map."""
     related: list[str] = []
@@ -282,6 +346,8 @@ def _related_concepts(query: str, chunks) -> list[str]:
         if c.metadata.entity:
             _add([c.metadata.entity])
         _add(c.metadata.related_entities)
+    if query_type == QueryType.architecture_question:
+        _add(["AviationLakehouse", "Bronze", "Silver", "Gold"])
     return related[:8]
 
 
@@ -421,7 +487,19 @@ def _prepare_answer_context(
             by_chunk_id.setdefault(chunk.chunk_id, chunk)
         chunks = list(by_chunk_id.values())
     chunks = rerank(retrieval_query, chunks)[: settings.rag_top_k]
-    user_prompt = prompt_mod.build_user_prompt(query, chunks, query_type)
+    extra_context = None
+    if query_type == QueryType.architecture_question:
+        mapping_text = alh_mapping.format_alh_context(query)
+        if mapping_text.strip():
+            extra_context = (
+                "AviationLakehouse mapping (project narrative):\n" + mapping_text
+            )
+    user_prompt = prompt_mod.build_user_prompt(
+        query,
+        chunks,
+        query_type,
+        extra_context=extra_context,
+    )
     return query_type, chunks, user_prompt
 
 
@@ -576,7 +654,7 @@ def answer(
             answer=answer_text,
             query_type=query_type,
             sources=_sources_from_chunks(cited),
-            related_concepts=_related_concepts(query, chunks),
+            related_concepts=_related_concepts(query, chunks, query_type),
             structured_output=structured_output,
         )
         log_chat_request(
@@ -657,7 +735,7 @@ def answer_stream(
         answer=answer_text,
         query_type=query_type,
         sources=_sources_from_chunks(cited),
-        related_concepts=_related_concepts(query, chunks),
+        related_concepts=_related_concepts(query, chunks, query_type),
         structured_output=structured_output,
     )
     log_chat_request(

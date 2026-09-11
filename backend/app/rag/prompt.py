@@ -78,6 +78,15 @@ _TYPE_HINTS = {
         "in the retrieved context, and distinguish them from official ONE Record "
         "standard behavior."
     ),
+    QueryType.architecture_question: (
+        "The user is asking about the RecordChat AviationLakehouse narrative "
+        "(Bronze / Silver / Gold). Prefer the retrieved ALH narrative and "
+        "glossary. Explicitly distinguish this project mapping from official "
+        "IATA ONE Record specifications. Mention Bronze, Silver, and Gold when "
+        "supported by context. A small Mermaid flowchart of "
+        "ONE Record → Bronze → Silver → Gold can help when it clarifies the "
+        "story. Do not invent a live lakehouse deployment."
+    ),
     QueryType.synthetic_data_generation: (
         "The user wants synthetic ONE Record objects or a generation workflow. "
         "If a generation connector is not available, explain the limitation "
@@ -97,12 +106,20 @@ def _format_context(chunks: list[Chunk]) -> str:
     return "\n---\n".join(blocks)
 
 
-def build_user_prompt(query: str, chunks: list[Chunk], query_type: QueryType) -> str:
+def build_user_prompt(
+    query: str,
+    chunks: list[Chunk],
+    query_type: QueryType,
+    *,
+    extra_context: str | None = None,
+) -> str:
     hint = _TYPE_HINTS.get(query_type, "")
     context = _format_context(chunks)
     parts = []
     if hint:
         parts.append(f"GUIDANCE: {hint}")
     parts.append(f"CONTEXT:\n{context}")
+    if extra_context and extra_context.strip():
+        parts.append(extra_context.strip())
     parts.append(f"QUESTION: {query}")
     return "\n\n".join(parts)

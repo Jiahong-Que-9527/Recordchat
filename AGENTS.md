@@ -27,14 +27,14 @@ AviationLakehouse = Bronze/Silver/Gold narrative (v0.2.6, docs/mapping only)
 |---|---|---|
 | 1 | `docs/project_plan.md` | **Current status + next work.** Wins when docs disagree. |
 | 2 | `docs/agent_execution_playbook.md` | How to execute any slice (read after the plan). |
-| 3 | slice brief, currently `docs/alh_execution_brief.md` | Step-by-step for the **current** next work. |
+| 3 | active slice brief (none scheduled; ALH brief is reference) | Step-by-step when a slice is open. |
 | 4 | `docs/architecture.md` | System architecture and design decisions. |
 | 5 | `SPEC.md` | v0.1 API / data / module contracts. Still **binding** (field names, module boundaries, forbidden patterns). Additive enum values are allowed; renaming is not. |
 | 6 | `docs/v0.2_development_plan.md` | Historical v0.2 task map. |
 | 7 | `docs/data_source_plan.md` | Ingest / governance / canonical versions. |
 | 8 | `docs/adr/*.md` | Recorded decisions. |
 | 9 | `docs/roadmap.md` | Milestone narrative (may lag; plan + briefs win). |
-| 10 | `docs/v03_sketch.md` | Unscheduled platform sketch. Do not start until ALH is done. |
+| 10 | `docs/v03_sketch.md` | Unscheduled platform sketch. |
 
 Repo directories:
 
@@ -101,24 +101,25 @@ uv run --project backend python scripts/evaluate_rag.py
 8. **Every phase must leave the project runnable and tested.** No credentials
    may be required to merely boot (graceful degradation instead).
 
-## 5. Current state (2026-09-10)
+## 5. Current state (2026-09-11)
 
-- Delivered: v0.1 baseline, Data Foundation (core pack), v0.2.1–v0.2.5,
+- Delivered: v0.1 baseline, Data Foundation (core pack), v0.2.1–v0.2.6,
   audit P0/P1 (AUD-01…AUD-07), Retrieval Quality `#27`–`#31`, RecordForge
-  `#13` `#14`, plus Local / RecordForge generation toggle.
+  `#13` `#14`, Local / RecordForge generation toggle, ALH narrative `#7`–`#10`.
 - Synthetic generation:
   - `synthetic_mode=local` (UI default) → template JSON-LD panel (`@graph` when
     multiple objects). No RecordForge, no Server write.
   - `synthetic_mode=recordforge` (or omitted on `/chat`) → `workflow_result`.
     Configured URL POSTs `/v1/generate`; missing URL → `blocked`; remote
     failure → `unavailable`. Never auto-persists to a ONE Record Server.
+- ALH: `architecture_question` + `domain/alh_mapping.py` +
+  `data/raw/one_record_docs/aviation_lakehouse.md` (narrative only).
 - Frontend: `WorkflowViewer` for workflows; JSON-LD canvas for templates /
   `@graph`.
-- **Current next:** v0.2.6 ALH narrative. Execute
-  `docs/alh_execution_brief.md` (`#7`→`#8`→`#9`→`#10`).
-- Optional P2 (do not block ALH): AUD-08…AUD-10, AUD-04 ModelPicker wiring,
-  leftover `#23`.
-- Backend tests: 61 passing (`uv run pytest -q`).
+- **Current next:** nothing scheduled. Optional P2 (AUD-08…AUD-10, AUD-04
+  ModelPicker wiring, leftover `#23`) or user-requested v0.3 from
+  `docs/v03_sketch.md`.
+- Backend tests: 69 passing (`uv run pytest -q`).
 
 ### What landed in the 2026-09-09 slice (so agents do not redo it)
 
@@ -141,17 +142,14 @@ uv run --project backend python scripts/evaluate_rag.py
 | RecordForge HTTP `#13` | `connectors/recordforge.py` (POST `/v1/generate`, mockable `http_client`) |
 | Frontend workflow `#14` | `components/WorkflowViewer.tsx`, `Canvas.tsx`, `Message.tsx`, `lib/api.ts` |
 | Generation toggle | `ChatRequest.synthetic_mode`, `GenerationModePicker`, local `jsonld_generator` batch |
+| ALH narrative `#7`–`#10` | `aviation_lakehouse.md`, `domain/alh_mapping.py`, `QueryType.architecture_question` |
 
 ## 6. Next work (in order)
 
-1. **v0.2.6 ALH narrative** — follow `docs/alh_execution_brief.md` exactly
-   (`#7` knowledge doc → `#8` `alh_mapping` → `#9` classifier/prompt →
-   `#10` eval/demo). Docs/mapping only; no live lakehouse.
-2. **v0.3 platform** — `docs/v03_sketch.md` only. Do not open unless ALH is
-   done and the user asks.
-3. Optional / P2 (playbook §6): AUD-04 ModelPicker → `GET /models`, AUD-08
-   shared ontology helper, AUD-09 pin Qdrant image, AUD-10 CI fake-embedding
-   fixture, leftover `#23`.
+1. **Nothing scheduled.** Optional P2 (playbook §6): AUD-04 ModelPicker →
+   `GET /models`, AUD-08 shared ontology helper, AUD-09 pin Qdrant image,
+   AUD-10 CI fake-embedding fixture, leftover `#23`.
+2. **v0.3 platform** — `docs/v03_sketch.md` only when the user explicitly asks.
 
 ## 7. Definition of done — closed iterations
 
@@ -174,17 +172,21 @@ Retrieval Quality + audit P0/P1 + workflow `#32` (2026-09-09) and RecordForge
       them as JSON-LD
 - [x] Backend tests cover ready / unconfigured / unavailable; frontend build green
 
-## 8. Definition of done — next iteration (ALH `#7`–`#10`)
+## 8. Definition of done — ALH `#7`–`#10` (closed)
 
-Copy the checklist in `docs/alh_execution_brief.md` §7. Short form:
+See `docs/alh_execution_brief.md` §7.
 
-- [ ] Ingestible ALH markdown + sidecar; governance script green
-- [ ] `domain/alh_mapping.py` with bronze/silver/gold for core entities
-- [ ] Additive `QueryType.architecture_question` + classifier/prompt/glossary
-- [ ] Three eval questions + demo prompt; `/chat` mentions Bronze/Silver/Gold
-      with citations
-- [ ] No live lakehouse or ONE Record Server write path
-- [ ] pytest green; frontend build green if `QueryType` union changed
+- [x] Ingestible ALH markdown + sidecar; governance script green
+- [x] `domain/alh_mapping.py` with bronze/silver/gold for core entities
+- [x] Additive `QueryType.architecture_question` + classifier/prompt/glossary
+- [x] Three eval questions + demo prompt
+- [x] No live lakehouse or ONE Record Server write path
+- [x] pytest green; frontend build green
+
+## 8b. Definition of done — next iteration
+
+No coding slice is scheduled. If opening v0.3, write
+`docs/v03_execution_brief.md` first (see `docs/v03_sketch.md`).
 
 ## 9. How to verify your work
 

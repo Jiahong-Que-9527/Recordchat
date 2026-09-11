@@ -20,6 +20,7 @@ class QueryType(str, Enum):
     api_question = "api_question"
     implementation_question = "implementation_question"
     ontology_question = "ontology_question"
+    architecture_question = "architecture_question"
     synthetic_data_generation = "synthetic_data_generation"
     jsonld_generation = "jsonld_generation"
     general_question = "general_question"
