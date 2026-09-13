@@ -48,7 +48,16 @@ sh-backend: ## Open a shell in the backend container
 	$(COMPOSE) exec backend sh
 
 ingest: ## Trigger ingestion / rebuild the Qdrant collection (waits for backend)
-	curl -fsS --retry 10 --retry-delay 3 --retry-connrefused -X POST $(BACKEND_URL)/ingest
+	@set -a; [ -f .env ] && . ./.env; set +a; \
+	path="/ingest"; \
+	if [ "$${AUTH_MODE:-off}" = "enforced" ]; then path="/internal/ingest"; fi; \
+	if [ -n "$${INGEST_TOKEN}" ]; then \
+	  curl -fsS --retry 10 --retry-delay 3 --retry-connrefused \
+	    -X POST -H "X-Ingest-Token: $${INGEST_TOKEN}" "$(BACKEND_URL)$${path}"; \
+	else \
+	  curl -fsS --retry 10 --retry-delay 3 --retry-connrefused \
+	    -X POST "$(BACKEND_URL)$${path}"; \
+	fi
 	@echo "\nIngest complete."
 
 session-env: ## Print freeze values for an expert session (revision, /health)

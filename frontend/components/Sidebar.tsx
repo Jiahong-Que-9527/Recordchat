@@ -9,6 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { RecordChatIcon } from "@/components/RecordChatIcon";
+import { UserMenu } from "@/components/UserMenu";
 import { EXAMPLE_QUESTIONS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -165,25 +166,7 @@ export function Sidebar({
       </div>
 
       <div className="border-t border-slate-200/70 p-2">
-        <button
-          type="button"
-          className={cn(
-            "flex h-10 w-full items-center rounded-lg text-sm text-slate-700 transition hover:bg-slate-200/70",
-            collapsed ? "justify-center px-0" : "gap-2.5 px-3"
-          )}
-        >
-          <span className="rc-gradient-bg inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white shadow-rc-sm">
-            G
-          </span>
-          {collapsed ? null : (
-            <>
-              <span className="flex-1 truncate text-left text-sm font-medium">
-                Guest
-              </span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
-            </>
-          )}
-        </button>
+        <UserMenu collapsed={collapsed} />
       </div>
     </aside>
   );
