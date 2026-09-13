@@ -25,6 +25,7 @@ import { Message, canvasTitle } from "@/components/Message";
 import { TypingIndicator } from "@/components/TypingIndicator";
 import { AuthControls } from "@/components/AuthControls";
 import { PrivacyBanner } from "@/components/PrivacyBanner";
+import { QuotaBanner } from "@/components/QuotaBanner";
 import { cn } from "@/lib/utils";
 import {
   getMessageData,
@@ -217,6 +218,7 @@ export default function Home() {
 
         <section className="relative flex h-full flex-col overflow-hidden bg-transparent px-4 pb-4 pt-3 sm:px-6">
           <PrivacyBanner />
+          <QuotaBanner />
           {/* Mobile/tablet top bar — opens the sidebar drawer. */}
           <header className="mb-2 flex items-center justify-between gap-2 xl:hidden">
             <button

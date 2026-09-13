@@ -37,9 +37,20 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
       # File destination must be under the writable logs mount below.
       RECORDCHAT_REQUEST_LOG: ${RECORDCHAT_REQUEST_LOG:-/app/data/logs/requests.jsonl}
+      AUTH_MODE: ${AUTH_MODE:-off}
+      INTERNAL_AUTH_SECRET: ${INTERNAL_AUTH_SECRET:-}
+      EMAIL_HASH_PEPPER: ${EMAIL_HASH_PEPPER:-}
+      ADMIN_IDP_USER_IDS: ${ADMIN_IDP_USER_IDS:-}
+      RECORDCHAT_DB_PATH: ${RECORDCHAT_DB_PATH:-/app/data/app/recordchat.db}
+      CHAT_DAILY_LIMIT_TRIAL: ${CHAT_DAILY_LIMIT_TRIAL:-30}
+      CHAT_DAILY_LIMIT_USER: ${CHAT_DAILY_LIMIT_USER:-100}
+      LLM_DAILY_BUDGET_USD: ${LLM_DAILY_BUDGET_USD:-15}
+      LLM_KILL_SWITCH: ${LLM_KILL_SWITCH:-false}
+      INGEST_TOKEN: ${INGEST_TOKEN:-}
     volumes:
       - ./data:/app/data:ro
       - ./data/logs:/app/data/logs
+      - ./data/app:/app/data/app
     depends_on:
       qdrant:
         condition: service_healthy
@@ -58,6 +69,10 @@ services:
       CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:-}
       NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
       NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
+      INTERNAL_AUTH_SECRET: ${INTERNAL_AUTH_SECRET:-}
+      EMAIL_HASH_PEPPER: ${EMAIL_HASH_PEPPER:-}
+      CHAT_MAX_MESSAGE_CHARS: ${CHAT_MAX_MESSAGE_CHARS:-4000}
+      CHAT_MAX_HISTORY_TURNS: ${CHAT_MAX_HISTORY_TURNS:-6}
     depends_on:
       - backend
 

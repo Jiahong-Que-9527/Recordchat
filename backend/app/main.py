@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from urllib.parse import urlparse
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
-from app.api import chat, health, ingest
+from app.api import chat, health, ingest, internal_users
 from app.core.config import get_settings
 from app.core.logging import get_logger
 
@@ -33,9 +34,24 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    @app.exception_handler(HTTPException)
+    async def _http_error(_request: Request, exc: HTTPException) -> JSONResponse:
+        if isinstance(exc.detail, dict) and "error" in exc.detail:
+            return JSONResponse(
+                status_code=exc.status_code,
+                content=exc.detail,
+                headers=dict(exc.headers or {}),
+            )
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"error": str(exc.detail)},
+            headers=dict(exc.headers or {}),
+        )
+
     app.include_router(health.router)
     app.include_router(chat.router)
     app.include_router(ingest.router)
+    app.include_router(internal_users.router)
 
     logger.info(
         "RecordChat started (llm=%s/%s key=%s base=%s, embedding=%s/%s key=%s base=%s, qdrant=%s collection=%s)",

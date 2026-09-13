@@ -51,6 +51,30 @@ class Settings(BaseSettings):
     # CORS (frontend origin)
     cors_origins: str = "http://localhost:3000"
 
+    # Trial auth (v0.3.1). off = local/CI; enforced = public.
+    auth_mode: str = "off"
+    internal_auth_secret: str = ""
+    internal_jwt_ttl_seconds: int = 90
+    email_hash_pepper: str = ""
+    admin_idp_user_ids: str = ""
+    recordchat_db_path: str = "data/app/recordchat.db"
+
+    chat_daily_limit_trial: int = 30
+    chat_daily_limit_user: int = 100
+    chat_max_concurrent_per_user: int = 1
+    chat_max_message_chars: int = 4000
+    chat_max_history_turns: int = 6
+    chat_global_max_streams: int = 10
+    llm_daily_budget_usd: float = 15.0
+    llm_usd_per_1k_tokens: float = 0.002
+    llm_kill_switch: bool = False
+
+    ingest_token: str = ""
+    ingest_allow_reset: bool = True
+
+    def auth_enforced(self) -> bool:
+        return self.auth_mode.strip().lower() == "enforced"
+
 
 @lru_cache
 def get_settings() -> Settings:
