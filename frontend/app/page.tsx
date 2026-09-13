@@ -23,7 +23,6 @@ import { ModelPicker } from "@/components/ModelPicker";
 import { Sidebar } from "@/components/Sidebar";
 import { Message, canvasTitle } from "@/components/Message";
 import { TypingIndicator } from "@/components/TypingIndicator";
-import { AuthControls } from "@/components/AuthControls";
 import { PrivacyBanner } from "@/components/PrivacyBanner";
 import { QuotaBanner } from "@/components/QuotaBanner";
 import { cn } from "@/lib/utils";
@@ -234,7 +233,6 @@ export default function Home() {
               <span className="rc-gradient-text">RecordChat</span>
             </span>
             <div className="flex items-center gap-2">
-              <AuthControls />
               <CanvasToggleButton
                 open={canvasOpen}
                 onClick={handleToggleCanvasPanel}
@@ -329,7 +327,6 @@ export default function Home() {
                   open={canvasOpen}
                   onClick={handleToggleCanvasPanel}
                 />
-                <AuthControls />
               </div>
               <PromptInputSubmit
                 isLoading={loading}
