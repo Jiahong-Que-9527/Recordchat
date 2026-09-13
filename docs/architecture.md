@@ -8,7 +8,7 @@ backend retrieves source-grounded context from Qdrant, assembles a prompt, calls
 a (provider-abstracted) LLM, and enriches the answer with domain tools
 (relationship map + JSON-LD templates).
 
-Current project priority (2026-09-11):
+Current project priority (2026-09-13):
 
 - `v0.1` through `v0.2.6` are delivered, including Retrieval Quality, audit
   P0/P1 (AUD-01…AUD-07), RecordForge HTTP, Local/RecordForge UI toggle, and
@@ -21,7 +21,7 @@ Current project priority (2026-09-11):
   failure → `unavailable`. **No auto-persist to a ONE Record Server.**
 - frontend: `WorkflowViewer` for `kind=workflow_result`; JSON-LD canvas
   otherwise
-- **next**: nothing scheduled (optional P2 or user-requested v0.3 sketch)
+- **next**: v0.3.1 trial-user auth ([v03_execution_brief.md](v03_execution_brief.md))
 
 ```
 ┌──────────────────────────── Frontend (Next.js) ────────────────────────────┐
@@ -49,6 +49,21 @@ Current project priority (2026-09-11):
    core/llm.py                core/embeddings.py          rag/retriever.py
    (LLMProvider)              (EmbeddingProvider)     (hybrid Retriever/Qdrant)
 ```
+
+Public trial (v0.3.1 — [v03_execution_brief.md](v03_execution_brief.md)):
+
+```
+Internet → Cloudflare (TLS / WAF / Tunnel) → Next.js :3000
+              Clerk session cookie, BFF /api/chat
+                    internal JWT (not /chat JSON)
+                         → FastAPI :8000 (private)
+                         → Qdrant :6333 (private + API key)
+```
+
+`plan=trial|user` (quotas) and `role=user|admin` (admin APIs). JWT is identity
+only; SQLite is the source of truth for plan/role/status. Quotas and model
+allowlists are enforced in the BFF and handler `Depends`; `pipeline.py` then
+runs as today.
 
 ## Ingestion pipeline
 
@@ -115,7 +130,11 @@ one_record_schema  ->  ontology neighbors first, manual map fallback
 Recommended order (current):
 
 1. **v0.2.6 ALH narrative** — **done** ([alh_execution_brief.md](alh_execution_brief.md))
-2. **v0.3** — sketch only ([v03_sketch.md](v03_sketch.md)); not scheduled
+2. **v0.3.1 trial-user auth** — **open** ([v03_execution_brief.md](v03_execution_brief.md);
+   [adr/0004-trial-user-auth.md](adr/0004-trial-user-auth.md)). Public hostname
+   hits Next.js only; Clerk session on the BFF; internal JWT to FastAPI;
+   `plan=trial|user`; backend and Qdrant stay private.
+3. **v0.3 remainder** — sketch only ([v03_sketch.md](v03_sketch.md) §3.2–3.7)
 
 - **RecordForge** (done, optional): HTTP `/v1/generate` or local templates.
   Output is displayed; not written to a Server.

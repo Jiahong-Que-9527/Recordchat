@@ -3,7 +3,7 @@
 The **current** plan (status, next slice, issue map) lives in
 [project_plan.md](project_plan.md). This file is the milestone narrative.
 
-## Status (2026-09-11)
+## Status (2026-09-13)
 
 - **v0.1**: complete and demoable
 - **Data Foundation**: core official + NE:ONE pack is in final folders;
@@ -17,7 +17,9 @@ The **current** plan (status, next slice, issue map) lives in
 - **v0.2.4 workflow** (`#11` `#12` `#32`): done
 - **v0.2.5 RecordForge** (`#13` `#14`): done (live HTTP + workflow UI)
 - **v0.2.6 ALH narrative** (`#7`–`#10`): done
-- **next priority**: nothing scheduled (optional P2 or user-requested v0.3)
+- **next priority**: v0.3.1 trial-user auth
+  ([v03_execution_brief.md](v03_execution_brief.md)). v0.3 remainder (3.2–3.7)
+  stays sketch.
 
 Source acquisition and import plan:
 [docs/data_source_plan.md](data_source_plan.md)
@@ -103,8 +105,11 @@ Primary GitHub issues:
    RecordForge `#13` `#14` (plus Local JSON-LD toggle).
 4. **v0.2.6 AviationLakehouse narrative** — **done**
    ([alh_execution_brief.md](alh_execution_brief.md)).
-5. **v0.3 platform** — sketch only ([v03_sketch.md](v03_sketch.md)).
-6. **Data Foundation leftover (`#23`)** — optional P2.
+5. **v0.3.1 trial-user auth** — **open**
+   ([v03_execution_brief.md](v03_execution_brief.md)).
+6. **v0.3 remainder** (memory, source admin, tracing) — still sketch
+   ([v03_sketch.md](v03_sketch.md) §3.2–3.7).
+7. **Data Foundation leftover (`#23`)** — optional P2.
 
 ## Strategic guidance (product-level)
 
@@ -210,7 +215,9 @@ Goal met:
 
 ## v0.3 — Real platform
 
-Sketch only: [v03_sketch.md](v03_sketch.md). Not scheduled.
+- **v0.3.1 trial-user auth:** open
+  ([v03_execution_brief.md](v03_execution_brief.md)).
+- **§3.2–3.7:** still sketch ([v03_sketch.md](v03_sketch.md)).
 
 ## Positioning
 

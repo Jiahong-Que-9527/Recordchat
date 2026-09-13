@@ -1,15 +1,17 @@
 # RecordChat Project Plan
 
-**Status date:** 2026-09-11
+**Status date:** 2026-09-13
 **Current delivered line:** v0.2.6 ALH narrative + RecordForge + Retrieval Quality
-**Current next work:** v0.3 sketch only (not scheduled) — see [v03_sketch.md](v03_sketch.md).
+**Current next work:** v0.3.1 trial-user auth — see [v03_execution_brief.md](v03_execution_brief.md).
 
-> **Agent handoff (2026-09-11).** v0.2.6 ALH (`#7`–`#10`) is **done** on
-> `feat/v0.2.6-alh-narrative` (merge when ready). Do not re-open closed
-> slices unless a regression appears. **Next scheduled coding is not
-> opened** — read [v03_sketch.md](v03_sketch.md) only if the user asks for
-> platform work. AUD-08…AUD-10 remain optional P2. Do not start Server
-> persist. How to work: [agent_execution_playbook.md](agent_execution_playbook.md).
+> **Agent handoff (2026-09-13).** v0.2.6 ALH (`#7`–`#10`) is **done**. Do not
+> re-open closed slices unless a regression appears. **Current coding slice is
+> v0.3.1 trial-user auth** ([v03_execution_brief.md](v03_execution_brief.md),
+> [adr/0004-trial-user-auth.md](adr/0004-trial-user-auth.md)). Testers are
+> trial users on our domain (self-serve sign-up **or** admin-provisioned
+> temp password). Same accounts later promote `trial → user`. Do not persist
+> chats, do not start Server persist, do not put Access in front of the user
+> hostname. How to work: [agent_execution_playbook.md](agent_execution_playbook.md).
 
 This is the **current** project plan. Use it when documents disagree.
 
@@ -23,7 +25,8 @@ This is the **current** project plan. Use it when documents disagree.
 | v0.1 API / module contract | [../SPEC.md](../SPEC.md) |
 | Knowledge-base import | [data_source_plan.md](data_source_plan.md) |
 | Architecture | [architecture.md](architecture.md) |
-| Unscheduled platform | [v03_sketch.md](v03_sketch.md) |
+| v0.3.1 trial-user auth (open) | [v03_execution_brief.md](v03_execution_brief.md) |
+| Unscheduled platform remainder | [v03_sketch.md](v03_sketch.md) |
 
 `SPEC.md` remains the contract for `/chat`, `/ingest`, and module boundaries.
 It is **not** the execution-order source after v0.1.
@@ -51,6 +54,10 @@ Frozen product choices (do not reverse without an explicit product decision):
   auto-write objects into a ONE Record Server.
 - Chat toolbar: **Local JSON-LD** (templates, default) vs **RecordForge**
   (connector workflow).
+- Public identity is **trial-user accounts on our domain** (self-serve sign-up
+  or admin-provisioned temp password). Testers are trial users; `trial → user`
+  is a plan change. Do not put Cloudflare Access in front of the user login
+  page. Do not persist chat bodies in v0.3.1.
 
 ---
 
@@ -68,7 +75,7 @@ Frozen product choices (do not reverse without an explicit product decision):
 | v0.2.4 workflow orchestration | **done** (`#11` `#12` `#32`) | structured workflow_result + connector path |
 | v0.2.5 RecordForge | **done** | `#13` `#14` |
 | v0.2.6 AviationLakehouse narrative | **done** | `#7`–`#10`; see [alh_execution_brief.md](alh_execution_brief.md) |
-| v0.3 platform | **sketch only** | no issues yet |
+| v0.3 platform | **3.1 opened as trial-user auth** | [v03_execution_brief.md](v03_execution_brief.md); 3.2–3.7 still frozen |
 
 ---
 
@@ -95,14 +102,28 @@ v0.1  ──► Data Foundation  ──► v0.2.1  ──► v0.2.2  ──► v
                                     v0.2.6 ALH narrative (#7–#10) ✅
                                                │
                                                ▼
-                                    v0.3 platform (auth, memory,
-                                    source versioning, tracing)
-                                    ◄── sketch only; not scheduled
+                                    v0.3.1 trial-user auth  ◄── CURRENT
+                                    (domain login, trial plan,
+                                    quotas, private backend)
+                                               │
+                                               ▼
+                                    v0.3 remainder (memory,
+                                    source admin, tracing)
+                                    ◄── still sketch; not this slice
 ```
 
 AUD-01…AUD-07, `#27`–`#32`, RecordForge `#13` `#14`, and ALH `#7`–`#10` are
-landed. Remaining P2 audit items: AUD-08…AUD-10. No coding slice is scheduled
-after ALH until the user opens v0.3.
+landed. Remaining P2 audit items: AUD-08…AUD-10 (AUD-09 pin/Qdrant auth is
+**P0 for this public slice**). Current coding: [v03_execution_brief.md](v03_execution_brief.md).
+
+### 3.1 v0.3.1 trial-user auth (current)
+
+Step-by-step file list and acceptance: [v03_execution_brief.md](v03_execution_brief.md).
+Decision: [adr/0004-trial-user-auth.md](adr/0004-trial-user-auth.md).
+
+Order inside the slice: **AUTH-01 hardening → AUTH-02 Clerk session → AUTH-03
+internal JWT + quotas → AUTH-04 ingest/admin isolation → AUTH-05 Tunnel**.
+Local `AUTH_MODE=off` must keep the demo bootable without Clerk keys.
 
 ---
 
@@ -277,14 +298,16 @@ ingest more community HTML/PDF until #27 and #28 are done.
 
 ---
 
-## 6. v0.3 sketch (not scheduled)
+## 6. v0.3
 
-See [v03_sketch.md](v03_sketch.md) for the ordered sketch (auth, memory,
-source admin, tracing, eval dashboard, optional live Server/ALH connectors).
+§3.1 is **open** as v0.3.1 trial-user auth
+([v03_execution_brief.md](v03_execution_brief.md),
+[adr/0004-trial-user-auth.md](adr/0004-trial-user-auth.md)).
 
-No GitHub issues yet. Do not pull these into v0.2. Product freeze: synthetic
-objects are shown in the UI; auto-persist to a ONE Record Server is **not**
-current work.
+§3.2–3.7 remain sketch ([v03_sketch.md](v03_sketch.md)). Do not fold memory,
+source admin, tracing, or live Server/ALH into this slice. Product freeze:
+synthetic objects are shown in the UI; auto-persist to a ONE Record Server is
+**not** current work.
 
 ---
 
@@ -296,7 +319,10 @@ current work.
 - replacing the retriever ABC with a framework-specific chain
 - letting the LLM emit JSON-LD structure (templates stay in `domain/`)
 - ALH / RecordForge work that skips Retrieval Quality
-- heavy tracing / auth / eval dashboard — these stay in the §6 v0.3 sketch (see AUD-07 for the lightweight logging that *is* in scope)
+- heavy tracing / eval dashboard / chat persistence — stay in v0.3 sketch
+  §3.2–3.7 (see AUD-07 for the lightweight logging that *is* in scope)
+- trial-user auth is **in scope** via [v03_execution_brief.md](v03_execution_brief.md);
+  do not expand it into a full SaaS
 
 ---
 
@@ -327,3 +353,44 @@ The current iteration (2026-09 audit P0 + Retrieval Quality) is done when:
 **This iteration is closed.** RecordForge `#13` `#14` is also closed (see
 AGENTS.md §7). Next DoD is ALH `#7`–`#10` —
 [alh_execution_brief.md](alh_execution_brief.md) §7.
+
+---
+
+## 9. Promotion readiness (2026-09 window, non-coding)
+
+Context: RecordChat enters a career-evidence distribution window
+(2026-09-14 -> 2026-10-25). Promotion serves external evaluation by
+recruiters and practitioners; it does NOT open v0.3, change the product
+freeze, or expand scope. All coding rules above still apply.
+
+Ordered actions:
+
+1. **Add a LICENSE file (pre-launch blocker).** The README already
+   positions the project as open source; without a license the repo is not
+   redistributable. Choose Apache-2.0 or MIT before any external post.
+2. **Tag `v0.2.6` and publish GitHub Release notes.** Contents: what shipped
+   (RAG + citations, streaming UI, RecordForge, ALH narrative), data
+   compliance boundaries (link `data_compliance_report.md` /
+   `source_usage_policy.md`), and the demo entry points.
+3. **Record a 60-90s demo video** following `docs/demo_script.md` +
+   `docs/demo_cheat_sheet.md`: streaming cited answer, citation panel,
+   Mermaid diagram, JSON-LD panel. One judgment per video; no performance
+   claims, no enterprise-deployment implication, no restricted data.
+4. **Run expert sessions per `docs/expert_session_script.md`** and keep
+   `data/logs/requests.jsonl` + frozen revision (`make session-env`) as
+   auditable evidence artifacts.
+
+Distribution (tracked outside this repo, in career-planning docs):
+LinkedIn evidence video #1 `Why ONE Record is not the end of the data
+journey` (due 2026-10-03); industry conversations 2026-09-23..25 where the
+demo is shown live over Tailscale on demand, never as a pitch.
+
+Deployment boundary: the avi deployment stays Tailscale-only
+(Caddy binds the tailnet address; app ports on 127.0.0.1). A public,
+read-only demo deployment is NOT approved; it would require a separate
+decision covering reverse proxy, rate limiting, and LLM cost gates.
+
+Success signals (not stars/likes): demo requests, substantive practitioner
+conversations, logged pain points, referrals. If no relevant conversation
+results within six weeks of the first video, revisit ICP and topic instead
+of increasing output frequency.

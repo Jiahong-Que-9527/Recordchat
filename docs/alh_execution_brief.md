@@ -255,5 +255,6 @@ needs API keys; still add a unit test that `classify_query` matches
 
 ## 9. After this slice
 
-Stop. Next scheduled work is **not** coding v0.3. See `docs/v03_sketch.md`.
-Optional: P2 audit items in the playbook §6.
+This ALH slice is **done**. Current next work (2026-09-13) is v0.3.1
+trial-user auth — see `docs/v03_execution_brief.md`. Do not reopen ALH unless
+a regression appears.
