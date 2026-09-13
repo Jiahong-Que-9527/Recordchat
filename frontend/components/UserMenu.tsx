@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronDown, LogOut, Shield, UserRound } from "lucide-react";
+import { ChevronUp, Info, LogOut, Shield, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Me = {
@@ -21,6 +21,41 @@ function initials(prefix?: string): string {
   const local = prefix.split("@")[0]?.replace(/\*/g, "") || prefix;
   const letters = local.replace(/[^a-zA-Z0-9]/g, "").slice(0, 2);
   return (letters || "?").toUpperCase();
+}
+
+function MenuItem({
+  href,
+  onClick,
+  icon,
+  children,
+  danger = false,
+}: {
+  href?: string;
+  onClick?: () => void;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  danger?: boolean;
+}) {
+  const className = cn(
+    "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] transition",
+    danger
+      ? "text-rose-700 hover:bg-rose-50"
+      : "text-slate-700 hover:bg-slate-100"
+  );
+  if (href) {
+    return (
+      <Link href={href} className={className} onClick={onClick}>
+        {icon}
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" className={className} onClick={onClick}>
+      {icon}
+      {children}
+    </button>
+  );
 }
 
 export function UserMenu({ collapsed }: { collapsed: boolean }) {
@@ -68,6 +103,7 @@ export function UserMenu({ collapsed }: { collapsed: boolean }) {
   const isAdmin = me?.role === "admin";
   const label = signedIn ? me?.email_prefix || "Account" : "Sign in";
   const glyph = signedIn ? initials(me?.email_prefix) : "?";
+  const planLabel = me?.plan === "user" ? "User" : "Trial";
 
   async function signOut() {
     setOpen(false);
@@ -79,74 +115,66 @@ export function UserMenu({ collapsed }: { collapsed: boolean }) {
     <div ref={rootRef} className="relative">
       {open ? (
         <div
+          role="menu"
           className={cn(
-            "absolute bottom-full z-50 mb-2 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-rc-md",
-            collapsed ? "left-0 w-56" : "inset-x-0"
+            "absolute bottom-full z-50 mb-1.5 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-1 shadow-rc-lg ring-1 ring-black/[0.03]",
+            collapsed ? "left-0 w-60" : "inset-x-0"
           )}
         >
           {signedIn ? (
             <>
-              <div className="border-b border-slate-100 px-3 py-2">
-                <p className="truncate text-sm font-medium text-slate-900">
+              <div className="px-2.5 py-2">
+                <p className="truncate text-[13px] font-medium text-slate-900">
                   {me?.email_prefix}
                 </p>
-                <p className="text-[11px] text-slate-500">
-                  {me?.plan === "user" ? "User" : "Trial"}
+                <p className="mt-0.5 text-[11px] text-slate-500">
+                  {planLabel}
                   {me?.quota != null
-                    ? ` · ${me.used_today ?? 0} / ${me.quota} today`
+                    ? ` · ${me.used_today ?? 0}/${me.quota} today`
                     : null}
                 </p>
               </div>
-              <Link
+              <div className="my-1 h-px bg-slate-100" />
+              <MenuItem
                 href="/account"
-                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                icon={<UserRound className="h-4 w-4 text-slate-400" />}
                 onClick={() => setOpen(false)}
               >
-                <UserRound className="h-4 w-4 text-slate-400" />
                 Account
-              </Link>
+              </MenuItem>
               {isAdmin ? (
-                <Link
+                <MenuItem
                   href="/admin"
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                  icon={<Shield className="h-4 w-4 text-slate-400" />}
                   onClick={() => setOpen(false)}
                 >
-                  <Shield className="h-4 w-4 text-slate-400" />
                   Manage users
-                </Link>
+                </MenuItem>
               ) : null}
-              <Link
+              <MenuItem
                 href="/privacy"
-                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                 onClick={() => setOpen(false)}
+                icon={<Info className="h-4 w-4 text-slate-400" />}
               >
                 Privacy
-              </Link>
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+              </MenuItem>
+              <div className="my-1 h-px bg-slate-100" />
+              <MenuItem
+                danger
+                icon={<LogOut className="h-4 w-4" />}
                 onClick={() => void signOut()}
               >
-                <LogOut className="h-4 w-4 text-slate-400" />
                 Sign out
-              </button>
+              </MenuItem>
             </>
           ) : (
             <>
-              <Link
-                href="/sign-in"
-                className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                onClick={() => setOpen(false)}
-              >
+              <MenuItem href="/sign-in" onClick={() => setOpen(false)} icon={<UserRound className="h-4 w-4 text-slate-400" />}>
                 Sign in
-              </Link>
-              <Link
-                href="/sign-up"
-                className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                onClick={() => setOpen(false)}
-              >
+              </MenuItem>
+              <MenuItem href="/sign-up" onClick={() => setOpen(false)} icon={<span className="inline-block w-4" />}>
                 Create account
-              </Link>
+              </MenuItem>
             </>
           )}
         </div>
@@ -160,22 +188,30 @@ export function UserMenu({ collapsed }: { collapsed: boolean }) {
         aria-label={label}
         title={label}
         className={cn(
-          "flex h-10 w-full items-center rounded-lg text-sm text-slate-700 transition hover:bg-slate-200/70",
-          collapsed ? "justify-center px-0" : "gap-2.5 px-3"
+          "flex w-full items-center rounded-xl text-sm text-slate-700 transition",
+          open ? "bg-white shadow-rc-sm" : "hover:bg-white/80",
+          collapsed ? "h-10 justify-center px-0" : "h-11 gap-2.5 px-2"
         )}
       >
-        <span className="rc-gradient-bg inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white shadow-rc-sm">
+        <span className="rc-gradient-bg inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold tracking-wide text-white">
           {glyph}
         </span>
         {collapsed ? null : (
           <>
-            <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">
-              {label}
+            <span className="min-w-0 flex-1 text-left">
+              <span className="block truncate text-[13px] font-medium leading-4 text-slate-900">
+                {label}
+              </span>
+              {signedIn ? (
+                <span className="mt-0.5 block truncate text-[11px] leading-4 text-slate-400">
+                  {planLabel}
+                </span>
+              ) : null}
             </span>
-            <ChevronDown
+            <ChevronUp
               className={cn(
-                "h-4 w-4 shrink-0 text-slate-400 transition-transform",
-                open ? "rotate-180" : ""
+                "h-4 w-4 shrink-0 text-slate-400 transition-transform duration-150",
+                open ? "" : "rotate-180"
               )}
             />
           </>
