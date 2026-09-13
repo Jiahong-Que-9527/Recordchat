@@ -47,6 +47,7 @@ services:
       LLM_DAILY_BUDGET_USD: ${LLM_DAILY_BUDGET_USD:-15}
       LLM_KILL_SWITCH: ${LLM_KILL_SWITCH:-false}
       INGEST_TOKEN: ${INGEST_TOKEN:-}
+      INGEST_ALLOW_RESET: ${INGEST_ALLOW_RESET:-true}
     volumes:
       - ./data:/app/data:ro
       - ./data/logs:/app/data/logs

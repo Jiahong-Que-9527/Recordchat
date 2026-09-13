@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api import chat, health, ingest, internal_users
+from app.api import admin, chat, health, ingest, internal_users
 from app.core.config import get_settings
 from app.core.logging import get_logger
 
@@ -52,6 +52,7 @@ def create_app() -> FastAPI:
     app.include_router(chat.router)
     app.include_router(ingest.router)
     app.include_router(internal_users.router)
+    app.include_router(admin.router)
 
     logger.info(
         "RecordChat started (llm=%s/%s key=%s base=%s, embedding=%s/%s key=%s base=%s, qdrant=%s collection=%s)",

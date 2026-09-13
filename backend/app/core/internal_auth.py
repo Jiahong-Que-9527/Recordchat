@@ -131,6 +131,16 @@ def get_auth_user(
     return user
 
 
+def require_admin(
+    user: Annotated[LocalUser | None, Depends(get_auth_user)] = None,
+) -> LocalUser:
+    if user is None:
+        raise HTTPException(status_code=401, detail={"error": "unauthorized"})
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail={"error": "forbidden"})
+    return user
+
+
 def require_jwt(
     authorization: Annotated[str | None, Header()] = None,
 ) -> JwtClaims:

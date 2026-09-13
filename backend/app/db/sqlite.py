@@ -217,6 +217,73 @@ def set_status(*, idp_user_id: str, status: str) -> LocalUser | None:
         conn.close()
 
 
+def list_users() -> list[LocalUser]:
+    conn = connect()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM users ORDER BY created_at DESC"
+        ).fetchall()
+        return [_row_to_user(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def set_plan(
+    *,
+    idp_user_id: str,
+    plan: str,
+    daily_quota: int | None = None,
+) -> LocalUser | None:
+    if plan not in {"trial", "user"}:
+        raise ValueError("plan must be trial or user")
+    conn = connect()
+    try:
+        conn.execute(
+            "UPDATE users SET plan = ?, daily_quota = ? WHERE idp_user_id = ?",
+            (plan, daily_quota, idp_user_id),
+        )
+        conn.commit()
+        row = conn.execute(
+            "SELECT * FROM users WHERE idp_user_id = ?", (idp_user_id,)
+        ).fetchone()
+        return _row_to_user(row) if row else None
+    finally:
+        conn.close()
+
+
+def usage_summary(day: str | None = None) -> dict[str, float | int]:
+    day = day or utc_day()
+    conn = connect()
+    try:
+        usage = conn.execute(
+            """
+            SELECT
+              COUNT(DISTINCT user_id) AS dau,
+              COALESCE(SUM(request_count), 0) AS request_count,
+              COALESCE(SUM(estimated_usd), 0) AS estimated_usd
+            FROM usage_daily
+            WHERE day = ?
+            """,
+            (day,),
+        ).fetchone()
+        limited = conn.execute(
+            """
+            SELECT COUNT(*) AS n FROM audit_events
+            WHERE action = 'chat_429' AND ts LIKE ?
+            """,
+            (f"{day}%",),
+        ).fetchone()
+        return {
+            "day": day,
+            "dau": int(usage["dau"] or 0),
+            "request_count": int(usage["request_count"] or 0),
+            "estimated_usd": float(usage["estimated_usd"] or 0),
+            "rate_limited_count": int(limited["n"] or 0),
+        }
+    finally:
+        conn.close()
+
+
 def increment_request(user_id: str, day: str | None = None) -> int:
     day = day or utc_day()
     conn = connect()

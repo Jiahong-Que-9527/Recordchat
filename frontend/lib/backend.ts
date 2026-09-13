@@ -105,3 +105,25 @@ export async function ensureUser(
     cache: "no-store",
   });
 }
+
+export async function requireAdminContext(request: NextRequest): Promise<
+  | { token: string; backendBase: string; userId: string }
+  | { response: Response }
+> {
+  const identity = await requireAuthedContext();
+  if ("response" in identity) {
+    return identity;
+  }
+  const backendBase = getBackendBase(request);
+  const ensured = await ensureUser(backendBase, identity.token, identity.email);
+  if (!ensured.ok) {
+    return {
+      response: new Response(await ensured.text(), { status: ensured.status }),
+    };
+  }
+  const me = (await ensured.json()) as { role?: string };
+  if (me.role !== "admin") {
+    return { response: jsonError("forbidden", 403) };
+  }
+  return { token: identity.token, backendBase, userId: identity.userId };
+}

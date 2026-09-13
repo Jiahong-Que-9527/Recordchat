@@ -17,6 +17,12 @@ export function AuthControls() {
         >
           Account
         </Link>
+        <Link
+          href="/admin"
+          className="hidden text-xs text-slate-600 underline sm:inline"
+        >
+          Admin
+        </Link>
         <UserButton />
       </div>
     </SignedIn>
