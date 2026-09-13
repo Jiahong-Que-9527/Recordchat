@@ -10,6 +10,7 @@ Start here only to find the right file. Execution order lives in
 | [agent_execution_playbook.md](agent_execution_playbook.md) | How to run any slice |
 | [alh_execution_brief.md](alh_execution_brief.md) | v0.2.6 ALH slice (done — reference) |
 | [v03_execution_brief.md](v03_execution_brief.md) | **v0.3.1 trial-user auth (current)** |
+| [v03_ops.md](v03_ops.md) | Public hostname / Clerk / Tunnel / rollback |
 | [architecture.md](architecture.md) | Runtime design |
 | [../SPEC.md](../SPEC.md) | `/chat` contract (do not rename fields) |
 | [v0.2_development_plan.md](v0.2_development_plan.md) | v0.2 historical breakdown |

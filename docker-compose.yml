@@ -55,6 +55,8 @@ services:
     depends_on:
       qdrant:
         condition: service_healthy
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
 
   frontend:
     build: ./frontend
@@ -76,6 +78,23 @@ services:
       CHAT_MAX_HISTORY_TURNS: ${CHAT_MAX_HISTORY_TURNS:-6}
     depends_on:
       - backend
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+
+  # Opt-in public hostname. Local `make up` does not start this.
+  # docker compose --profile public up -d
+  # Dashboard published application must map the hostname to http://frontend:3000 only.
+  cloudflared:
+    image: cloudflare/cloudflared:2025.8.1
+    profiles: ["public"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    depends_on:
+      - frontend
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
 
 volumes:
   qdrant_storage:
