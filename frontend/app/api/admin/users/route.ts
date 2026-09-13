@@ -1,19 +1,8 @@
-import { randomBytes } from "crypto";
 import type { NextRequest } from "next/server";
-import { createClerkClient } from "@clerk/nextjs/server";
-import {
-  emailHash,
-  emailPrefix,
-  jsonError,
-  requireAdminContext,
-} from "@/lib/backend";
+import { jsonError, requireAdminContext } from "@/lib/backend";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-
-function temporaryPassword(): string {
-  return randomBytes(18).toString("base64url").slice(0, 24);
-}
 
 export async function GET(request: NextRequest): Promise<Response> {
   const admin = await requireAdminContext(request);
@@ -43,46 +32,17 @@ export async function POST(request: NextRequest): Promise<Response> {
   if (!email || !email.includes("@")) {
     return jsonError("invalid_email", 400);
   }
-  const secret = process.env.CLERK_SECRET_KEY?.trim();
-  if (!secret) {
-    return jsonError("unavailable", 503);
-  }
-  const password = temporaryPassword();
-  const clerk = createClerkClient({ secretKey: secret });
-  let created: { id: string };
-  try {
-    created = await clerk.users.createUser({
-      emailAddress: [email],
-      password,
-      skipPasswordChecks: false,
-    });
-    await clerk.users.updateUserMetadata(created.id, {
-      publicMetadata: { must_reset_password: true },
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "clerk_failed";
-    return jsonError("unavailable", 502, { detail: message });
-  }
   const recorded = await fetch(`${admin.backendBase}/internal/admin/users`, {
     method: "POST",
     headers: {
       authorization: `Bearer ${admin.token}`,
       "content-type": "application/json",
     },
-    body: JSON.stringify({
-      idp_user_id: created.id,
-      email_hash: emailHash(email),
-      email_prefix: emailPrefix(email),
-      plan,
-    }),
+    body: JSON.stringify({ email, plan }),
     cache: "no-store",
   });
-  if (!recorded.ok) {
-    return new Response(await recorded.text(), { status: recorded.status });
-  }
-  const row = (await recorded.json()) as Record<string, unknown>;
-  return Response.json({
-    ...row,
-    temporary_password: password,
+  return new Response(await recorded.text(), {
+    status: recorded.status,
+    headers: { "content-type": "application/json" },
   });
 }

@@ -27,7 +27,7 @@ export async function GET(request: NextRequest): Promise<Response> {
     });
   }
 
-  const identity = await requireAuthedContext();
+  const identity = await requireAuthedContext(request);
   if ("response" in identity) {
     return identity.response;
   }

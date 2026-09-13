@@ -9,24 +9,17 @@ from pydantic import BaseModel, Field
 
 from app.api.internal_users import UserView, _view
 from app.core.internal_auth import require_admin
+from app.api.auth import ProvisionEmailBody, ProvisionResult, provision_with_temp_password
 from app.db.sqlite import (
     LocalUser,
     list_users,
     set_plan,
     set_status,
-    upsert_user,
     usage_summary,
     write_audit,
 )
 
 router = APIRouter()
-
-
-class ProvisionBody(BaseModel):
-    idp_user_id: str = Field(min_length=3, max_length=128)
-    email_hash: str = Field(min_length=8, max_length=128)
-    email_prefix: str = Field(default="", max_length=120)
-    plan: str = Field(default="trial")
 
 
 class PlanBody(BaseModel):
@@ -40,22 +33,12 @@ def admin_list_users(admin: Annotated[LocalUser, Depends(require_admin)]) -> lis
     return [_view(user) for user in list_users()]
 
 
-@router.post("/internal/admin/users", response_model=UserView)
+@router.post("/internal/admin/users", response_model=ProvisionResult)
 def admin_provision(
-    body: ProvisionBody,
+    body: ProvisionEmailBody,
     admin: Annotated[LocalUser, Depends(require_admin)],
-) -> UserView:
-    if body.plan not in {"trial", "user"}:
-        raise HTTPException(status_code=400, detail={"error": "invalid_plan"})
-    user = upsert_user(
-        idp_user_id=body.idp_user_id,
-        email_hash=body.email_hash,
-        email_prefix=body.email_prefix,
-        plan=body.plan,
-        role="user",
-    )
-    write_audit(action="provision", actor_user_id=admin.idp_user_id)
-    return _view(user)
+) -> ProvisionResult:
+    return provision_with_temp_password(email=body.email, plan=body.plan, admin=admin)
 
 
 @router.post("/internal/admin/users/{idp_id}/revoke", response_model=UserView)

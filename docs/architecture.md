@@ -54,7 +54,7 @@ Public trial (v0.3.1 — [v03_execution_brief.md](v03_execution_brief.md)):
 
 ```
 Internet → Cloudflare (TLS / WAF / Tunnel) → Next.js :3000
-              Clerk session cookie, BFF /api/chat
+              session cookie, BFF /api/chat
                     internal JWT (not /chat JSON)
                          → FastAPI :8000 (private)
                          → Qdrant :6333 (private + API key)

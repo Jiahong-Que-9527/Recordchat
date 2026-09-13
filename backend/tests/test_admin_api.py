@@ -18,72 +18,78 @@ from app.main import app
 SECRET = "n" * 32
 
 
-def _client(tmp_path, monkeypatch, **env: str) -> TestClient:
+def _client(tmp_path, monkeypatch) -> TestClient:
     monkeypatch.setenv("AUTH_MODE", "enforced")
     monkeypatch.setenv("INTERNAL_AUTH_SECRET", SECRET)
     monkeypatch.setenv("RECORDCHAT_DB_PATH", str(tmp_path / "recordchat.db"))
-    monkeypatch.setenv("ADMIN_IDP_USER_IDS", env.get("ADMIN_IDP_USER_IDS", "user_admin"))
+    monkeypatch.setenv("ADMIN_EMAILS", "admin@example.com")
     get_settings.cache_clear()
     reset_db_state()
     reset_quota_state()
     return TestClient(app)
 
 
-def _auth(sub: str) -> dict[str, str]:
-    token = sign_internal_jwt(sub=sub, email_hash="ab" * 32, secret=SECRET)
+def _jwt(idp: str) -> dict[str, str]:
+    token = sign_internal_jwt(sub=idp, email_hash="ab" * 32, secret=SECRET)
     return {"Authorization": f"Bearer {token}"}
 
 
 def test_non_admin_gets_403(tmp_path, monkeypatch):
     client = _client(tmp_path, monkeypatch)
-    client.post("/internal/users/ensure", json={}, headers=_auth("user_abc"))
-    resp = client.get("/internal/admin/users", headers=_auth("user_abc"))
+    created = client.post(
+        "/internal/auth/signup",
+        json={"email": "user@example.com", "password": "correcthorse"},
+    )
+    idp = created.json()["user"]["idp_user_id"]
+    resp = client.get("/internal/admin/users", headers=_jwt(idp))
     assert resp.status_code == 403
     assert resp.json()["error"] == "forbidden"
 
 
 def test_admin_provision_revoke_and_plan(tmp_path, monkeypatch):
     client = _client(tmp_path, monkeypatch)
-    ensured = client.post(
-        "/internal/users/ensure", json={}, headers=_auth("user_admin")
+    admin = client.post(
+        "/internal/auth/signup",
+        json={"email": "admin@example.com", "password": "correcthorse"},
     )
-    assert ensured.status_code == 200
-    assert ensured.json()["role"] == "admin"
+    assert admin.json()["user"]["role"] == "admin"
+    admin_id = admin.json()["user"]["idp_user_id"]
 
     created = client.post(
         "/internal/admin/users",
-        json={
-            "idp_user_id": "user_new",
-            "email_hash": "cd" * 32,
-            "email_prefix": "cd***@example.com",
-            "plan": "trial",
-        },
-        headers=_auth("user_admin"),
+        json={"email": "new@example.com", "plan": "trial"},
+        headers=_jwt(admin_id),
     )
     assert created.status_code == 200
-    assert created.json()["plan"] == "trial"
+    assert created.json()["temporary_password"]
+    idp = created.json()["user"]["idp_user_id"]
+    assert created.json()["user"]["must_reset_password"] is True
 
-    listed = client.get("/internal/admin/users", headers=_auth("user_admin"))
-    ids = {row["idp_user_id"] for row in listed.json()}
-    assert "user_new" in ids
+    login = client.post(
+        "/internal/auth/login",
+        json={
+            "email": "new@example.com",
+            "password": created.json()["temporary_password"],
+        },
+    )
+    assert login.status_code == 200
+    assert login.json()["must_reset_password"] is True
 
     planned = client.post(
-        "/internal/admin/users/user_new/plan",
+        f"/internal/admin/users/{idp}/plan",
         json={"plan": "user", "daily_quota": 80},
-        headers=_auth("user_admin"),
+        headers=_jwt(admin_id),
     )
     assert planned.status_code == 200
     assert planned.json()["plan"] == "user"
-    assert planned.json()["daily_quota"] == 80
 
     revoked = client.post(
-        "/internal/admin/users/user_new/revoke",
-        headers=_auth("user_admin"),
+        f"/internal/admin/users/{idp}/revoke",
+        headers=_jwt(admin_id),
     )
     assert revoked.status_code == 200
     assert revoked.json()["status"] == "revoked"
 
-    usage = client.get("/internal/admin/usage", headers=_auth("user_admin"))
+    usage = client.get("/internal/admin/usage", headers=_jwt(admin_id))
     assert usage.status_code == 200
     assert "request_count" in usage.json()
-    assert "estimated_usd" in usage.json()

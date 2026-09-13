@@ -4,16 +4,15 @@ Do not bind backend `:8000` or Qdrant `:6333` to `0.0.0.0`. The only published
 application is the Next.js frontend.
 
 Official refs: [Cloudflare Tunnel](https://developers.cloudflare.com/tunnel/get-started/),
-[WAF](https://developers.cloudflare.com/waf/),
-[Clerk access modes](https://clerk.com/docs/guides/secure/restricting-access).
+[WAF](https://developers.cloudflare.com/waf/).
 
-## 1. Clerk
+## 1. First admin
 
-1. Create a production Clerk application.
-2. Access mode **Open**; email + password; verify at sign-up; no social login.
-3. Enable disposable-email / subaddress blocking in the Dashboard.
-4. Put `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` in `.env`.
-5. First operator: copy that Clerk user id into `ADMIN_IDP_USER_IDS`.
+1. Set `AUTH_MODE=enforced` and a 32+ byte `INTERNAL_AUTH_SECRET`.
+2. Set `ADMIN_EMAILS=you@example.com`.
+3. Rebuild the frontend (`AUTH_MODE` is a Docker build arg for middleware).
+4. Open `/sign-up` with that email and a 10+ character password. That account
+   is `role=admin`.
 
 ## 2. App env (public)
 
@@ -65,9 +64,9 @@ That hits `http://127.0.0.1:8000/internal/ingest` with the token. Public
 1. Stop public access: `docker compose --profile public stop cloudflared`
    or unpublish the hostname.
 2. Stop spend: `LLM_KILL_SWITCH=true` and rotate provider keys.
-3. One user: Admin → Revoke (Clerk ban + `status=revoked`).
+3. One user: Admin → Revoke (`status=revoked`, sessions deleted).
 4. Do not roll back by publishing backend/Qdrant.
 
 ## 7. Local demo (unchanged)
 
-`AUTH_MODE=off`, no Clerk keys, `make up` without `--profile public`.
+`AUTH_MODE=off`, `make up` without `--profile public`. No login required.

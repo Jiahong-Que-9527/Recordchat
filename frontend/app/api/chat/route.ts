@@ -175,7 +175,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     if (!allowIp(clientIp(request))) {
       return jsonError("rate_limited", 429, { retry_after_seconds: 3600 });
     }
-    const identity = await requireAuthedContext();
+    const identity = await requireAuthedContext(request);
     if ("response" in identity) {
       return identity.response;
     }

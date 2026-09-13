@@ -57,7 +57,10 @@ class Settings(BaseSettings):
     internal_jwt_ttl_seconds: int = 90
     email_hash_pepper: str = ""
     admin_idp_user_ids: str = ""
+    admin_emails: str = ""
     recordchat_db_path: str = "data/app/recordchat.db"
+    session_ttl_seconds: int = 604800
+    auth_debug: bool = False
 
     chat_daily_limit_trial: int = 30
     chat_daily_limit_user: int = 100

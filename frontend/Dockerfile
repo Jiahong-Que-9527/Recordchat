@@ -5,6 +5,8 @@ RUN npm ci
 
 FROM node:20-alpine AS builder
 WORKDIR /app
+ARG AUTH_MODE=off
+ENV AUTH_MODE=$AUTH_MODE
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build

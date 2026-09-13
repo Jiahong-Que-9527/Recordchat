@@ -1,5 +1,4 @@
 import type { NextRequest } from "next/server";
-import { createClerkClient } from "@clerk/nextjs/server";
 import { jsonError, requireAdminContext } from "@/lib/backend";
 
 export const dynamic = "force-dynamic";
@@ -14,15 +13,6 @@ export async function POST(
     return admin.response;
   }
   const { idp } = await context.params;
-  const secret = process.env.CLERK_SECRET_KEY?.trim();
-  if (secret) {
-    try {
-      const clerk = createClerkClient({ secretKey: secret });
-      await clerk.users.banUser(idp);
-    } catch {
-      /* local row still revoked */
-    }
-  }
   const upstream = await fetch(
     `${admin.backendBase}/internal/admin/users/${encodeURIComponent(idp)}/revoke`,
     {

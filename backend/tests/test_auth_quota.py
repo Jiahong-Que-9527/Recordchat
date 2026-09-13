@@ -41,6 +41,16 @@ def _auth(sub: str = "user_abc") -> dict[str, str]:
     return {"Authorization": f"Bearer {_token(sub)}"}
 
 
+def _signup(client: TestClient, email: str = "a@example.com") -> tuple[dict[str, str], str]:
+    created = client.post(
+        "/internal/auth/signup",
+        json={"email": email, "password": "correcthorse"},
+    )
+    assert created.status_code == 200
+    idp = created.json()["user"]["idp_user_id"]
+    return _auth(idp), idp
+
+
 def _stub_answer(monkeypatch, captured: dict | None = None):
     def fake_answer(message, model=None, history=None, synthetic_mode=None):
         if captured is not None:
@@ -88,30 +98,31 @@ def test_valid_jwt_without_ensure_is_401(tmp_path, monkeypatch):
 def test_ensure_then_chat(tmp_path, monkeypatch):
     client = _client(tmp_path, monkeypatch)
     _stub_answer(monkeypatch)
+    headers, _idp = _signup(client)
     ensured = client.post(
         "/internal/users/ensure",
         json={"email_prefix": "ab***@example.com"},
-        headers=_auth(),
+        headers=headers,
     )
     assert ensured.status_code == 200
     body = ensured.json()
     assert body["plan"] == "trial"
     assert body["role"] == "user"
-    chat = client.post("/chat", json={"message": "hi"}, headers=_auth())
+    chat = client.post("/chat", json={"message": "hi"}, headers=headers)
     assert chat.status_code == 200
     assert chat.json()["answer"] == "ok"
-    me = client.get("/internal/users/me", headers=_auth())
+    me = client.get("/internal/users/me", headers=headers)
     assert me.json()["used_today"] == 1
 
 
 def test_revoked_user_is_401(tmp_path, monkeypatch):
     client = _client(tmp_path, monkeypatch)
     _stub_answer(monkeypatch)
-    client.post("/internal/users/ensure", json={}, headers=_auth())
+    headers, idp = _signup(client)
     from app.db.sqlite import set_status
 
-    set_status(idp_user_id="user_abc", status="revoked")
-    resp = client.post("/chat", json={"message": "hi"}, headers=_auth())
+    set_status(idp_user_id=idp, status="revoked")
+    resp = client.post("/chat", json={"message": "hi"}, headers=headers)
     assert resp.status_code == 401
     assert resp.json()["error"] == "revoked"
 
@@ -119,8 +130,8 @@ def test_revoked_user_is_401(tmp_path, monkeypatch):
 def test_payload_too_large(tmp_path, monkeypatch):
     monkeypatch.setenv("CHAT_MAX_MESSAGE_CHARS", "8")
     client = _client(tmp_path, monkeypatch)
-    client.post("/internal/users/ensure", json={}, headers=_auth())
-    resp = client.post("/chat", json={"message": "123456789"}, headers=_auth())
+    headers, _idp = _signup(client)
+    resp = client.post("/chat", json={"message": "123456789"}, headers=headers)
     assert resp.status_code == 400
     assert resp.json()["error"] == "payload_too_large"
 
@@ -128,9 +139,9 @@ def test_payload_too_large(tmp_path, monkeypatch):
 def test_daily_quota_429(tmp_path, monkeypatch):
     client = _client(tmp_path, monkeypatch, CHAT_DAILY_LIMIT_TRIAL="1")
     _stub_answer(monkeypatch)
-    client.post("/internal/users/ensure", json={}, headers=_auth())
-    assert client.post("/chat", json={"message": "one"}, headers=_auth()).status_code == 200
-    second = client.post("/chat", json={"message": "two"}, headers=_auth())
+    headers, _idp = _signup(client)
+    assert client.post("/chat", json={"message": "one"}, headers=headers).status_code == 200
+    second = client.post("/chat", json={"message": "two"}, headers=headers)
     assert second.status_code == 429
     assert second.json()["error"] == "rate_limited"
     assert "Retry-After" in second.headers
@@ -138,8 +149,8 @@ def test_daily_quota_429(tmp_path, monkeypatch):
 
 def test_concurrent_stream_429(tmp_path, monkeypatch):
     client = _client(tmp_path, monkeypatch)
-    client.post("/internal/users/ensure", json={}, headers=_auth())
-    user = get_user_by_idp("user_abc")
+    headers, idp = _signup(client)
+    user = get_user_by_idp(idp)
     assert user is not None
     check_and_begin(user, "first")
     try:
@@ -158,7 +169,7 @@ def test_trial_clamps_model_and_recordforge(tmp_path, monkeypatch):
     client = _client(tmp_path, monkeypatch)
     captured: dict = {}
     _stub_answer(monkeypatch, captured)
-    client.post("/internal/users/ensure", json={}, headers=_auth())
+    headers, _idp = _signup(client)
     resp = client.post(
         "/chat",
         json={
@@ -166,7 +177,7 @@ def test_trial_clamps_model_and_recordforge(tmp_path, monkeypatch):
             "model": "deepseek-v4-pro",
             "synthetic_mode": "recordforge",
         },
-        headers=_auth(),
+        headers=headers,
     )
     assert resp.status_code == 200
     assert captured["model"] == "deepseek-v4-flash"
@@ -175,15 +186,15 @@ def test_trial_clamps_model_and_recordforge(tmp_path, monkeypatch):
 
 def test_kill_switch_503(tmp_path, monkeypatch):
     client = _client(tmp_path, monkeypatch, LLM_KILL_SWITCH="true")
-    client.post("/internal/users/ensure", json={}, headers=_auth())
-    resp = client.post("/chat", json={"message": "hi"}, headers=_auth())
+    headers, _idp = _signup(client)
+    resp = client.post("/chat", json={"message": "hi"}, headers=headers)
     assert resp.status_code == 503
     assert resp.json()["error"] == "unavailable"
 
 
 def test_ensure_does_not_reset_plan(tmp_path, monkeypatch):
     client = _client(tmp_path, monkeypatch)
-    client.post("/internal/users/ensure", json={}, headers=_auth())
-    upsert_user(idp_user_id="user_abc", email_hash="ab" * 32, plan="user")
-    again = client.post("/internal/users/ensure", json={}, headers=_auth())
+    headers, idp = _signup(client)
+    upsert_user(idp_user_id=idp, email_hash="ab" * 32, plan="user")
+    again = client.post("/internal/users/ensure", json={}, headers=headers)
     assert again.json()["plan"] == "user"

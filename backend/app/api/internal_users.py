@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from app.core.config import get_settings
 from app.core.internal_auth import JwtClaims, get_auth_user, require_jwt
 from app.core.quota import seconds_until_utc_midnight
-from app.db.sqlite import LocalUser, upsert_user, used_today, write_audit
+from app.db.sqlite import LocalUser, get_user_by_idp, used_today, write_audit
 
 router = APIRouter()
 
@@ -30,6 +30,7 @@ class UserView(BaseModel):
     used_today: int
     retry_after_seconds: int
     email_prefix: str
+    must_reset_password: bool = False
 
 
 def _view(user: LocalUser) -> UserView:
@@ -48,6 +49,7 @@ def _view(user: LocalUser) -> UserView:
         used_today=used_today(user.id),
         retry_after_seconds=seconds_until_utc_midnight(),
         email_prefix=user.email_prefix,
+        must_reset_password=user.must_reset_password,
     )
 
 
@@ -56,12 +58,11 @@ def ensure_user(
     body: EnsureRequest,
     claims: Annotated[JwtClaims, Depends(require_jwt)],
 ) -> UserView:
-    user = upsert_user(
-        idp_user_id=claims.sub,
-        email_hash=claims.email_hash,
-        email_prefix=body.email_prefix,
-    )
+    user = get_user_by_idp(claims.sub)
+    if user is None:
+        raise HTTPException(status_code=401, detail={"error": "unauthorized"})
     write_audit(action="ensure", actor_user_id=user.idp_user_id)
+    _ = body
     return _view(user)
 
 

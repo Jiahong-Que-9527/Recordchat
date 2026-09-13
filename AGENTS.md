@@ -198,7 +198,7 @@ Must keep:
 
 - `/chat` field names unchanged; identity in internal JWT headers only
 - `pipeline.py` the only orchestrator
-- `AUTH_MODE=off` boots without Clerk
+- `AUTH_MODE=off` boots without login
 - backend and Qdrant never on a public hostname
 - `/ingest` not reachable from the internet
 - request logs omit raw user questions by default

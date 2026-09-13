@@ -1,8 +1,9 @@
-import { createHash } from "crypto";
 import type { NextRequest } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { isAuthEnforced } from "@/lib/authMode";
 import { signInternalJwt } from "@/lib/internalJwt";
+import { SESSION_COOKIE } from "@/lib/sessionCookie";
+
+export { SESSION_COOKIE };
 
 export function getBackendBase(request: NextRequest): string {
   const internal = process.env.INTERNAL_API_BASE_URL?.trim();
@@ -31,37 +32,51 @@ export function jsonError(
   });
 }
 
-export function emailHash(email: string): string {
-  const pepper =
-    process.env.EMAIL_HASH_PEPPER?.trim() ||
-    process.env.INTERNAL_AUTH_SECRET?.trim() ||
-    "";
-  return createHash("sha256")
-    .update(`${email.trim().toLowerCase()}${pepper}`)
-    .digest("hex");
+export function sessionCookieValue(request: NextRequest): string {
+  return request.cookies.get(SESSION_COOKIE)?.value || "";
 }
 
-export function emailPrefix(email: string): string {
-  const trimmed = email.trim().toLowerCase();
-  const at = trimmed.indexOf("@");
-  if (at <= 0) {
-    return "***";
+export function setSessionCookieHeader(token: string, request: NextRequest): string {
+  const proto = (
+    request.headers.get("x-forwarded-proto") ||
+    request.nextUrl.protocol.replace(/:$/, "")
+  ).toLowerCase();
+  const parts = [
+    `${SESSION_COOKIE}=${token}`,
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax",
+    "Max-Age=604800",
+  ];
+  if (proto === "https") {
+    parts.push("Secure");
   }
-  const local = trimmed.slice(0, at);
-  const domain = trimmed.slice(at);
-  return `${local.slice(0, 2)}***${domain}`;
+  return parts.join("; ");
 }
+
+export function clearSessionCookieHeader(): string {
+  return `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+}
+
+type SessionUser = {
+  idp_user_id: string;
+  email_prefix?: string;
+  role?: string;
+  plan?: string;
+  must_reset_password?: boolean;
+};
 
 export type AuthedContext = {
   userId: string;
   email: string;
   mustResetPassword: boolean;
   token: string;
+  sessionToken: string;
 };
 
-export async function requireAuthedContext(): Promise<
-  AuthedContext | { response: Response }
-> {
+export async function requireAuthedContext(
+  request: NextRequest
+): Promise<AuthedContext | { response: Response }> {
   if (!isAuthEnforced()) {
     return { response: jsonError("unauthorized", 401) };
   }
@@ -69,31 +84,48 @@ export async function requireAuthedContext(): Promise<
   if (secret.length < 32) {
     return { response: jsonError("unavailable", 503, { retry_after_seconds: 60 }) };
   }
-  const { userId } = await auth();
+  const sessionToken = sessionCookieValue(request);
+  if (!sessionToken) {
+    return { response: jsonError("unauthorized", 401) };
+  }
+  const backendBase = getBackendBase(request);
+  const session = await fetch(`${backendBase}/internal/auth/session`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ session_token: sessionToken }),
+    cache: "no-store",
+  });
+  if (!session.ok) {
+    return { response: jsonError("unauthorized", 401) };
+  }
+  const body = (await session.json()) as {
+    user?: SessionUser;
+    must_reset_password?: boolean;
+  };
+  const userId = body.user?.idp_user_id;
   if (!userId) {
     return { response: jsonError("unauthorized", 401) };
   }
-  const user = await currentUser();
-  const email =
-    user?.primaryEmailAddress?.emailAddress ||
-    user?.emailAddresses?.[0]?.emailAddress ||
-    "";
-  const mustResetPassword =
-    user?.publicMetadata?.must_reset_password === true;
   const ttl = Number(process.env.INTERNAL_JWT_TTL_SECONDS || "90");
   const token = signInternalJwt({
     sub: userId,
-    emailHash: email ? emailHash(email) : "",
+    emailHash: "",
     secret,
     ttlSeconds: Number.isFinite(ttl) ? ttl : 90,
   });
-  return { userId, email, mustResetPassword, token };
+  return {
+    userId,
+    email: "",
+    mustResetPassword: Boolean(body.must_reset_password),
+    token,
+    sessionToken,
+  };
 }
 
 export async function ensureUser(
   backendBase: string,
   token: string,
-  email: string
+  _email: string
 ): Promise<Response> {
   return fetch(`${backendBase}/internal/users/ensure`, {
     method: "POST",
@@ -101,7 +133,7 @@ export async function ensureUser(
       authorization: `Bearer ${token}`,
       "content-type": "application/json",
     },
-    body: JSON.stringify({ email_prefix: email ? emailPrefix(email) : "" }),
+    body: JSON.stringify({ email_prefix: "" }),
     cache: "no-store",
   });
 }
@@ -110,7 +142,7 @@ export async function requireAdminContext(request: NextRequest): Promise<
   | { token: string; backendBase: string; userId: string }
   | { response: Response }
 > {
-  const identity = await requireAuthedContext();
+  const identity = await requireAuthedContext(request);
   if ("response" in identity) {
     return identity;
   }

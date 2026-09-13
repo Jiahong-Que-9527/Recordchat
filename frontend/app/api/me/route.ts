@@ -14,7 +14,7 @@ export async function GET(request: NextRequest): Promise<Response> {
   if (!isAuthEnforced()) {
     return jsonError("unauthorized", 401);
   }
-  const identity = await requireAuthedContext();
+  const identity = await requireAuthedContext(request);
   if ("response" in identity) {
     return identity.response;
   }

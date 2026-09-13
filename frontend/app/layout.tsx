@@ -1,6 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
-import { clerkPublishableKey } from "@/lib/authMode";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -25,14 +23,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const publishableKey = clerkPublishableKey();
-  const tree = (
+  return (
     <html lang="en">
       <body>{children}</body>
     </html>
   );
-  if (!publishableKey) {
-    return tree;
-  }
-  return <ClerkProvider publishableKey={publishableKey}>{tree}</ClerkProvider>;
 }
