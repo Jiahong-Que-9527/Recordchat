@@ -23,6 +23,8 @@ import { ModelPicker } from "@/components/ModelPicker";
 import { Sidebar } from "@/components/Sidebar";
 import { Message, canvasTitle } from "@/components/Message";
 import { TypingIndicator } from "@/components/TypingIndicator";
+import { AuthControls } from "@/components/AuthControls";
+import { PrivacyBanner } from "@/components/PrivacyBanner";
 import { cn } from "@/lib/utils";
 import {
   getMessageData,
@@ -214,6 +216,7 @@ export default function Home() {
         />
 
         <section className="relative flex h-full flex-col overflow-hidden bg-transparent px-4 pb-4 pt-3 sm:px-6">
+          <PrivacyBanner />
           {/* Mobile/tablet top bar — opens the sidebar drawer. */}
           <header className="mb-2 flex items-center justify-between gap-2 xl:hidden">
             <button
@@ -229,6 +232,7 @@ export default function Home() {
               <span className="rc-gradient-text">RecordChat</span>
             </span>
             <div className="flex items-center gap-2">
+              <AuthControls />
               <CanvasToggleButton
                 open={canvasOpen}
                 onClick={handleToggleCanvasPanel}
@@ -323,6 +327,7 @@ export default function Home() {
                   open={canvasOpen}
                   onClick={handleToggleCanvasPanel}
                 />
+                <AuthControls />
               </div>
               <PromptInputSubmit
                 isLoading={loading}
