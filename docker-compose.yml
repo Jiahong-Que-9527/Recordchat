@@ -1,8 +1,12 @@
 services:
   qdrant:
-    image: qdrant/qdrant:latest
+    # AUD-09 / v0.3.1: pin a release tag, never :latest.
+    image: qdrant/qdrant:v1.19.1
     ports:
       - "127.0.0.1:6333:6333"
+    environment:
+      # Empty = auth disabled (local). Set QDRANT_API_KEY for any shared host.
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:-}
     volumes:
       - qdrant_storage:/qdrant/storage
     healthcheck:
@@ -19,6 +23,7 @@ services:
       # Connect to the qdrant service instead of the in-memory store.
       QDRANT_URL: http://qdrant:6333
       QDRANT_COLLECTION: ${QDRANT_COLLECTION:-recordchat_one_record}
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
       LLM_PROVIDER: ${LLM_PROVIDER:-openai}
       LLM_MODEL: ${LLM_MODEL:-deepseek-v4-flash}
       LLM_API_KEY: ${LLM_API_KEY:-}

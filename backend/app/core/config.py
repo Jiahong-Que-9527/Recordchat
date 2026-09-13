@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     qdrant_url: str = ":memory:"
     qdrant_collection: str = "recordchat_one_record"
     qdrant_upsert_batch_size: int = 128
+    qdrant_api_key: str = ""
 
     # Workflow connectors
     recordforge_url: str = ""
