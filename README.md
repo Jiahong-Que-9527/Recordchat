@@ -1,106 +1,41 @@
 <div align="center">
-  <img src="assets/recordchat-logo.png" alt="RecordChat logo" width="260">
+  <img src="assets/recordchat-logo.png" alt="RecordChat logo" width="220">
 </div>
 
 # RecordChat
 
-**An open-source AI assistant that makes IATA ONE Record easier to learn and explore.**
+**A citation-first AI assistant for IATA ONE Record and NE:ONE.**
 
-ONE Record is the air-cargo industry's data-sharing standard — powerful, but spread
-across specifications, an ontology, a REST API, JSON-LD payloads, and server
-implementations like **NE:ONE**. Getting up to speed means reading a lot of dense
-material. RecordChat exists to shorten that path: ask a question in plain language
-and get a **grounded, source-cited answer**, so developers, logistics teams, and
-newcomers can understand ONE Record — including NE:ONE server topics — faster and
-more easily.
+RecordChat helps developers and logistics teams explore the ONE Record specification, ontology, JSON-LD, APIs, and NE:ONE implementation guidance. It retrieves from reviewed public sources and returns source-linked answers; it is an **independent project, not an official IATA product**.
 
-It is a community helper, not a replacement for the official docs: every answer
-cites where it came from, and diagrams are generated when they make a relationship
-or flow clearer.
+## What you can do
 
-> **Disclaimer.** RecordChat is an **independent, auxiliary open-source project**.
-> It is **not** an official IATA product and is not affiliated with or endorsed by
-> IATA. Every reference material it uses comes from **publicly available,
-> open-source resources**, and answers are retrieval-based with citations — no
-> fine-tuning on third-party content.
+- Ask how `LogisticsObject`, `Shipment`, `Piece`, and `Waybill` relate, then inspect the supporting sources.
+- Explore illustrative JSON-LD generated from templates, API flows, and NE:ONE setup questions.
+- Follow a conversation through the streaming Next.js interface, with citations and diagrams when useful.
 
-## What it does
-
-- **Grounded Q&A** — answers are retrieved from reviewed public sources and cited,
-  not made up.
-- **Concepts & ontology** — explains LogisticsObjects, classes, properties, and how
-  entities relate to each other.
-- **JSON-LD & API** — shows illustrative JSON-LD payloads and explains API/data-sharing flows.
-- **NE:ONE implementation** — practical guidance on running and using the NE:ONE server.
-- **Visual when useful** — renders Mermaid diagrams for relationships and flows.
-
-## Screenshots
-
-### Welcome & suggested prompts
-
-The landing view orients new users around ONE Record topics. The sidebar lists
-starter questions; the main area offers the same prompts as one-click tiles so
-you can begin without typing.
+**Engineering behind the assistant:** Next.js frontend → FastAPI API and orchestration → Qdrant-backed retrieval. The repository also includes source-version governance, a versioned retrieval evaluation set, and backend tests. See the [architecture](docs/architecture.md) and [current project plan](docs/project_plan.md).
 
 <div align="center">
-  <img src="assets/welcome_pic2.png" alt="RecordChat welcome screen with suggested ONE Record prompts" width="80%">
+  <img src="assets/welcome_pic2.png" alt="RecordChat welcome screen with suggested ONE Record prompts" width="75%">
 </div>
 
-### In the chat
+## Run locally
 
-Once you start asking questions, RecordChat streams **grounded, cited answers**
-in the main conversation. When a relationship or flow is easier to grasp
-visually, it can render a **Mermaid diagram** inline with the reply.
-
-For ontology and payload questions, answers may also include **JSON-LD
-structured output** (open the `{ }` panel anytime from the prompt bar), plus
-**source citations** and **related concepts** for follow-up exploration.
-You can switch between supported **LLM providers and models** from the prompt
-bar when you want a different speed or reasoning style.
-
-## Quickstart
-
-Requires Docker. The included `Makefile` wraps the common commands:
+Requires Docker, `make`, and API keys for the configured LLM and embedding providers.
 
 ```bash
-make env      # create .env from .env.example, then add your model API keys
-make up       # start backend + frontend + Qdrant (http://localhost:3000)
-make ingest   # load the public ONE Record / NE:ONE corpus into the vector store
+git clone https://github.com/Jiahong-Que-9527/Recordchat.git
+cd Recordchat
+make env       # create .env; add LLM_* and EMBEDDING_* keys
+make up        # start frontend, backend, and Qdrant
+make ingest    # index reviewed public-source files into Qdrant
 ```
 
-Run `make` to see all targets (`down`, `restart`, `rebuild`, `logs`, `test`, …).
-Generation and retrieval use external model APIs — set `LLM_*` and `EMBEDDING_*`
-in `.env` before `make up`. Re-run `make ingest` whenever you change the embedding
-model. See [SPEC.md](SPEC.md) for the no-Docker path and full configuration.
+Open `http://localhost:3000` and try: **“How do Shipment, Piece, and Waybill relate?”** The corpus must be prepared before ingestion; see the [data-source guide](docs/data_download_guide.md) and [source-usage policy](docs/source_usage_policy.md). Configuration and API details are in [SPEC.md](SPEC.md).
 
-## Try asking
+## Scope and limits
 
-- What is a LogisticsObject, and why is it central to ONE Record?
-- How do Shipment, Piece, and Waybill relate in ONE Record?
-- Generate a JSON-LD example for a Piece.
-- Walk me through the ONE Record data sharing flow with subscriptions.
-- How do I run NE:ONE locally with Docker Compose?
+RecordChat is a local/demo-oriented application, not a hosted production service. Citations make answers inspectable, not automatically correct; verify important claims against the linked source. Generated JSON-LD is illustrative and is **not** automatically written to a ONE Record Server. RecordForge is an optional connector when configured; a live aviation lakehouse integration is not part of the current application.
 
-## Repository layout
-
-```
-backend/    FastAPI service — API, RAG pipeline, domain layer, tests
-frontend/   Next.js + Tailwind chat UI (streaming, citations, diagrams)
-data/       public raw sources and processed artifacts
-docs/       architecture, **project plan**, roadmap, data-source & compliance notes
-scripts/    ingestion, evaluation, and data-governance helpers
-SPEC.md     v0.1 contracts (API, modules, setup)
-```
-
-Planning: [docs/project_plan.md](docs/project_plan.md) is the current status and
-next-slice map. [docs/roadmap.md](docs/roadmap.md) is the milestone narrative.
-
-## Open data & compliance
-
-RecordChat only uses **publicly available, open-source** ONE Record, ontology, and
-NE:ONE materials, with citation-first retrieval over reviewed sources. It does not
-claim official affiliation, does not ingest access-restricted materials, and does
-not republish raw third-party bundles. Details:
-[data_compliance_report.md](docs/data_compliance_report.md) ·
-[source_usage_policy.md](docs/source_usage_policy.md) ·
-[data_source_plan.md](docs/data_source_plan.md).
+Only reviewed, publicly accessible sources should be ingested. The project does not claim IATA affiliation or redistribute third-party source bundles. See [data compliance notes](docs/data_compliance_report.md) for the source boundaries.
