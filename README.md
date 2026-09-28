@@ -6,7 +6,7 @@
 
 [Quick start](#run-locally) · [Architecture](docs/architecture.md) · [Source policy](docs/source_usage_policy.md) · [Project status](docs/project_plan.md)
 
-Air-cargo teams adopting ONE Record must navigate specifications, an ontology, JSON-LD payloads, APIs, and server guidance. RecordChat turns that fragmented documentation into a **question-and-answer interface with inspectable sources**. It is designed to help developers and logistics practitioners understand the standard—not to replace the standard or make operational decisions for them.
+Air-cargo teams adopting ONE Record must navigate specifications, an ontology, JSON-LD payloads, APIs, and server guidance. RecordChat turns that fragmented documentation into a **question-and-answer interface with inspectable sources**. It helps developers and logistics practitioners understand the standard, but does not replace the standard or make operational decisions for them.
 
 RecordChat is an **independent public project**, not an official IATA product or an IATA-endorsed service.
 
