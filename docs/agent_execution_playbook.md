@@ -32,7 +32,10 @@ AviationLakehouse = analytical Bronze/Silver/Gold narrative (v0.2.6, docs only)
 5. **`data/raw/_staging/` is never ingested.** One live canonical version per
    source family.
 6. **`/chat` field names are a hard contract.** Additive optional fields are
-   allowed; renaming is not.
+   allowed; renaming is not. User identity is an internal JWT header, never a
+   `/chat` JSON field.
+7. **Public surface is the Next.js frontend only** when `AUTH_MODE=enforced`.
+   Backend, Qdrant, and `/ingest` stay off the public hostname.
 
 ## 2. Canonical documents (when they disagree)
 
@@ -40,7 +43,7 @@ AviationLakehouse = analytical Bronze/Silver/Gold narrative (v0.2.6, docs only)
 |---|---|---|
 | 1 | `docs/project_plan.md` | Current status + next work |
 | 2 | this playbook | How to execute a slice |
-| 3 | the slice brief (e.g. `docs/alh_execution_brief.md`) | Step-by-step for that slice |
+| 3 | the slice brief (`docs/v03_execution_brief.md`) | Step-by-step for that slice |
 | 4 | `docs/architecture.md` + `docs/adr/*.md` | Design constraints |
 | 5 | `SPEC.md` | `/chat` field names, module boundaries |
 | 6 | `docs/v0.2_development_plan.md` | Historical v0.2 task map |
@@ -55,16 +58,17 @@ AviationLakehouse = analytical Bronze/Silver/Gold narrative (v0.2.6, docs only)
 - **Delivered:** v0.1 → Data Foundation core pack → v0.2.1–v0.2.6,
   Retrieval Quality `#27`–`#31`, audit AUD-01…AUD-07, workflow `#32`,
   RecordForge `#13` `#14`, Local / RecordForge UI toggle, ALH `#7`–`#10`.
-- **Next slice:** none scheduled.
-- **Unscheduled:** v0.3 sketch — `docs/v03_sketch.md` (only if the user asks).
-- **Optional P2:** AUD-08, AUD-09, AUD-10, AUD-04 frontend `/models` wiring,
-  leftover `#23`.
+- **Next slice:** v0.3.1 trial-user auth — `docs/v03_execution_brief.md`.
+- **Unscheduled:** v0.3 remainder (memory, source admin, tracing) —
+  `docs/v03_sketch.md` §3.2–3.7.
+- **Optional P2:** AUD-08, AUD-10, AUD-04 frontend `/models` wiring,
+  leftover `#23`. AUD-09 is in the v0.3.1 P0 list.
 
 Do **not** start without an explicit ask:
 
 - live ONE Record Server writes
 - live AviationLakehouse
-- auth / persisted sessions / tracing dashboards
+- chat-body persistence / tracing dashboards
 - bulk ingest of `_staging/` or extra overlapping ontology copies
 
 ## 4. How to execute any slice
@@ -73,11 +77,13 @@ Work in this order. Skip a step only when the slice brief says so.
 
 1. **Read** `AGENTS.md` → `project_plan.md` → this playbook → the slice brief.
 2. **Confirm the slice is the current next work.** If the user asks to jump
-   ahead (Server ingest, v0.3, ALH live), say so and keep the change optional
-   or deferred unless they explicitly override the plan.
+   ahead (Server persist, chat memory, live ALH), say so and keep the change
+   deferred unless they explicitly override the plan. v0.3.1 trial-user auth
+   **is** the current slice.
 3. **Stay inside the brief’s file list.** Do not “while we’re here” rewrite
    retrieval, providers, or the `/chat` contract.
-4. **Implement in the issue order** listed in the brief (`#7` then `#8`…).
+4. **Implement in the issue order** listed in the brief (`AUTH-01` then
+   `AUTH-02`…).
 5. **Add/adjust tests first or alongside**, never after “it looks fine”.
 6. **Verify** with the commands in `AGENTS.md` §9:
    - `uv run pytest -q` from `backend/`

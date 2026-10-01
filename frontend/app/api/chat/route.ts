@@ -1,5 +1,12 @@
 import type { NextRequest } from "next/server";
 import { CHAT_MODELS, SYNTHETIC_MODES } from "@/lib/api";
+import { isAuthEnforced } from "@/lib/authMode";
+import {
+  ensureUser,
+  getBackendBase,
+  jsonError,
+  requireAuthedContext,
+} from "@/lib/backend";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -11,23 +18,36 @@ type IncomingMessage = {
 
 const ALLOWED_MODELS = new Set<string>(CHAT_MODELS);
 const ALLOWED_SYNTHETIC_MODES = new Set<string>(SYNTHETIC_MODES);
+const MAX_MESSAGE_CHARS = Number(process.env.CHAT_MAX_MESSAGE_CHARS || "4000");
+const MAX_HISTORY_TURNS = Number(process.env.CHAT_MAX_HISTORY_TURNS || "6");
+const IP_CHAT_PER_HOUR = 60;
+const ipWindows = new Map<string, { start: number; count: number }>();
 
-function getBackendBase(request: NextRequest): string {
-  const internal = process.env.INTERNAL_API_BASE_URL?.trim();
-  if (internal) {
-    return internal.replace(/\/$/, "");
+function clientIp(request: NextRequest): string {
+  const cf = request.headers.get("cf-connecting-ip");
+  if (cf) {
+    return cf.trim();
   }
-
-  const configured = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
-  if (configured) {
-    return configured.replace(/\/$/, "");
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0]?.trim() || "unknown";
   }
+  return "unknown";
+}
 
-  const forwardedProto = request.headers.get("x-forwarded-proto");
-  const protocol =
-    forwardedProto ?? request.nextUrl.protocol.replace(/:$/, "") ?? "http";
-  const host = request.nextUrl.hostname || "127.0.0.1";
-  return `${protocol}://${host}:8000`;
+function allowIp(ip: string): boolean {
+  const now = Date.now();
+  const windowMs = 60 * 60 * 1000;
+  const rec = ipWindows.get(ip);
+  if (!rec || now - rec.start > windowMs) {
+    ipWindows.set(ip, { start: now, count: 1 });
+    return true;
+  }
+  if (rec.count >= IP_CHAT_PER_HOUR) {
+    return false;
+  }
+  rec.count += 1;
+  return true;
 }
 
 function messageText(message: IncomingMessage): string {
@@ -58,7 +78,7 @@ function extractLatestUserMessage(messages: IncomingMessage[]): string {
 function extractHistory(
   messages: IncomingMessage[],
   currentMessage: string,
-  limit = 6
+  limit = MAX_HISTORY_TURNS
 ): Array<{ role: "user" | "assistant"; content: string }> {
   const history: Array<{ role: "user" | "assistant"; content: string }> = [];
   let skippedCurrent = false;
@@ -142,10 +162,41 @@ export async function POST(request: NextRequest): Promise<Response> {
     );
   }
 
+  if (message.length > MAX_MESSAGE_CHARS || history.some((item) => item.content.length > MAX_MESSAGE_CHARS)) {
+    return jsonError("payload_too_large", 400);
+  }
+
   const backendBase = getBackendBase(request);
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  const requestId = crypto.randomUUID();
+  headers["x-request-id"] = requestId;
+
+  if (isAuthEnforced()) {
+    if (!allowIp(clientIp(request))) {
+      return jsonError("rate_limited", 429, { retry_after_seconds: 3600 });
+    }
+    const identity = await requireAuthedContext(request);
+    if ("response" in identity) {
+      return identity.response;
+    }
+    if (identity.mustResetPassword) {
+      return jsonError("password_change_required", 403);
+    }
+    const ensured = await ensureUser(backendBase, identity.token, identity.email);
+    if (!ensured.ok) {
+      return new Response(await ensured.text(), {
+        status: ensured.status,
+        headers: {
+          "content-type": ensured.headers.get("content-type") ?? "application/json",
+        },
+      });
+    }
+    headers.authorization = `Bearer ${identity.token}`;
+  }
+
   const upstream = await fetch(`${backendBase}/chat/stream`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers,
     body: JSON.stringify({
       message,
       model,
