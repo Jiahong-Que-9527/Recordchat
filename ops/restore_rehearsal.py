@@ -24,6 +24,7 @@ saved=yaml.safe_load((b/'resources.yaml').read_text())
 for obj in saved['items']:
     if not obj:continue
     kind=obj['kind'];name=obj['metadata']['name']
+    if kind=='ConfigMap' and name=='kube-root-ca.crt':continue
     obj.pop('status',None)
     obj['metadata']={k:v for k,v in obj['metadata'].items() if k in ['name','labels']}
     if kind=='Service':
