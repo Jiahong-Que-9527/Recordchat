@@ -55,3 +55,19 @@ Known limits: single-node host failure causes downtime; current private user URL
 Source governance passed; 4147 corpus files matched SHA256 in both runtime environments. First prod backup `/var/backups/recordchat/recordchat-prod/20261103T155623384913Z` (12 files,336686293 bytes) was copied and verified at `~/.local/share/recordchat/backups/20261103T155623384913Z`. Restore was proven with no model keys/no external gateway, from backup DB/vector snapshots and backed-up Kubernetes resources. Final successful report: `/var/lib/recordchat/recordchat-recovery-20261103d/recovery-report.json`. All four recovery namespaces remain present, workloads scaled to zero; the first attempt failed before data restore due port-forward timing, others are retained evidence. Do not delete them automatically.
 
 An initial release preparation failed because a test inherited local kill=true; only the auth-test fixture was isolated, 97 tests then passed and prepare/deploy succeeded. The incomplete private release directory for a27488f is retained; a manifest.json is the completion marker. A restore helper syntax error was caught before deployment of that helper version, corrected and reverified. Historical commits/failed artifacts are not current runtime evidence.
+
+## Local hot reload (normal feature development)
+
+**[房玄龄·2026-11-03]** The local Compose preview uses built images. For live code edits, keep local Qdrant, stop only the local preview frontend/backend, then use two WSL terminals:
+
+```bash
+cd ~/src/recordchat
+source ops/env.sh
+recordchat-docker compose -p recordchat-local -f docker-compose.yml -f docker-compose.local.override.yml stop frontend backend
+# Terminal A:
+bash ops/dev_backend.sh
+# Terminal B:
+bash ops/dev_frontend.sh
+```
+
+Both wrappers bind loopback, load only the local .env, and use data/local-app + data/local-logs. Default kill=true and empty provider keys remain; add development keys locally and intentionally enable calls when needed. Never copy prod auth keys or use prod DB for development. Stop the hot-reload processes before restarting the full local Compose preview. Shell syntax was checked; application runtime/build were verified separately.
