@@ -1,5 +1,8 @@
 # AGENTS.md — RecordChat developer guidance
 
+**[房玄龄·2026-11-03] Operational update:** Development is now WSL Ubuntu `/home/bill/src/recordchat`; runtime is dev K3s (`recordchat-prod`, `recordchat-staging`). avi RecordChat containers are stopped and retained. Read `docs/k3s_operations.md` and the cabinet migration runbook before operating. Existing local SQLite auth is preserved; old Clerk descriptions do not describe the deployed implementation. This migration does not close unrelated product/auth milestone requirements.
+
+
 Entry point for coding agents working on RecordChat. Read this first, then the
 canonical documents listed below in order. When documents disagree, the file
 with higher precedence in the table wins.

@@ -49,5 +49,15 @@
       },
       "patch": "[{\"op\": \"add\", \"path\": \"/data/CORS_ORIGINS\", \"value\": \"http://dev.tail0f631b.ts.net:13001\"}]"
     }
+  ],
+  "images": [
+    {
+      "name": "recordchat/frontend",
+      "newTag": "7883ec80d932"
+    },
+    {
+      "name": "recordchat/backend",
+      "newTag": "7883ec80d932"
+    }
   ]
 }

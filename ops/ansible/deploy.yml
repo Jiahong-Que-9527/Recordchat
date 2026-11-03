@@ -10,5 +10,5 @@
           - target_env in ['staging', 'prod']
     - name: Apply versioned resources
       ansible.builtin.command:
-        argv: [kubectl, apply, -k, '/opt/recordchat/deploy/k8s/overlays/{{ target_env }}']
+        argv: [kubectl, apply, -k, '{{ release_root | default("/opt/recordchat") }}/deploy/k8s/overlays/{{ target_env }}']
       changed_when: true

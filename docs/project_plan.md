@@ -1,5 +1,8 @@
 # RecordChat Project Plan
 
+**[房玄龄·2026-11-03] Operational update:** Development is now WSL Ubuntu `/home/bill/src/recordchat`; runtime is dev K3s (`recordchat-prod`, `recordchat-staging`). avi RecordChat containers are stopped and retained. Read `docs/k3s_operations.md` and the cabinet migration runbook before operating. Existing local SQLite auth is preserved; old Clerk descriptions do not describe the deployed implementation. This migration does not close unrelated product/auth milestone requirements.
+
+
 **Status date:** 2026-09-13
 **Current delivered line:** v0.2.6 ALH narrative + RecordForge + Retrieval Quality
 **Current next work:** v0.3.1 trial-user auth — see [v03_execution_brief.md](v03_execution_brief.md).

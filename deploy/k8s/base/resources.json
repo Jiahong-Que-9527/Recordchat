@@ -196,7 +196,7 @@
               {
                 "name": "frontend",
                 "image": "recordchat/frontend:bootstrap",
-                "imagePullPolicy": "IfNotPresent",
+                "imagePullPolicy": "Never",
                 "ports": [
                   {
                     "containerPort": 3000,
@@ -318,7 +318,7 @@
               {
                 "name": "backend",
                 "image": "recordchat/backend:bootstrap",
-                "imagePullPolicy": "IfNotPresent",
+                "imagePullPolicy": "Never",
                 "ports": [
                   {
                     "containerPort": 8000,
@@ -602,6 +602,9 @@
                   "capabilities": {
                     "drop": [
                       "ALL"
+                    ],
+                    "add": [
+                      "NET_BIND_SERVICE"
                     ]
                   }
                 },
