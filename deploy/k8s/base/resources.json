@@ -1,0 +1,985 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "app-state"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "storageClassName": "",
+        "resources": {
+          "requests": {
+            "storage": "2Gi"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "corpus"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "storageClassName": "",
+        "resources": {
+          "requests": {
+            "storage": "2Gi"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "logs"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "storageClassName": "",
+        "resources": {
+          "requests": {
+            "storage": "2Gi"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "qdrant-storage"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "storageClassName": "",
+        "resources": {
+          "requests": {
+            "storage": "5Gi"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "recordchat-config"
+      },
+      "data": {
+        "AUTH_MODE": "enforced",
+        "QDRANT_URL": "http://qdrant:6333",
+        "QDRANT_COLLECTION": "recordchat_one_record",
+        "INTERNAL_API_BASE_URL": "http://backend:8000",
+        "RECORDCHAT_DB_PATH": "/app/data/app/recordchat.db",
+        "RECORDCHAT_REQUEST_LOG": "/app/data/logs/requests.jsonl",
+        "INGEST_ALLOW_RESET": "false",
+        "EMBEDDING_DIM": "1536",
+        "HOSTNAME": "0.0.0.0",
+        "PORT": "3000"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "gateway-config"
+      },
+      "data": {
+        "Caddyfile": "# [\u623f\u7384\u9f84\u00b72026-11-03] Only the frontend is reachable through this gateway.\n{\n  auto_https off\n  admin off\n}\n:8080 {\n  reverse_proxy frontend:3000 {\n    flush_interval -1\n    header_up -CF-Connecting-IP\n    header_up X-Forwarded-For {remote_host}\n  }\n}\n"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "frontend"
+      },
+      "spec": {
+        "selector": {
+          "app.kubernetes.io/name": "recordchat",
+          "app.kubernetes.io/component": "frontend"
+        },
+        "ports": [
+          {
+            "name": "http",
+            "port": 3000,
+            "targetPort": 3000
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "backend"
+      },
+      "spec": {
+        "selector": {
+          "app.kubernetes.io/name": "recordchat",
+          "app.kubernetes.io/component": "backend"
+        },
+        "ports": [
+          {
+            "name": "http",
+            "port": 8000,
+            "targetPort": 8000
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "qdrant"
+      },
+      "spec": {
+        "selector": {
+          "app.kubernetes.io/name": "recordchat",
+          "app.kubernetes.io/component": "qdrant"
+        },
+        "ports": [
+          {
+            "name": "http",
+            "port": 6333,
+            "targetPort": 6333
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "frontend"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "recordchat",
+            "app.kubernetes.io/component": "frontend"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/name": "recordchat",
+              "app.kubernetes.io/component": "frontend"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "terminationGracePeriodSeconds": 90,
+            "securityContext": {
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "containers": [
+              {
+                "name": "frontend",
+                "image": "recordchat/frontend:bootstrap",
+                "imagePullPolicy": "IfNotPresent",
+                "ports": [
+                  {
+                    "containerPort": 3000,
+                    "name": "http"
+                  }
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": "50m",
+                    "memory": "128Mi"
+                  },
+                  "limits": {
+                    "cpu": "1",
+                    "memory": "1Gi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "startupProbe": {
+                  "tcpSocket": {
+                    "port": 3000
+                  },
+                  "periodSeconds": 3,
+                  "failureThreshold": 60
+                },
+                "livenessProbe": {
+                  "tcpSocket": {
+                    "port": 3000
+                  },
+                  "periodSeconds": 20,
+                  "failureThreshold": 3
+                },
+                "readinessProbe": {
+                  "tcpSocket": {
+                    "port": 3000
+                  },
+                  "periodSeconds": 5
+                },
+                "envFrom": [
+                  {
+                    "configMapRef": {
+                      "name": "recordchat-config"
+                    }
+                  },
+                  {
+                    "secretRef": {
+                      "name": "recordchat-secrets"
+                    }
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "HOME",
+                    "value": "/tmp"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "strategy": {
+          "type": "RollingUpdate",
+          "rollingUpdate": {
+            "maxSurge": 1,
+            "maxUnavailable": 0
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "backend"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "recordchat",
+            "app.kubernetes.io/component": "backend"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/name": "recordchat",
+              "app.kubernetes.io/component": "backend"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "terminationGracePeriodSeconds": 90,
+            "securityContext": {
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "containers": [
+              {
+                "name": "backend",
+                "image": "recordchat/backend:bootstrap",
+                "imagePullPolicy": "IfNotPresent",
+                "ports": [
+                  {
+                    "containerPort": 8000,
+                    "name": "http"
+                  }
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": "50m",
+                    "memory": "256Mi"
+                  },
+                  "limits": {
+                    "cpu": "2",
+                    "memory": "2Gi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "startupProbe": {
+                  "tcpSocket": {
+                    "port": 8000
+                  },
+                  "periodSeconds": 3,
+                  "failureThreshold": 60
+                },
+                "livenessProbe": {
+                  "httpGet": {
+                    "path": "/health",
+                    "port": 8000
+                  },
+                  "periodSeconds": 20,
+                  "failureThreshold": 3
+                },
+                "readinessProbe": {
+                  "exec": {
+                    "command": [
+                      "python",
+                      "-c",
+                      "import os,urllib.request;urllib.request.urlopen(urllib.request.Request(os.environ['QDRANT_URL']+'/collections/'+os.environ['QDRANT_COLLECTION'],headers={'api-key':os.environ['QDRANT_API_KEY']}),timeout=3)"
+                    ]
+                  },
+                  "periodSeconds": 10,
+                  "timeoutSeconds": 5
+                },
+                "envFrom": [
+                  {
+                    "configMapRef": {
+                      "name": "recordchat-config"
+                    }
+                  },
+                  {
+                    "secretRef": {
+                      "name": "recordchat-secrets"
+                    }
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "HOME",
+                    "value": "/tmp"
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "corpus",
+                    "mountPath": "/app/data",
+                    "readOnly": true
+                  },
+                  {
+                    "name": "app-state",
+                    "mountPath": "/app/data/app",
+                    "readOnly": false
+                  },
+                  {
+                    "name": "logs",
+                    "mountPath": "/app/data/logs",
+                    "readOnly": false
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "corpus",
+                "persistentVolumeClaim": {
+                  "claimName": "corpus"
+                }
+              },
+              {
+                "name": "app-state",
+                "persistentVolumeClaim": {
+                  "claimName": "app-state"
+                }
+              },
+              {
+                "name": "logs",
+                "persistentVolumeClaim": {
+                  "claimName": "logs"
+                }
+              }
+            ]
+          }
+        },
+        "strategy": {
+          "type": "Recreate"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "StatefulSet",
+      "metadata": {
+        "name": "qdrant"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "recordchat",
+            "app.kubernetes.io/component": "qdrant"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/name": "recordchat",
+              "app.kubernetes.io/component": "qdrant"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "terminationGracePeriodSeconds": 90,
+            "securityContext": {
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "containers": [
+              {
+                "name": "qdrant",
+                "image": "qdrant/qdrant:v1.19.1",
+                "imagePullPolicy": "IfNotPresent",
+                "ports": [
+                  {
+                    "containerPort": 6333,
+                    "name": "http"
+                  }
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": "50m",
+                    "memory": "256Mi"
+                  },
+                  "limits": {
+                    "cpu": "2",
+                    "memory": "2Gi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "startupProbe": {
+                  "tcpSocket": {
+                    "port": 6333
+                  },
+                  "periodSeconds": 3,
+                  "failureThreshold": 60
+                },
+                "livenessProbe": {
+                  "tcpSocket": {
+                    "port": 6333
+                  },
+                  "periodSeconds": 20,
+                  "failureThreshold": 3
+                },
+                "readinessProbe": {
+                  "tcpSocket": {
+                    "port": 6333
+                  },
+                  "periodSeconds": 5
+                },
+                "env": [
+                  {
+                    "name": "QDRANT__SERVICE__API_KEY",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "recordchat-secrets",
+                        "key": "QDRANT_API_KEY"
+                      }
+                    }
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "qdrant-storage",
+                    "mountPath": "/qdrant/storage",
+                    "readOnly": false
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "qdrant-storage",
+                "persistentVolumeClaim": {
+                  "claimName": "qdrant-storage"
+                }
+              }
+            ]
+          }
+        },
+        "serviceName": "qdrant",
+        "updateStrategy": {
+          "type": "RollingUpdate"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "gateway"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "recordchat",
+            "app.kubernetes.io/component": "gateway"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/name": "recordchat",
+              "app.kubernetes.io/component": "gateway"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "terminationGracePeriodSeconds": 90,
+            "securityContext": {
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "containers": [
+              {
+                "name": "gateway",
+                "image": "caddy@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5",
+                "imagePullPolicy": "IfNotPresent",
+                "ports": [
+                  {
+                    "containerPort": 8080,
+                    "name": "http"
+                  }
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": "50m",
+                    "memory": "32Mi"
+                  },
+                  "limits": {
+                    "cpu": "1",
+                    "memory": "128Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "startupProbe": {
+                  "tcpSocket": {
+                    "port": 8080
+                  },
+                  "periodSeconds": 3,
+                  "failureThreshold": 60
+                },
+                "livenessProbe": {
+                  "tcpSocket": {
+                    "port": 8080
+                  },
+                  "periodSeconds": 20,
+                  "failureThreshold": 3
+                },
+                "readinessProbe": {
+                  "tcpSocket": {
+                    "port": 8080
+                  },
+                  "periodSeconds": 5
+                },
+                "volumeMounts": [
+                  {
+                    "name": "gateway-config",
+                    "mountPath": "/etc/caddy",
+                    "readOnly": true
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "gateway-config",
+                "configMap": {
+                  "name": "gateway-config"
+                }
+              }
+            ]
+          }
+        },
+        "strategy": {
+          "type": "Recreate"
+        }
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "default-deny"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress",
+          "Egress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "dns"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Egress"
+        ],
+        "egress": [
+          {
+            "to": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "kubernetes.io/metadata.name": "kube-system"
+                  }
+                },
+                "podSelector": {
+                  "matchLabels": {
+                    "k8s-app": "kube-dns"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "protocol": "UDP",
+                "port": 53
+              },
+              {
+                "protocol": "TCP",
+                "port": 53
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "frontend-ingress"
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "recordchat",
+            "app.kubernetes.io/component": "frontend"
+          }
+        },
+        "policyTypes": [
+          "Ingress"
+        ],
+        "ingress": [
+          {
+            "from": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/name": "recordchat",
+                    "app.kubernetes.io/component": "gateway"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 3000
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "gateway-to-frontend"
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "recordchat",
+            "app.kubernetes.io/component": "gateway"
+          }
+        },
+        "policyTypes": [
+          "Egress"
+        ],
+        "egress": [
+          {
+            "to": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/name": "recordchat",
+                    "app.kubernetes.io/component": "frontend"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 3000
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "backend-ingress"
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "recordchat",
+            "app.kubernetes.io/component": "backend"
+          }
+        },
+        "policyTypes": [
+          "Ingress"
+        ],
+        "ingress": [
+          {
+            "from": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/name": "recordchat",
+                    "app.kubernetes.io/component": "frontend"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 8000
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "frontend-to-backend"
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "recordchat",
+            "app.kubernetes.io/component": "frontend"
+          }
+        },
+        "policyTypes": [
+          "Egress"
+        ],
+        "egress": [
+          {
+            "to": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/name": "recordchat",
+                    "app.kubernetes.io/component": "backend"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 8000
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "qdrant-ingress"
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "recordchat",
+            "app.kubernetes.io/component": "qdrant"
+          }
+        },
+        "policyTypes": [
+          "Ingress"
+        ],
+        "ingress": [
+          {
+            "from": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/name": "recordchat",
+                    "app.kubernetes.io/component": "backend"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 6333
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "backend-to-qdrant"
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "recordchat",
+            "app.kubernetes.io/component": "backend"
+          }
+        },
+        "policyTypes": [
+          "Egress"
+        ],
+        "egress": [
+          {
+            "to": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/name": "recordchat",
+                    "app.kubernetes.io/component": "qdrant"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 6333
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "gateway-ingress"
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "recordchat",
+            "app.kubernetes.io/component": "gateway"
+          }
+        },
+        "policyTypes": [
+          "Ingress"
+        ],
+        "ingress": [
+          {
+            "ports": [
+              {
+                "port": 8080
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "backend-provider-https"
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "recordchat",
+            "app.kubernetes.io/component": "backend"
+          }
+        },
+        "policyTypes": [
+          "Egress"
+        ],
+        "egress": [
+          {
+            "to": [
+              {
+                "ipBlock": {
+                  "cidr": "0.0.0.0/0",
+                  "except": [
+                    "10.0.0.0/8",
+                    "172.16.0.0/12",
+                    "192.168.0.0/16",
+                    "100.64.0.0/10",
+                    "169.254.0.0/16"
+                  ]
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 443
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -193,7 +193,7 @@ export default function Home() {
     <main className="h-dvh overflow-hidden bg-transparent">
       <div
         className={cn(
-          "grid h-full w-full grid-cols-1",
+          "grid h-full w-full grid-cols-1 transition-[grid-template-columns] duration-300 ease-in-out",
           canvasOpen
             ? sidebarCollapsed
               ? "xl:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)]"
