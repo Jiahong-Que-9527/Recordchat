@@ -37,7 +37,9 @@ for obj in saved['items']:
         obj['metadata']['namespace']=ns
         if kind=='PersistentVolumeClaim':
             obj['spec']['volumeName']=ns+'-'+name
-            items.append({'apiVersion':'v1','kind':'PersistentVolume','metadata':{'name':ns+'-'+name},'spec':{'capacity':obj['spec']['resources']['requests'],'accessModes':['ReadWriteOnce'],'persistentVolumeReclaimPolicy':'Retain','storageClassName':'','claimRef':{'namespace':ns,'name':name},'hostPath':{'path':str(root/name),'type':'Directory'},'nodeAffinity':{'required':{'nodeSelectorTerms':[{'matchExpressions':[{'key':'kubernetes.io/hostname','operator':'In','values':['sololakehouse']}]}]}}})
+            pv_spec={'capacity':obj['spec']['resources']['requests'],'accessModes':['ReadWriteOnce'],'persistentVolumeReclaimPolicy':'Retain','storageClassName':'','claimRef':{'namespace':ns,'name':name},'hostPath':{'path':str(root/name),'type':'Directory'}}
+            pv_spec['nodeAffinity']={'required':{'nodeSelectorTerms':[{'matchExpressions':[{'key':'kubernetes.io/hostname','operator':'In','values':['sololakehouse']}]}]}}
+            items.append({'apiVersion':'v1','kind':'PersistentVolume','metadata':{'name':ns+'-'+name},'spec':pv_spec})
     items.append(obj)
 subprocess.run(['kubectl','apply','-f','-'],input=json.dumps({'apiVersion':'v1','kind':'List','items':items}).encode(),check=True,stdout=subprocess.DEVNULL)
 subprocess.run(['kubectl','rollout','status','statefulset/qdrant','-n',ns,'--timeout=90s'],check=True)
