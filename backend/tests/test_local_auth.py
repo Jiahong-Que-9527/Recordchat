@@ -21,6 +21,8 @@ SECRET = "n" * 32
 def _client(tmp_path, monkeypatch, **env: str) -> TestClient:
     monkeypatch.setenv("AUTH_MODE", env.get("AUTH_MODE", "enforced"))
     monkeypatch.setenv("INTERNAL_AUTH_SECRET", SECRET)
+    # [房玄龄·2026-11-03] Auth tests must not inherit the local development kill switch.
+    monkeypatch.setenv("LLM_KILL_SWITCH", env.get("LLM_KILL_SWITCH", "false"))
     monkeypatch.setenv("RECORDCHAT_DB_PATH", str(tmp_path / "recordchat.db"))
     monkeypatch.setenv("ADMIN_EMAILS", env.get("ADMIN_EMAILS", "admin@example.com"))
     get_settings.cache_clear()
