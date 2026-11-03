@@ -67,6 +67,16 @@ subprocess.run(['kubectl','apply','--dry-run=server','-k',str(p.parent)],check=T
     for name in ['backend','frontend','gateway']:
         run(ssh+['kubectl rollout status deployment/'+name+' -n recordchat-'+a.env+' --timeout=120s'])
     run(ssh+['kubectl rollout status statefulset/qdrant -n recordchat-'+a.env+' --timeout=120s'])
+    marker_script = """from pathlib import Path
+import json,subprocess,datetime,sys,shutil
+root=Path('/opt/recordchat/state');root.mkdir(mode=0o700,exist_ok=True)
+env,tag,config=sys.argv[1:];now=datetime.datetime.now(datetime.timezone.utc);stamp=now.strftime('%Y%m%dT%H%M%S%fZ')
+state={'environment':env,'release':tag,'config_root':config,'verified_utc':now.isoformat(),'pods':json.loads(subprocess.check_output(['kubectl','get','pods','-n','recordchat-'+env,'-o','json']))}
+current=root/('current-'+env+'.json')
+if current.exists():shutil.copy2(current,root/(env+'-'+stamp+'-previous.json'))
+text=json.dumps(state,indent=2);(root/(env+'-'+stamp+'.json')).write_text(text);current.write_text(text)
+"""
+    run(ssh+['python3 - '+a.env+' '+tag+' '+remote],input=marker_script.encode())
     # Append-only evidence; no overwritten release history.
     print('DEPLOYED',a.env,tag,'CONFIG_ROOT',remote,'Run acceptance; image rollback does not roll back database schema.')
 

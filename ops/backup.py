@@ -36,6 +36,7 @@ finally:p.terminate();p.wait(timeout=15)
 subprocess.run(['tar','-czf',str(out/'corpus.tar.gz'),'-C',str(root/'corpus'),'.'],check=True)
 subprocess.run(['tar','-czf',str(out/'logs.tar.gz'),'-C',str(root/'logs'),'.'],check=True)
 subprocess.run(['tar','-czf',str(out/'deployment-source.tar.gz'),'-C','/opt/recordchat','deploy','ops'],check=True)
+if Path('/opt/recordchat/state').exists():subprocess.run(['tar','-czf',str(out/'release-state.tar.gz'),'-C','/opt/recordchat','state'],check=True)
 (out/'pods.json').write_bytes(subprocess.check_output(['kubectl','get','pods','-n',ns,'-o','json']))
 (out/'resources.yaml').write_bytes(subprocess.check_output(['kubectl','get','deploy,sts,svc,cm,pvc,networkpolicy','-n',ns,'-o','yaml']))
 if env=='prod':
