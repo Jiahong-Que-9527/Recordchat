@@ -246,14 +246,27 @@
                     "configMapRef": {
                       "name": "recordchat-config"
                     }
-                  },
-                  {
-                    "secretRef": {
-                      "name": "recordchat-secrets"
-                    }
                   }
                 ],
                 "env": [
+                  {
+                    "name": "INTERNAL_AUTH_SECRET",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "recordchat-secrets",
+                        "key": "INTERNAL_AUTH_SECRET"
+                      }
+                    }
+                  },
+                  {
+                    "name": "EMAIL_HASH_PEPPER",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "recordchat-secrets",
+                        "key": "EMAIL_HASH_PEPPER"
+                      }
+                    }
+                  },
                   {
                     "name": "HOME",
                     "value": "/tmp"

@@ -1,0 +1,8 @@
+# [房玄龄·2026-11-03] SSH alias resolves through existing ~/.ssh/config.
+all:
+  hosts:
+    dev:
+      ansible_host: dev
+      ansible_user: root
+      ansible_python_interpreter: /usr/bin/python3
+      ansible_ssh_common_args: -o StrictHostKeyChecking=yes -o BatchMode=yes

@@ -1,0 +1,14 @@
+# [房玄龄·2026-11-03] Run from WSL with --limit dev; no deletion or pruning.
+- name: Deploy a reviewed RecordChat environment
+  hosts: dev
+  gather_facts: false
+  tasks:
+    - name: Validate target environment
+      ansible.builtin.assert:
+        that:
+          - inventory_hostname == 'dev'
+          - target_env in ['staging', 'prod']
+    - name: Apply versioned resources
+      ansible.builtin.command:
+        argv: [kubectl, apply, -k, '/opt/recordchat/deploy/k8s/overlays/{{ target_env }}']
+      changed_when: true
