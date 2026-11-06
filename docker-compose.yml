@@ -1,8 +1,12 @@
 services:
   qdrant:
-    image: qdrant/qdrant:latest
+    # AUD-09 / v0.3.1: pin a release tag, never :latest.
+    image: qdrant/qdrant:v1.19.1
     ports:
       - "127.0.0.1:6333:6333"
+    environment:
+      # Empty = auth disabled (local). Set QDRANT_API_KEY for any shared host.
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:-}
     volumes:
       - qdrant_storage:/qdrant/storage
     healthcheck:
@@ -19,6 +23,7 @@ services:
       # Connect to the qdrant service instead of the in-memory store.
       QDRANT_URL: http://qdrant:6333
       QDRANT_COLLECTION: ${QDRANT_COLLECTION:-recordchat_one_record}
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
       LLM_PROVIDER: ${LLM_PROVIDER:-openai}
       LLM_MODEL: ${LLM_MODEL:-deepseek-v4-flash}
       LLM_API_KEY: ${LLM_API_KEY:-}
@@ -32,15 +37,33 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
       # File destination must be under the writable logs mount below.
       RECORDCHAT_REQUEST_LOG: ${RECORDCHAT_REQUEST_LOG:-/app/data/logs/requests.jsonl}
+      AUTH_MODE: ${AUTH_MODE:-off}
+      INTERNAL_AUTH_SECRET: ${INTERNAL_AUTH_SECRET:-}
+      EMAIL_HASH_PEPPER: ${EMAIL_HASH_PEPPER:-}
+      ADMIN_IDP_USER_IDS: ${ADMIN_IDP_USER_IDS:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      RECORDCHAT_DB_PATH: ${RECORDCHAT_DB_PATH:-/app/data/app/recordchat.db}
+      CHAT_DAILY_LIMIT_TRIAL: ${CHAT_DAILY_LIMIT_TRIAL:-30}
+      CHAT_DAILY_LIMIT_USER: ${CHAT_DAILY_LIMIT_USER:-100}
+      LLM_DAILY_BUDGET_USD: ${LLM_DAILY_BUDGET_USD:-15}
+      LLM_KILL_SWITCH: ${LLM_KILL_SWITCH:-false}
+      INGEST_TOKEN: ${INGEST_TOKEN:-}
+      INGEST_ALLOW_RESET: ${INGEST_ALLOW_RESET:-true}
     volumes:
       - ./data:/app/data:ro
       - ./data/logs:/app/data/logs
+      - ./data/app:/app/data/app
     depends_on:
       qdrant:
         condition: service_healthy
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        AUTH_MODE: ${AUTH_MODE:-off}
     ports:
       - "127.0.0.1:3000:3000"
     environment:
@@ -48,8 +71,30 @@ services:
       PORT: 3000
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
       INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:8000}
+      AUTH_MODE: ${AUTH_MODE:-off}
+      INTERNAL_AUTH_SECRET: ${INTERNAL_AUTH_SECRET:-}
+      EMAIL_HASH_PEPPER: ${EMAIL_HASH_PEPPER:-}
+      CHAT_MAX_MESSAGE_CHARS: ${CHAT_MAX_MESSAGE_CHARS:-4000}
+      CHAT_MAX_HISTORY_TURNS: ${CHAT_MAX_HISTORY_TURNS:-6}
     depends_on:
       - backend
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+
+  # Opt-in public hostname. Local `make up` does not start this.
+  # docker compose --profile public up -d
+  # Dashboard published application must map the hostname to http://frontend:3000 only.
+  cloudflared:
+    image: cloudflare/cloudflared:2025.8.1
+    profiles: ["public"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    depends_on:
+      - frontend
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
 
 volumes:
   qdrant_storage:

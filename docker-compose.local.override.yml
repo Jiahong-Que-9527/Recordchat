@@ -1,0 +1,15 @@
+# [房玄龄·2026-11-03] Separate local state. JSON below is valid YAML.
+{
+  "services": {
+    "frontend": {
+      "image": "recordchat/frontend:7883ec80d932"
+    },
+    "backend": {
+      "image": "recordchat/backend:7883ec80d932",
+      "volumes": [
+        "./data/local-app:/app/data/app",
+        "./data/local-logs:/app/data/logs"
+      ]
+    }
+  }
+}

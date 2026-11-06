@@ -120,7 +120,8 @@ class QdrantRetriever(Retriever):
             logger.info("Using in-memory Qdrant store.")
             self.client = QdrantClient(location=":memory:")
         else:
-            self.client = QdrantClient(url=settings.qdrant_url)
+            api_key = (settings.qdrant_api_key or "").strip() or None
+            self.client = QdrantClient(url=settings.qdrant_url, api_key=api_key)
 
     def ensure_collection(self) -> None:
         if not self.client.collection_exists(self.collection):

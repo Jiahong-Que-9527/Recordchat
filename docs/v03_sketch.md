@@ -1,11 +1,11 @@
 # v0.3 platform — sketch only
 
-**Status:** not scheduled. Do not start this while v0.2.6 ALH is open.  
-There are **no GitHub issues** on purpose.
+**Status:** §3.1 is open as **v0.3.1 trial-user auth**
+([v03_execution_brief.md](v03_execution_brief.md)). §3.2–3.7 stay sketch /
+not scheduled.
 
 v0.3 is the first time RecordChat would look like a small platform instead of
-a demoable assistant. Keep it a sketch until ALH narrative is done and the
-user explicitly asks to open a v0.3 issue.
+a demoable assistant. Do not implement 3.2–3.7 inside the trial-auth slice.
 
 ## 1. What v0.3 is for
 
@@ -27,7 +27,7 @@ Do these as separate issues, each still bootable without secrets.
 
 | Order | Theme | Intent | Notes |
 |---|---|---|---|
-| 3.1 | Auth + sessions | Identify a user; persist `conversation_id` | Keep `/chat` fields stable; add optional auth headers |
+| 3.1 | Auth + sessions | **Opened 2026-09-13 as trial-user accounts** (domain login, self-serve sign-up, admin temp password, `plan=trial\|user`, quotas). Chat bodies still not persisted. | Brief: [v03_execution_brief.md](v03_execution_brief.md). Keep `/chat` fields stable; identity in internal JWT headers, not the JSON body. |
 | 3.2 | Conversation memory | History beyond the 6-turn rewrite window | Still rewrite inside `pipeline.py` |
 | 3.3 | Source versioning admin | See live canonical versions; trigger ingest | Reuse `rag/canonical.py`; no `_staging` ingest |
 | 3.4 | Tracing | Request id across BFF → pipeline → providers | Build on `request_log.py` (AUD-07); OpenTelemetry later |
@@ -60,7 +60,9 @@ Do not implement 3.6 inside v0.2.6.
 
 ## 5. Open this sketch into a real plan only when
 
-- v0.2.6 DoD is checked
-- user asks for platform work
-- a new `docs/v03_execution_brief.md` exists with issue numbers, file lists,
-  and acceptance tests (same shape as the ALH brief)
+- v0.2.6 DoD is checked — **done**
+- user asks for platform work — **done** (trial-user product, 2026-09-13)
+- a new `docs/v03_execution_brief.md` exists with file lists and acceptance
+  tests (same shape as the ALH brief) — **done for 3.1 only**
+
+Further v0.3 themes (3.2+) need their own brief. Do not fold them into 3.1.

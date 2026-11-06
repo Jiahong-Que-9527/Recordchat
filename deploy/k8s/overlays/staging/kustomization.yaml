@@ -1,0 +1,63 @@
+{
+  "apiVersion": "kustomize.config.k8s.io/v1beta1",
+  "kind": "Kustomization",
+  "namespace": "recordchat-staging",
+  "resources": [
+    "../../base",
+    "storage.json"
+  ],
+  "patches": [
+    {
+      "target": {
+        "kind": "PersistentVolumeClaim",
+        "name": "app-state"
+      },
+      "patch": "[{\"op\": \"add\", \"path\": \"/spec/volumeName\", \"value\": \"rc-staging-app-state\"}]"
+    },
+    {
+      "target": {
+        "kind": "PersistentVolumeClaim",
+        "name": "corpus"
+      },
+      "patch": "[{\"op\": \"add\", \"path\": \"/spec/volumeName\", \"value\": \"rc-staging-corpus\"}]"
+    },
+    {
+      "target": {
+        "kind": "PersistentVolumeClaim",
+        "name": "logs"
+      },
+      "patch": "[{\"op\": \"add\", \"path\": \"/spec/volumeName\", \"value\": \"rc-staging-logs\"}]"
+    },
+    {
+      "target": {
+        "kind": "PersistentVolumeClaim",
+        "name": "qdrant-storage"
+      },
+      "patch": "[{\"op\": \"add\", \"path\": \"/spec/volumeName\", \"value\": \"rc-staging-qdrant-storage\"}]"
+    },
+    {
+      "target": {
+        "kind": "Deployment",
+        "name": "gateway"
+      },
+      "patch": "[{\"op\": \"add\", \"path\": \"/spec/template/spec/containers/0/ports/0/hostPort\", \"value\": 13001}, {\"op\": \"add\", \"path\": \"/spec/template/spec/containers/0/ports/0/hostIP\", \"value\": \"100.84.135.71\"}]"
+    },
+    {
+      "target": {
+        "kind": "ConfigMap",
+        "name": "recordchat-config"
+      },
+      "patch": "[{\"op\": \"add\", \"path\": \"/data/CORS_ORIGINS\", \"value\": \"http://dev.tail0f631b.ts.net:13001\"}]"
+    }
+  ],
+  "images": [
+    {
+      "name": "recordchat/frontend",
+      "newTag": "7883ec80d932"
+    },
+    {
+      "name": "recordchat/backend",
+      "newTag": "7883ec80d932"
+    }
+  ]
+}

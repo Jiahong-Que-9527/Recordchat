@@ -9,7 +9,7 @@ from app.connectors.base import ConnectorAvailability
 from app.connectors.orchestration import run_synthetic_data_workflow
 from app.connectors.recordforge import RecordForgeConnector
 from app.core.config import Settings
-from app.core.request_log import log_chat_request
+from app.core.request_log import log_chat_request, redact_log_event
 from app.core.llm import LLMProvider
 from app.models.chat import QueryType, SyntheticMode
 from app.rag.pipeline import answer, classify_query
@@ -203,6 +203,7 @@ def test_synthetic_intent_still_routed():
 def test_request_log_writes_jsonl(tmp_path, monkeypatch):
     log_path = tmp_path / "requests.jsonl"
     monkeypatch.setenv("RECORDCHAT_REQUEST_LOG", str(log_path))
+    monkeypatch.delenv("RECORDCHAT_REQUEST_LOG_INCLUDE_QUERY", raising=False)
     log_chat_request(
         {
             "event": "chat",
@@ -215,9 +216,31 @@ def test_request_log_writes_jsonl(tmp_path, monkeypatch):
     lines = log_path.read_text(encoding="utf-8").strip().splitlines()
     assert len(lines) == 1
     payload = json.loads(lines[0])
-    assert payload["query"] == "What is a Piece?"
+    assert "query" not in payload
+    assert payload["query_len"] == len("What is a Piece?")
+    assert payload["query_hash"]
     assert payload["chunks"][0]["chunk_id"] == "piece::1"
     assert "ts" in payload
+    assert payload["request_id"]
+
+
+def test_request_log_can_include_raw_query(tmp_path, monkeypatch):
+    log_path = tmp_path / "requests.jsonl"
+    monkeypatch.setenv("RECORDCHAT_REQUEST_LOG", str(log_path))
+    monkeypatch.setenv("RECORDCHAT_REQUEST_LOG_INCLUDE_QUERY", "true")
+    log_chat_request({"event": "chat", "query": "What is a Piece?"})
+    payload = json.loads(log_path.read_text(encoding="utf-8").strip())
+    assert payload["query"] == "What is a Piece?"
+    assert payload["query_hash"]
+
+
+def test_redact_log_event_drops_query_by_default(monkeypatch):
+    monkeypatch.delenv("RECORDCHAT_REQUEST_LOG_INCLUDE_QUERY", raising=False)
+    redacted = redact_log_event({"event": "chat", "query": "secret question"})
+    assert "query" not in redacted
+    assert redacted["query_len"] == len("secret question")
+    assert len(redacted["query_hash"]) == 64
+    assert redacted["request_id"]
 
 
 def test_request_log_relative_path_resolves_to_logs_dir():

@@ -1,5 +1,8 @@
 # AGENTS.md — RecordChat developer guidance
 
+**[房玄龄·2026-11-03] Operational update:** Development is now WSL Ubuntu `/home/bill/src/recordchat`; runtime is dev K3s (`recordchat-prod`, `recordchat-staging`). avi RecordChat containers are stopped and retained. Read `docs/k3s_operations.md` and the cabinet migration runbook before operating. Existing local SQLite auth is preserved; old Clerk descriptions do not describe the deployed implementation. This migration does not close unrelated product/auth milestone requirements.
+
+
 Entry point for coding agents working on RecordChat. Read this first, then the
 canonical documents listed below in order. When documents disagree, the file
 with higher precedence in the table wins.
@@ -27,7 +30,7 @@ AviationLakehouse = Bronze/Silver/Gold narrative (v0.2.6, docs/mapping only)
 |---|---|---|
 | 1 | `docs/project_plan.md` | **Current status + next work.** Wins when docs disagree. |
 | 2 | `docs/agent_execution_playbook.md` | How to execute any slice (read after the plan). |
-| 3 | active slice brief (none scheduled; ALH brief is reference) | Step-by-step when a slice is open. |
+| 3 | active slice brief (`docs/v03_execution_brief.md`) | Step-by-step when a slice is open. |
 | 4 | `docs/architecture.md` | System architecture and design decisions. |
 | 5 | `SPEC.md` | v0.1 API / data / module contracts. Still **binding** (field names, module boundaries, forbidden patterns). Additive enum values are allowed; renaming is not. |
 | 6 | `docs/v0.2_development_plan.md` | Historical v0.2 task map. |
@@ -100,8 +103,11 @@ uv run --project backend python scripts/evaluate_rag.py
    `scripts/evaluate_rag.py` unable to load it.
 8. **Every phase must leave the project runnable and tested.** No credentials
    may be required to merely boot (graceful degradation instead).
+9. **Public surface is the Next.js frontend only.** Backend and Qdrant stay on
+   the Docker network. `/ingest` is not a public API when `AUTH_MODE=enforced`.
+   Do not put `user_id` on the `/chat` JSON body.
 
-## 5. Current state (2026-09-11)
+## 5. Current state (2026-09-13)
 
 - Delivered: v0.1 baseline, Data Foundation (core pack), v0.2.1–v0.2.6,
   audit P0/P1 (AUD-01…AUD-07), Retrieval Quality `#27`–`#31`, RecordForge
@@ -116,10 +122,12 @@ uv run --project backend python scripts/evaluate_rag.py
   `data/raw/one_record_docs/aviation_lakehouse.md` (narrative only).
 - Frontend: `WorkflowViewer` for workflows; JSON-LD canvas for templates /
   `@graph`.
-- **Current next:** nothing scheduled. Optional P2 (AUD-08…AUD-10, AUD-04
-  ModelPicker wiring, leftover `#23`) or user-requested v0.3 from
-  `docs/v03_sketch.md`.
-- Backend tests: 69 passing (`uv run pytest -q`).
+- **Current next:** v0.3.1 trial-user auth
+  ([docs/v03_execution_brief.md](docs/v03_execution_brief.md)). Testers are
+  trial users on our domain; same accounts promote `trial → user`. Optional P2
+  (AUD-08, AUD-10, AUD-04 ModelPicker wiring, leftover `#23`) waits. AUD-09
+  (pin Qdrant + auth) is in the v0.3.1 P0 list.
+- Backend tests: 69 passing (`uv run pytest -q`) as of the ALH close.
 
 ### What landed in the 2026-09-09 slice (so agents do not redo it)
 
@@ -146,10 +154,12 @@ uv run --project backend python scripts/evaluate_rag.py
 
 ## 6. Next work (in order)
 
-1. **Nothing scheduled.** Optional P2 (playbook §6): AUD-04 ModelPicker →
-   `GET /models`, AUD-08 shared ontology helper, AUD-09 pin Qdrant image,
-   AUD-10 CI fake-embedding fixture, leftover `#23`.
-2. **v0.3 platform** — `docs/v03_sketch.md` only when the user explicitly asks.
+1. **v0.3.1 trial-user auth** — [docs/v03_execution_brief.md](docs/v03_execution_brief.md)
+   (AUTH-01 → AUTH-05). Do not persist chats. Do not publish backend/Qdrant.
+2. **Optional P2 after that:** AUD-04 ModelPicker → `GET /models`, AUD-08
+   shared ontology helper, AUD-10 CI fake-embedding fixture, leftover `#23`.
+3. **v0.3 remainder** (memory, source admin, tracing) — [docs/v03_sketch.md](docs/v03_sketch.md)
+   only with a new brief.
 
 ## 7. Definition of done — closed iterations
 
@@ -183,10 +193,18 @@ See `docs/alh_execution_brief.md` §7.
 - [x] No live lakehouse or ONE Record Server write path
 - [x] pytest green; frontend build green
 
-## 8b. Definition of done — next iteration
+## 8b. Definition of done — v0.3.1 trial-user auth (open)
 
-No coding slice is scheduled. If opening v0.3, write
-`docs/v03_execution_brief.md` first (see `docs/v03_sketch.md`).
+See [docs/v03_execution_brief.md](docs/v03_execution_brief.md) §10.
+
+Must keep:
+
+- `/chat` field names unchanged; identity in internal JWT headers only
+- `pipeline.py` the only orchestrator
+- `AUTH_MODE=off` boots without login
+- backend and Qdrant never on a public hostname
+- `/ingest` not reachable from the internet
+- request logs omit raw user questions by default
 
 ## 9. How to verify your work
 

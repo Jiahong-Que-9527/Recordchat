@@ -1,0 +1,178 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "rc-staging-app-state"
+      },
+      "spec": {
+        "capacity": {
+          "storage": "2Gi"
+        },
+        "volumeMode": "Filesystem",
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "persistentVolumeReclaimPolicy": "Retain",
+        "storageClassName": "",
+        "claimRef": {
+          "namespace": "recordchat-staging",
+          "name": "app-state"
+        },
+        "hostPath": {
+          "path": "/var/lib/recordchat/recordchat-staging/app-state",
+          "type": "Directory"
+        },
+        "nodeAffinity": {
+          "required": {
+            "nodeSelectorTerms": [
+              {
+                "matchExpressions": [
+                  {
+                    "key": "kubernetes.io/hostname",
+                    "operator": "In",
+                    "values": [
+                      "sololakehouse"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "rc-staging-corpus"
+      },
+      "spec": {
+        "capacity": {
+          "storage": "2Gi"
+        },
+        "volumeMode": "Filesystem",
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "persistentVolumeReclaimPolicy": "Retain",
+        "storageClassName": "",
+        "claimRef": {
+          "namespace": "recordchat-staging",
+          "name": "corpus"
+        },
+        "hostPath": {
+          "path": "/var/lib/recordchat/recordchat-staging/corpus",
+          "type": "Directory"
+        },
+        "nodeAffinity": {
+          "required": {
+            "nodeSelectorTerms": [
+              {
+                "matchExpressions": [
+                  {
+                    "key": "kubernetes.io/hostname",
+                    "operator": "In",
+                    "values": [
+                      "sololakehouse"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "rc-staging-logs"
+      },
+      "spec": {
+        "capacity": {
+          "storage": "2Gi"
+        },
+        "volumeMode": "Filesystem",
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "persistentVolumeReclaimPolicy": "Retain",
+        "storageClassName": "",
+        "claimRef": {
+          "namespace": "recordchat-staging",
+          "name": "logs"
+        },
+        "hostPath": {
+          "path": "/var/lib/recordchat/recordchat-staging/logs",
+          "type": "Directory"
+        },
+        "nodeAffinity": {
+          "required": {
+            "nodeSelectorTerms": [
+              {
+                "matchExpressions": [
+                  {
+                    "key": "kubernetes.io/hostname",
+                    "operator": "In",
+                    "values": [
+                      "sololakehouse"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "rc-staging-qdrant-storage"
+      },
+      "spec": {
+        "capacity": {
+          "storage": "5Gi"
+        },
+        "volumeMode": "Filesystem",
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "persistentVolumeReclaimPolicy": "Retain",
+        "storageClassName": "",
+        "claimRef": {
+          "namespace": "recordchat-staging",
+          "name": "qdrant-storage"
+        },
+        "hostPath": {
+          "path": "/var/lib/recordchat/recordchat-staging/qdrant-storage",
+          "type": "Directory"
+        },
+        "nodeAffinity": {
+          "required": {
+            "nodeSelectorTerms": [
+              {
+                "matchExpressions": [
+                  {
+                    "key": "kubernetes.io/hostname",
+                    "operator": "In",
+                    "values": [
+                      "sololakehouse"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

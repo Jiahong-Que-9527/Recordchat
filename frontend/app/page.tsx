@@ -23,6 +23,8 @@ import { ModelPicker } from "@/components/ModelPicker";
 import { Sidebar } from "@/components/Sidebar";
 import { Message, canvasTitle } from "@/components/Message";
 import { TypingIndicator } from "@/components/TypingIndicator";
+import { PrivacyBanner } from "@/components/PrivacyBanner";
+import { QuotaBanner } from "@/components/QuotaBanner";
 import { cn } from "@/lib/utils";
 import {
   getMessageData,
@@ -191,7 +193,7 @@ export default function Home() {
     <main className="h-dvh overflow-hidden bg-transparent">
       <div
         className={cn(
-          "grid h-full w-full grid-cols-1",
+          "grid h-full w-full grid-cols-1 transition-[grid-template-columns] duration-300 ease-in-out",
           canvasOpen
             ? sidebarCollapsed
               ? "xl:grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)]"
@@ -214,6 +216,8 @@ export default function Home() {
         />
 
         <section className="relative flex h-full flex-col overflow-hidden bg-transparent px-4 pb-4 pt-3 sm:px-6">
+          <PrivacyBanner />
+          <QuotaBanner />
           {/* Mobile/tablet top bar — opens the sidebar drawer. */}
           <header className="mb-2 flex items-center justify-between gap-2 xl:hidden">
             <button

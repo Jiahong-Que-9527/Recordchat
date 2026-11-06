@@ -93,6 +93,25 @@ body {
     -webkit-backdrop-filter: blur(16px);
   }
 
+  /* Fade the top/bottom edges of scrollable sidebars. The 12px stops match
+     the container's vertical padding, so short lists look untouched. */
+  .rc-scroll-fade {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 12px,
+      #000 calc(100% - 12px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 12px,
+      #000 calc(100% - 12px),
+      transparent 100%
+    );
+  }
+
   /* Keyboard key look for shortcut hints. */
   .rc-kbd {
     display: inline-flex;

@@ -1,7 +1,11 @@
 """Lightweight JSONL request diagnostics (AUD-07).
 
-Records query, query_type, ranked chunk ids, latency, and model/config without
+Records query_type, ranked chunk ids, latency, and model/config without
 pulling in OpenTelemetry (that stays in the v0.3 sketch).
+
+By default the raw user question is **not** stored (v0.3.1 trial auth). Set
+``RECORDCHAT_REQUEST_LOG_INCLUDE_QUERY=true`` only for a time-boxed local
+debug session.
 
 Destination:
 - ``RECORDCHAT_REQUEST_LOG=stdout`` (default) → structured log line via logger
@@ -11,9 +15,11 @@ Destination:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import time
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +28,7 @@ from app.core.logging import get_logger
 logger = get_logger("recordchat.request")
 
 _DEFAULT = "stdout"
+_SENSITIVE_KEYS = ("query", "message", "answer", "history", "user_prompt", "prompt")
 
 
 def _destination() -> str:
@@ -44,12 +51,33 @@ def _resolve_log_path(dest: str) -> Path:
     return repo_root / path
 
 
+def _include_raw_query() -> bool:
+    flag = (os.environ.get("RECORDCHAT_REQUEST_LOG_INCLUDE_QUERY") or "").strip().lower()
+    return flag in {"1", "true", "yes", "on"}
+
+
+def redact_log_event(event: dict[str, Any]) -> dict[str, Any]:
+    """Copy *event* and drop raw question text unless the include flag is on."""
+    payload = dict(event)
+    if not payload.get("request_id"):
+        payload["request_id"] = str(uuid.uuid4())
+    raw_query = payload.get("query")
+    if isinstance(raw_query, str):
+        encoded = raw_query.encode("utf-8")
+        payload.setdefault("query_len", len(raw_query))
+        payload.setdefault("query_hash", hashlib.sha256(encoded).hexdigest())
+    if not _include_raw_query():
+        for key in _SENSITIVE_KEYS:
+            payload.pop(key, None)
+    return payload
+
+
 def log_chat_request(event: dict[str, Any]) -> None:
     """Append one diagnostic event. Never raises into the request path."""
     try:
         payload = {
             "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            **event,
+            **redact_log_event(event),
         }
         line = json.dumps(payload, ensure_ascii=False, default=str)
         dest = _destination().lower()
